@@ -10,6 +10,7 @@
  * receives the sidebar built here as a prop.
  */
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { signOut } from '@/auth'
 import AdminFrame from '@/components/admin/AdminFrame'
@@ -30,11 +31,26 @@ const ADMIN_NAV = [
 function Sidebar({ user, currentPath }) {
   return (
     <>
-      <div className="px-6 py-5 border-b border-white/15">
-        <Link href="/admin" className="text-lg font-bold">
-          iHealth Plans
+      {/*
+        White strip behind the logo. The mark is #1a2a55 and #04a350, and the
+        sidebar is #1b2a56, so dropped straight onto it the wordmark would be
+        invisible. Filtering it white would work but throws away the green,
+        and a panel reads as a deliberate lockup rather than a workaround.
+      */}
+      <div className="bg-white px-6 py-5">
+        <Link href="/admin" className="block">
+          <Image
+            src="/icons/health-plans-logo-h.svg"
+            alt="iHealth Plans"
+            width={1501}
+            height={318}
+            priority
+            className="w-full h-auto"
+          />
         </Link>
-        <p className="text-sm text-white/60 mt-0.5">Reporting</p>
+        <p className="text-sm font-semibold uppercase tracking-[1.2px] text-[#6C7381] mt-2">
+          Reporting
+        </p>
       </div>
 
       <nav className="flex-1 py-4 flex flex-col">
