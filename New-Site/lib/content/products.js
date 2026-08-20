@@ -12,7 +12,10 @@
  * 3. Language stays hedged, "may", "varies by plan", "options that may fit".
  *    Avoid "free", "best", superlatives, and anything implying every available
  *    plan is offered. The footer disclaimer already states that it is not.
- * 4. Each page may need its own CMS material ID rather than inheriting the
+ * 4. THIS AGENCY DOES NOT SELL MEDICARE SUPPLEMENT OR MEDIGAP. Medicare
+ *    Advantage, standalone Part D, and D-SNP only. Do not add a product
+ *    page, a nav entry, or a call to action for anything they cannot place.
+ * 5. Each page may need its own CMS material ID rather than inheriting the
  *    site wide SMID. TODO confirm with the client's compliance contact and add
  *    a per product smid field here once answered.
  */
@@ -108,101 +111,7 @@ export const PRODUCTS = {
       },
     ],
 
-    related: ['medicare-supplement', 'prescription-drug-plans', 'dual-eligible-snp'],
-  },
-
-  'medicare-supplement': {
-    slug: 'medicare-supplement',
-    name: 'Medicare Supplement',
-    eyebrow: 'Medigap',
-    title: 'Medicare Supplement Plans | iHealth Plans',
-    metaDescription:
-      'Medicare Supplement, or Medigap, works alongside Original Medicare to help pay costs it leaves behind. Speak with a licensed insurance agent about your options.',
-    headline: 'Medicare Supplement Plans',
-    intro:
-      'Medicare Supplement insurance, often called Medigap, is sold by private insurance companies to work alongside Original Medicare. It helps pay some of the costs Original Medicare does not, such as coinsurance, copayments, and deductibles.',
-
-    whatItIs: {
-      heading: 'How Medicare Supplement works',
-      body: [
-        'A Medigap policy does not replace Original Medicare. You keep Part A and Part B, Medicare pays its share of a covered service first, and then your Medigap policy pays its share.',
-        'Medigap policies are standardized and identified by letter. A plan with a given letter offers the same basic benefits no matter which company sells it, so the differences between carriers are price, service, and availability rather than coverage.',
-      ],
-    },
-
-    keyPoints: [
-      {
-        title: 'No provider network',
-        body: 'You can generally see any provider anywhere in the country who accepts Medicare, without a referral.',
-      },
-      {
-        title: 'Standardized benefits',
-        body: 'Plans are labelled by letter. The same letter means the same basic benefits regardless of which company you buy it from.',
-      },
-      {
-        title: 'Prescription drugs are not included',
-        body: 'Medigap policies do not include drug coverage. A separate Part D plan is usually needed if you want prescription coverage.',
-      },
-      {
-        title: 'Coverage renews as long as you pay',
-        body: 'Medigap policies are generally guaranteed renewable, meaning the policy continues as long as premiums are paid.',
-      },
-    ],
-
-    planTypes: {
-      heading: 'Things to know about plan letters',
-      items: [
-        { term: 'Standardized letters', detail: 'Most states use the same set of standardized plans, identified by letters such as A, B, D, G, K, L, M, and N.' },
-        { term: 'Plans C and F', detail: 'These are not available to people who became newly eligible for Medicare on or after 1 January 2020. People already eligible before then may still be able to keep or buy them.' },
-        { term: 'Some states differ', detail: 'Massachusetts, Minnesota, and Wisconsin standardize their plans differently from the rest of the country.' },
-        { term: 'One policy per person', detail: 'A Medigap policy covers one person. A spouse or partner needs their own policy.' },
-      ],
-    },
-
-    costs: {
-      heading: 'What you may pay',
-      items: [
-        { term: 'Your Part B premium', detail: 'You continue to pay your Medicare Part B premium.' },
-        { term: 'A Medigap premium', detail: 'You pay a separate monthly premium to the insurance company for the Medigap policy itself.' },
-        { term: 'A Part D premium', detail: 'If you add prescription drug coverage, that is a separate plan with its own premium.' },
-        { term: 'Remaining costs', detail: 'What you still pay out of pocket depends on which plan letter you choose, since the letters differ in how much they cover.' },
-      ],
-    },
-
-    eligibility: {
-      heading: 'When you can buy a Medigap policy',
-      items: [
-        'Your Medigap Open Enrollment Period lasts 6 months and begins the month you are both 65 or older and enrolled in Part B.',
-        'During that period you can buy any Medigap policy sold in your state, and health problems cannot be used to refuse you or charge you more.',
-        'Outside that period, an insurance company may be allowed to use medical underwriting, which can affect whether you can buy a policy and what you pay.',
-        'Some situations create a guaranteed issue right outside the open enrollment period. A licensed insurance agent can help you understand whether one applies to you.',
-      ],
-    },
-
-    faqs: [
-      {
-        question: 'Can I have both a Medigap policy and a Medicare Advantage plan?',
-        answer:
-          'No. Medigap works alongside Original Medicare, so it cannot be used with a Medicare Advantage plan. If you are enrolled in a Medicare Advantage plan, a Medigap policy cannot pay your costs under it.',
-      },
-      {
-        question: 'Why is the Medigap Open Enrollment Period so important?',
-        answer:
-          'It is the one window when you can buy any Medigap policy sold in your state regardless of your health. It lasts 6 months, it starts when you are 65 or older and enrolled in Part B, and it does not repeat.',
-      },
-      {
-        question: 'Do all companies charge the same price for the same plan letter?',
-        answer:
-          'No. Benefits for a given letter are standardized, but each insurance company sets its own price and may use a different pricing method. Comparing prices for the same letter is worthwhile.',
-      },
-      {
-        question: 'Does Medigap cover prescription drugs?',
-        answer:
-          'No. Medigap policies sold today do not include prescription drug coverage. Drug coverage is available separately through a Part D plan.',
-      },
-    ],
-
-    related: ['medicare-advantage', 'prescription-drug-plans', 'dual-eligible-snp'],
+    related: ['prescription-drug-plans', 'dual-eligible-snp'],
   },
 
   'prescription-drug-plans': {
@@ -219,7 +128,7 @@ export const PRODUCTS = {
     whatItIs: {
       heading: 'Two ways to get Part D coverage',
       body: [
-        'A standalone Prescription Drug Plan, sometimes called a PDP, is added alongside Original Medicare or a Medicare Supplement policy.',
+        'A standalone Prescription Drug Plan, sometimes called a PDP, is added alongside Original Medicare.',
         'Alternatively, most Medicare Advantage plans already include prescription drug coverage. Those are often called MA-PD plans, and in that case a separate Part D plan is generally not needed.',
       ],
     },
@@ -311,7 +220,7 @@ export const PRODUCTS = {
       },
     ],
 
-    related: ['medicare-advantage', 'medicare-supplement', 'dual-eligible-snp'],
+    related: ['medicare-advantage', 'dual-eligible-snp'],
   },
 
   'dual-eligible-snp': {
@@ -418,7 +327,7 @@ export const PRODUCTS = {
       },
     ],
 
-    related: ['medicare-advantage', 'medicare-supplement', 'prescription-drug-plans'],
+    related: ['medicare-advantage', 'prescription-drug-plans'],
   },
 }
 

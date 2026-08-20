@@ -132,7 +132,14 @@ function NavDropdown({ link }) {
               // Not focusable while closed, otherwise tabbing lands on links
               // nobody can see
               tabIndex={isOpen ? 0 : -1}
-              className="block px-5 py-3 text-base font-semibold text-[#111C39] hover:bg-ihealthBlue/5 hover:text-ihealthBlue transition-colors"
+              // An overview entry reads as the parent of the ones below it,
+              // which are indented under it. Same single level of menu, just
+              // grouped, so nothing here needs a second flyout to reach.
+              className={`block py-3 text-base transition-colors hover:bg-ihealthBlue/5 hover:text-ihealthBlue ${
+                child.isOverview
+                  ? 'px-5 font-bold text-ihealthBlue border-b border-[#E5E5E5] mb-1'
+                  : 'pl-9 pr-5 font-semibold text-[#111C39]'
+              }`}
             >
               {child.label}
             </Link>
@@ -239,7 +246,9 @@ export default function Header() {
                         key={child.href}
                         href={child.href}
                         onClick={() => setIsMenuOpen(false)}
-                        className="text-ihealthBlue font-semibold text-[clamp(14px,3vw,22px)]"
+                        className={`text-ihealthBlue text-[clamp(14px,3vw,22px)] ${
+                          child.isOverview ? 'font-bold underline underline-offset-4' : 'font-semibold'
+                        }`}
                       >
                         {child.label}
                       </Link>

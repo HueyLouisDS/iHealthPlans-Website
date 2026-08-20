@@ -26,8 +26,8 @@ export default function AnnouncementBar({ variant = 'header', location = 'announ
         </CallLink>{' '}
         {isMenu ? (
           <>
-            to get a quote for your Medicare Advantage Plan, Medicare Supplement Plan or
-            Prescription Drug Plan. {BUSINESS_HOURS}.
+            to get a quote for your Medicare Advantage Plan or Prescription Drug Plan.{' '}
+            {BUSINESS_HOURS}.
           </>
         ) : (
           <>

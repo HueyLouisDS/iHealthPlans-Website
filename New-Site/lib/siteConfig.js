@@ -29,9 +29,11 @@ export const NAV_LINKS = [
   { label: 'Home', href: '/' },
   {
     label: 'Plans',
+    // No Medicare Supplement or Medigap entry, the agency cannot place them
+    // and a nav entry is a claim that they can. D-SNP stays, it is a type of
+    // Medicare Advantage plan.
     children: [
       { label: 'Medicare Advantage', href: '/medicare-advantage' },
-      { label: 'Medicare Supplement', href: '/medicare-supplement' },
       { label: 'Prescription Drug Plans', href: '/prescription-drug-plans' },
       { label: 'Dual Eligible (D-SNP)', href: '/dual-eligible-snp' },
     ],
@@ -39,7 +41,11 @@ export const NAV_LINKS = [
   {
     label: 'Enrollment Period',
     children: [
-      { label: 'All Enrollment Periods', href: '/medicare-enrollment-periods' },
+      // isOverview renders this as the group's parent, emphasised and with a
+      // rule under it, and indents the entries below. It gives the hierarchy
+      // of a nested submenu without a second flyout level, which is fiddly
+      // with a mouse and unusable on touch.
+      { label: 'All Enrollment Periods', href: '/medicare-enrollment-periods', isOverview: true },
       // "Open Enrollment" here means the Medicare Advantage Open Enrollment
       // Period, 1 January to 31 March. Worth knowing that Medicare.gov also
       // uses "Open Enrollment" for the 15 Oct to 7 Dec window, which is the

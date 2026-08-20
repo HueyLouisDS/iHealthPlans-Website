@@ -33,7 +33,7 @@ const FAQ_ITEMS = [
   {
     question: 'What decisions do I need to make?',
     answer:
-      'If you are interested in health insurance coverage beyond original Medicare, you need to speak to a licensed insurance agent to explore Medicare Advantage plans, Medicare Supplemental Insurance, Part D Drug plans, and stand-alone dental and vision coverage options.',
+      'If you are interested in health insurance coverage beyond Original Medicare, speaking to a licensed insurance agent can help you explore the Medicare Advantage and Part D prescription drug plan options available in your area, including plans that bundle drug coverage and plans that offer additional benefits.',
   },
   {
     question: 'What if I’m still covered by an employer or spouse’s/partner’s employer plan?',

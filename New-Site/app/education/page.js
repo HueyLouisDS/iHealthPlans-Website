@@ -25,7 +25,7 @@ export async function generateMetadata({ searchParams }) {
   if (!category) {
     return {
       title: 'Education | iHealth Plans',
-      description: 'Articles on Medicare Advantage, Medigap, prescription drug coverage, and more.',
+      description: 'Articles on Medicare Advantage plans, prescription drug coverage, enrollment periods, and costs.',
     }
   }
 

@@ -22,10 +22,10 @@ const sourceSans = Source_Sans_3({
 
 export const metadata = {
   title: 'iHealth Plans',
-  description: 'Medicare Advantage Plans, Medicare Supplement Plans, and Prescription Drug Plans',
+  description: 'Medicare Advantage Plans and Prescription Drug Plans',
   openGraph: {
     title: 'iHealth Plans',
-    description: 'Medicare Advantage Plans, Medicare Supplement Plans, and Prescription Drug Plans',
+    description: 'Medicare Advantage Plans and Prescription Drug Plans',
   },
 }
 

@@ -148,7 +148,14 @@ function RelatedProducts({ product }) {
     <section className="w-full h-fit py-16 px-4">
       <div className="w-full max-w-6xl mx-auto flex flex-col items-start gap-8">
         <h2 className="text-4xl text-ihealthBlue">Other coverage options</h2>
-        <div className="w-full grid grid-cols-1 nm:grid-cols-3 gap-8">
+        {/* Column count follows the number of cards. With only Medicare
+            Advantage and D-SNP left, a fixed 3 column grid would leave a
+            single card stranded at a third of the width */}
+        <div
+          className={`w-full grid gap-8 grid-cols-1 ${
+            product.related.length >= 3 ? 'nm:grid-cols-3' : product.related.length === 2 ? 'nm:grid-cols-2' : 'nm:max-w-md'
+          }`}
+        >
           {product.related.map((slug) => {
             const related = getProduct(slug)
             if (!related) return null
