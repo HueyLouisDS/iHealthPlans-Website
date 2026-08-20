@@ -36,6 +36,14 @@ export const NAV_LINKS = [
       { label: 'Dual Eligible (D-SNP)', href: '/dual-eligible-snp' },
     ],
   },
+  {
+    label: 'Enrollment',
+    children: [
+      { label: 'All Enrollment Periods', href: '/medicare-enrollment-periods' },
+      { label: 'Annual Enrollment Period', href: '/annual-enrollment-period' },
+      { label: 'Special Enrollment Period', href: '/special-enrollment-period' },
+    ],
+  },
   { label: 'Education', href: '/education' },
   { label: 'Careers', href: '/careers' },
 ]

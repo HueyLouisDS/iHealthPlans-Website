@@ -15,8 +15,10 @@ import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS, NAV_LINKS } from '@/lib/siteCo
 
 // Shared by the plain nav links and the dropdown trigger, so a hover state or
 // a spacing change never applies to only half the nav.
+// Padding stepped down from the original px-12 when the nav went from 3 items
+// to 5. At px-12 the row overflows into the phone block at the lg breakpoint.
 const NAV_ITEM_CLASS =
-  'flex text-[#111C39] text-lg font-semibold flex-col items-center py-1 relative border-r last:border-r-0 border-[#E5E5E5] hover:opacity-70 transition-opacity duration-300 px-12'
+  'flex text-[#111C39] text-base xl:text-lg font-semibold flex-col items-center py-1 relative border-r last:border-r-0 border-[#E5E5E5] hover:opacity-70 transition-opacity duration-300 px-5 xl:px-7 whitespace-nowrap'
 
 /**
  * Hamburger glyph, inlined rather than pulled from an icon package.
@@ -156,7 +158,9 @@ export default function Header() {
 
         <div className="w-full py-2 px-4 bg-white shadow-lg">
           <div className="max-w-shell w-full h-full mx-auto flex items-center justify-between">
-            <div className="w-fit flex items-center justify-center gap-40">
+            {/* Gap stepped down from the original gap-40 for the same reason
+                as the item padding, 5 nav items no longer fit beside it */}
+            <div className="w-fit flex items-center justify-center gap-6 xl:gap-16">
               <Logo className="w-[clamp(151px,22.68vw,225px)] h-fit flex-shrink-0" />
 
               <nav className="w-full hidden items-center justify-center lg:flex">

@@ -422,35 +422,6 @@ export const PRODUCTS = {
   },
 }
 
-// Enrollment windows are the same across products and the dates are stable
-// year to year, unlike dollar figures, so they are safe to state directly.
-export const ENROLLMENT_WINDOWS = [
-  {
-    name: 'Initial Enrollment Period',
-    dates: '7 months around your 65th birthday',
-    detail:
-      'Begins 3 months before the month you turn 65, includes that month, and ends 3 months after. This is when most people first enrol.',
-  },
-  {
-    name: 'Annual Enrollment Period',
-    dates: '15 October to 7 December',
-    detail:
-      'Each autumn you can join, switch, or drop a Medicare Advantage or Part D plan. Changes generally take effect on 1 January.',
-  },
-  {
-    name: 'Medicare Advantage Open Enrollment',
-    dates: '1 January to 31 March',
-    detail:
-      'If you are already in a Medicare Advantage plan you can switch to another one, or return to Original Medicare, once during this window.',
-  },
-  {
-    name: 'Special Enrollment Period',
-    dates: 'When your circumstances change',
-    detail:
-      'Events such as moving, losing other coverage, or qualifying for Medicaid can open a window to make a change outside the usual periods.',
-  },
-]
-
 /**
  * Looks up one product by slug.
  * Returns null rather than throwing so a route can decide between a fallback

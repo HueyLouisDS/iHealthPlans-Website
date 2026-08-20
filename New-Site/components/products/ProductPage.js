@@ -7,11 +7,11 @@
 
 import Link from 'next/link'
 import { HeaderSpacer } from '@/components/layout/Header'
-import CallLink from '@/components/tracking/CallLink'
 import Accordion from '@/components/ui/Accordion'
+import PageHero from '@/components/ui/PageHero'
 import ZipCta from '@/components/marketing/ZipCta'
-import { getProduct, ENROLLMENT_WINDOWS } from '@/lib/content/products'
-import { PHONE_NUMBER } from '@/lib/siteConfig'
+import { getProduct } from '@/lib/content/products'
+import { ENROLLMENT_WINDOWS } from '@/lib/content/enrollment'
 
 /**
  * Green tick used through the key points list.
@@ -21,46 +21,6 @@ function CheckIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-ihealthGreen flex-shrink-0 mt-1" aria-hidden="true">
       <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  )
-}
-
-/**
- * Gradient hero.
- * Deliberately not a photo hero. Choosing stock photography for a regulated
- * product page is a client decision, and the brand gradient is already part of
- * the design system, so this ships without waiting on image selection.
- * TODO replace with approved photography once the client supplies it.
- */
-function ProductHero({ product }) {
-  return (
-    <div className="w-full bg-[linear-gradient(96deg,var(--ihealth-blue)_20%,var(--ihealth-green)_140%)] text-white">
-      <div className="w-full max-w-6xl mx-auto px-4 py-16 sm:py-24 flex flex-col items-start">
-        <h6 className="border-l-2 border-l-ihealthGreen pl-3 uppercase tracking-[3px] text-sm font-extralight mb-3">
-          {product.eyebrow}
-        </h6>
-
-        <h1 className="text-3xl sm:text-5xl font-bold leading-[120%] mb-4 max-w-3xl">
-          {product.headline}
-        </h1>
-
-        <p className="text-lg sm:text-xl font-light max-w-3xl mb-8">{product.intro}</p>
-
-        <div className="flex flex-wrap flex-col-reverse sm:flex-row items-start gap-4">
-          <Link
-            href="/quote-health-plans"
-            className="px-7 py-2.5 rounded-lg sm:text-lg bg-white text-ihealthBlue font-semibold min-w-[225px] text-center"
-          >
-            Get a Free Quote
-          </Link>
-          <CallLink
-            location={`productHero:${product.slug}`}
-            className="bg-transparent text-white border border-white/60 hover:border-white transition-colors px-7 py-2.5 rounded-lg sm:text-lg"
-          >
-            Call Now {PHONE_NUMBER}
-          </CallLink>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -151,7 +111,8 @@ function Eligibility({ content }) {
 }
 
 /**
- * The 4 enrollment windows, shared across all products.
+ * The enrollment windows, shared across all products and the enrollment
+ * pages, read from lib/content/enrollment.js.
  * Repeated on every product page on purpose. Timing is the single most common
  * reason someone calls, and it should never be more than 1 scroll away.
  */
@@ -228,7 +189,12 @@ export default function ProductPage({ slug }) {
       <HeaderSpacer />
 
       <main className="flex flex-col items-center justify-center">
-        <ProductHero product={product} />
+        <PageHero
+          eyebrow={product.eyebrow}
+          headline={product.headline}
+          intro={product.intro}
+          callLocation={`productHero:${product.slug}`}
+        />
 
         <div className="w-full max-w-6xl mx-auto px-4 pt-16">
           <KeyPoints product={product} />
