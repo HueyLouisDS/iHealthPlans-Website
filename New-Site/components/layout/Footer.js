@@ -60,7 +60,26 @@ export default function Footer() {
           ))}
         </div>
 
-        <p>&copy; {year} iHealth Plans. All rights reserved.</p>
+        <div className="w-full flex flex-col nm:flex-row nm:items-center justify-between gap-4">
+          <p>&copy; {year} iHealth Plans. All rights reserved.</p>
+
+          {/*
+            Staff entry to the reporting area. Deliberately down here, muted,
+            and labelled "Team Login" rather than "Sign In". A sign in button in
+            the header reads to a Medicare visitor as their own plan's member
+            portal, and they click it, fail at a Google prompt, and either call
+            an agent confused or leave.
+            Kept out of LEGAL_LINKS because those are consumer notices and this
+            is not one.
+          */}
+          <Link
+            href="/admin/signin"
+            rel="nofollow"
+            className="text-[#6C7381] hover:text-ihealthBlue hover:underline flex-shrink-0"
+          >
+            Team Login
+          </Link>
+        </div>
       </div>
     </footer>
   )
