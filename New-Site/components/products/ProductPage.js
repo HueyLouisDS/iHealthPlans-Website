@@ -1,0 +1,255 @@
+/**
+ * Shared template for the 4 Medicare product landing pages.
+ * All 4 render through this so the structure, the conversion path, and the
+ * compliance register stay identical across them. The differences between the
+ * pages live entirely in lib/content/products.js.
+ */
+
+import Link from 'next/link'
+import { HeaderSpacer } from '@/components/layout/Header'
+import CallLink from '@/components/tracking/CallLink'
+import Accordion from '@/components/ui/Accordion'
+import ZipCta from '@/components/marketing/ZipCta'
+import { getProduct, ENROLLMENT_WINDOWS } from '@/lib/content/products'
+import { PHONE_NUMBER } from '@/lib/siteConfig'
+
+/**
+ * Green tick used through the key points list.
+ */
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-ihealthGreen flex-shrink-0 mt-1" aria-hidden="true">
+      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+/**
+ * Gradient hero.
+ * Deliberately not a photo hero. Choosing stock photography for a regulated
+ * product page is a client decision, and the brand gradient is already part of
+ * the design system, so this ships without waiting on image selection.
+ * TODO replace with approved photography once the client supplies it.
+ */
+function ProductHero({ product }) {
+  return (
+    <div className="w-full bg-[linear-gradient(96deg,var(--ihealth-blue)_20%,var(--ihealth-green)_140%)] text-white">
+      <div className="w-full max-w-6xl mx-auto px-4 py-16 sm:py-24 flex flex-col items-start">
+        <h6 className="border-l-2 border-l-ihealthGreen pl-3 uppercase tracking-[3px] text-sm font-extralight mb-3">
+          {product.eyebrow}
+        </h6>
+
+        <h1 className="text-3xl sm:text-5xl font-bold leading-[120%] mb-4 max-w-3xl">
+          {product.headline}
+        </h1>
+
+        <p className="text-lg sm:text-xl font-light max-w-3xl mb-8">{product.intro}</p>
+
+        <div className="flex flex-wrap flex-col-reverse sm:flex-row items-start gap-4">
+          <Link
+            href="/quote-health-plans"
+            className="px-7 py-2.5 rounded-lg sm:text-lg bg-white text-ihealthBlue font-semibold min-w-[225px] text-center"
+          >
+            Get a Free Quote
+          </Link>
+          <CallLink
+            location={`productHero:${product.slug}`}
+            className="bg-transparent text-white border border-white/60 hover:border-white transition-colors px-7 py-2.5 rounded-lg sm:text-lg"
+          >
+            Call Now {PHONE_NUMBER}
+          </CallLink>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Narrative section, a heading and 1 or more paragraphs.
+ */
+function Explainer({ content }) {
+  return (
+    <section className="w-full h-fit py-16 px-4">
+      <div className="w-full max-w-4xl mx-auto flex flex-col items-start gap-6">
+        <h2 className="text-4xl text-ihealthBlue">{content.heading}</h2>
+        {content.body.map((paragraph) => (
+          <p key={paragraph.slice(0, 40)} className="text-lg">
+            {paragraph}
+          </p>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/**
+ * The 4 headline benefits, as a ticked grid.
+ * Sits high on the page because it is what a visitor scanning for relevance
+ * actually reads before deciding whether to keep going.
+ */
+function KeyPoints({ product }) {
+  return (
+    <section className="w-full h-fit pb-8 px-4">
+      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 nm:grid-cols-2 gap-x-16 gap-y-10">
+        {product.keyPoints.map((point) => (
+          <div key={point.title} className="w-full flex items-start gap-4">
+            <CheckIcon />
+            <div className="flex flex-col items-start gap-2">
+              <h3 className="font-bold text-xl text-ihealthBlue">{point.title}</h3>
+              <p className="text-lg">{point.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Term and detail list, used for plan types and cost breakdowns.
+ * A definition list rather than a table, because these are label and
+ * explanation pairs and a table would imply a comparison that is not there.
+ */
+function TermList({ content }) {
+  return (
+    <section className="w-full h-fit py-16 px-4">
+      <div className="w-full max-w-4xl mx-auto flex flex-col items-start gap-8">
+        <h2 className="text-4xl text-ihealthBlue">{content.heading}</h2>
+        <dl className="w-full divide-y divide-gray-900/10">
+          {content.items.map((item) => (
+            <div key={item.term} className="py-5 grid grid-cols-1 nm:grid-cols-[240px_1fr] gap-2 nm:gap-8">
+              <dt className="font-bold text-lg text-ihealthBlue">{item.term}</dt>
+              <dd className="text-lg">{item.detail}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Eligibility bullets on a tinted panel, so the qualifying criteria are
+ * visually separated from the explanatory copy around them.
+ */
+function Eligibility({ content }) {
+  return (
+    <section className="w-full h-fit py-16 px-4">
+      <div className="w-full max-w-4xl mx-auto bg-[#f7f7f7] rounded-xl p-10 flex flex-col items-start gap-6">
+        <h2 className="text-4xl text-ihealthBlue">{content.heading}</h2>
+        <ul className="w-full flex flex-col items-start gap-4">
+          {content.items.map((item) => (
+            <li key={item.slice(0, 40)} className="w-full flex items-start gap-4">
+              <CheckIcon />
+              <span className="text-lg">{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * The 4 enrollment windows, shared across all products.
+ * Repeated on every product page on purpose. Timing is the single most common
+ * reason someone calls, and it should never be more than 1 scroll away.
+ */
+function EnrollmentWindows() {
+  return (
+    <section className="w-full h-fit py-16 px-4">
+      <div className="w-full max-w-6xl mx-auto flex flex-col items-start gap-8">
+        <h2 className="text-4xl text-ihealthBlue">When you can enroll</h2>
+        <div className="w-full grid grid-cols-1 nm:grid-cols-2 gap-8">
+          {ENROLLMENT_WINDOWS.map((window) => (
+            <div key={window.name} className="w-full flex flex-col items-start gap-2 border-l-2 border-l-ihealthGreen pl-5">
+              <h3 className="font-bold text-xl text-ihealthBlue">{window.name}</h3>
+              <p className="text-sm font-semibold uppercase tracking-[1.2px] text-ihealthGreen">
+                {window.dates}
+              </p>
+              <p className="text-lg">{window.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Links to the other 3 products.
+ * These 4 pages are genuinely alternatives to one another, and someone who
+ * lands on the wrong one should be able to reach the right one without
+ * going back to search.
+ */
+function RelatedProducts({ product }) {
+  return (
+    <section className="w-full h-fit py-16 px-4">
+      <div className="w-full max-w-6xl mx-auto flex flex-col items-start gap-8">
+        <h2 className="text-4xl text-ihealthBlue">Other coverage options</h2>
+        <div className="w-full grid grid-cols-1 nm:grid-cols-3 gap-8">
+          {product.related.map((slug) => {
+            const related = getProduct(slug)
+            if (!related) return null
+
+            return (
+              <Link
+                key={slug}
+                href={`/${slug}`}
+                className="w-full flex flex-col items-start gap-3 border rounded-xl p-6 hover:border-ihealthGreen transition-colors group"
+              >
+                <span className="text-xs font-bold uppercase tracking-[1.2px] text-ihealthGreen">
+                  {related.eyebrow}
+                </span>
+                <h3 className="font-bold text-xl text-ihealthBlue group-hover:underline">
+                  {related.name}
+                </h3>
+                <p className="text-base text-[#505258] line-clamp-3">{related.intro}</p>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Renders a complete product page from its data.
+ * Section order is a funnel, what it is, why it matters, what it costs, who
+ * qualifies, when to act, then the questions that stop people converting.
+ */
+export default function ProductPage({ slug }) {
+  const product = getProduct(slug)
+  if (!product) return null
+
+  return (
+    <>
+      <HeaderSpacer />
+
+      <main className="flex flex-col items-center justify-center">
+        <ProductHero product={product} />
+
+        <div className="w-full max-w-6xl mx-auto px-4 pt-16">
+          <KeyPoints product={product} />
+        </div>
+
+        <Explainer content={product.whatItIs} />
+        <TermList content={product.planTypes} />
+        <TermList content={product.costs} />
+        <Eligibility content={product.eligibility} />
+        <EnrollmentWindows />
+
+        <section className="w-full h-fit py-16 px-4">
+          <div className="mx-auto max-w-4xl w-full flex flex-col items-center">
+            <h2 className="text-4xl text-gray-900">Frequently asked questions</h2>
+            <Accordion items={product.faqs} />
+          </div>
+        </section>
+
+        <RelatedProducts product={product} />
+        <ZipCta />
+      </main>
+    </>
+  )
+}

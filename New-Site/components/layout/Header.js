@@ -13,6 +13,11 @@ import AnnouncementBar from '@/components/layout/AnnouncementBar'
 import CallLink from '@/components/tracking/CallLink'
 import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS, NAV_LINKS } from '@/lib/siteConfig'
 
+// Shared by the plain nav links and the dropdown trigger, so a hover state or
+// a spacing change never applies to only half the nav.
+const NAV_ITEM_CLASS =
+  'flex text-[#111C39] text-lg font-semibold flex-col items-center py-1 relative border-r last:border-r-0 border-[#E5E5E5] hover:opacity-70 transition-opacity duration-300 px-12'
+
 /**
  * Hamburger glyph, inlined rather than pulled from an icon package.
  * The live site ships react-icons for this single shape, which is not worth a
@@ -57,6 +62,86 @@ function Logo({ className }) {
 }
 
 /**
+ * Small chevron on the dropdown trigger.
+ */
+function ChevronIcon({ isOpen }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+      aria-hidden="true"
+    >
+      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+/**
+ * Desktop nav item that opens a panel of child links.
+ * Opens on hover for a mouse and on click for keyboard and touch, because
+ * hover alone is unreachable without a pointer. The wrapper keeps the panel
+ * open while the cursor travels from the trigger down into it.
+ */
+function NavDropdown({ link }) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+      // Closing on blur that leaves the whole group is what makes tabbing out
+      // of the last child dismiss the panel
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false)
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        className={`${NAV_ITEM_CLASS} !flex-row gap-1.5 items-center`}
+      >
+        {link.label}
+        <ChevronIcon isOpen={isOpen} />
+      </button>
+
+      {/*
+        The panel is always in the DOM and hidden with CSS rather than
+        conditionally rendered. Mounting it only when open would keep these 4
+        links out of the server rendered HTML, which hides them from crawlers.
+        pointer-events-none stops the invisible panel swallowing clicks.
+      */}
+      <div
+        className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 transition-opacity duration-200 ${
+          isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+        }`}
+      >
+        <div className="w-[280px] bg-white rounded-lg shadow-xl border border-[#E5E5E5] py-2">
+          {link.children.map((child) => (
+            <Link
+              key={child.href}
+              href={child.href}
+              onClick={() => setIsOpen(false)}
+              // Not focusable while closed, otherwise tabbing lands on links
+              // nobody can see
+              tabIndex={isOpen ? 0 : -1}
+              className="block px-5 py-3 text-base font-semibold text-[#111C39] hover:bg-ihealthBlue/5 hover:text-ihealthBlue transition-colors"
+            >
+              {child.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
  * Renders the whole header stack.
  * Fixed positioning means it sits outside normal flow, so any page using it
  * must also render HeaderSpacer or the hero slides underneath.
@@ -75,15 +160,15 @@ export default function Header() {
               <Logo className="w-[clamp(151px,22.68vw,225px)] h-fit flex-shrink-0" />
 
               <nav className="w-full hidden items-center justify-center lg:flex">
-                {NAV_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex text-[#111C39] text-lg font-semibold flex-col items-center py-1 relative border-r last:border-r-0 border-[#E5E5E5] hover:opacity-70 transition-opacity duration-300 px-12"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                {NAV_LINKS.map((link) =>
+                  link.children ? (
+                    <NavDropdown key={link.label} link={link} />
+                  ) : (
+                    <Link key={link.href} href={link.href} className={NAV_ITEM_CLASS}>
+                      {link.label}
+                    </Link>
+                  )
+                )}
               </nav>
             </div>
 
@@ -136,19 +221,42 @@ export default function Header() {
           </div>
 
           <div className="w-full px-4 pt-20 grid grid-cols-1 gap-5 flex-shrink-0">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setIsMenuOpen(false)}
-                className="w-full flex flex-col items-start"
-              >
-                <span className="w-full flex items-center justify-center text-ihealthBlue font-semibold text-[clamp(16px,3.55vw,32px)]">
-                  {link.label}
-                </span>
-                <span className="w-full h-px bg-black/10 mt-5" />
-              </Link>
-            ))}
+            {NAV_LINKS.map((link) =>
+              // A group with children has no page of its own, so it renders as
+              // a heading with its links nested rather than as a dead link
+              link.children ? (
+                <div key={link.label} className="w-full flex flex-col items-start">
+                  <span className="w-full flex items-center justify-center text-ihealthBlue/60 font-semibold text-[clamp(16px,3.55vw,32px)]">
+                    {link.label}
+                  </span>
+                  <div className="w-full mt-4 flex flex-col items-center gap-3">
+                    {link.children.map((child) => (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="text-ihealthBlue font-semibold text-[clamp(14px,3vw,22px)]"
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                  <span className="w-full h-px bg-black/10 mt-5" />
+                </div>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="w-full flex flex-col items-start"
+                >
+                  <span className="w-full flex items-center justify-center text-ihealthBlue font-semibold text-[clamp(16px,3.55vw,32px)]">
+                    {link.label}
+                  </span>
+                  <span className="w-full h-px bg-black/10 mt-5" />
+                </Link>
+              )
+            )}
           </div>
 
           <div className="w-full mt-10 px-4 mx-auto grid grid-cols-1 sm:grid-cols-2 gap-5">

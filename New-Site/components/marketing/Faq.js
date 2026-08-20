@@ -1,13 +1,11 @@
-'use client'
-
 /**
- * Accordion of the 7 homepage questions.
- * Written against useState rather than a headless component library. The live
- * site pulls in @headlessui/react for this one accordion, which is a large
- * dependency for behaviour that is 20 lines.
+ * The 7 homepage questions.
+ * Holds the copy only, the accordion behaviour lives in components/ui/Accordion
+ * so the product pages reuse the identical interaction rather than growing a
+ * second, slightly different one.
  */
 
-import { useState } from 'react'
+import Accordion from '@/components/ui/Accordion'
 
 // Questions and answers are the client's approved copy, recovered from the
 // live bundle. Treat edits here as content changes, not code changes.
@@ -50,60 +48,15 @@ const FAQ_ITEMS = [
 ]
 
 /**
- * Plus and minus glyph for the toggle, swapped by the open state.
- */
-function ToggleIcon({ isOpen }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6" aria-hidden="true">
-      {!isOpen && <path d="M12 6v12" strokeLinecap="round" />}
-      <path d="M18 12H6" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-/**
- * Renders the accordion.
- * Tracks a single open index rather than a set, so opening one closes the
- * others. That is how the live site behaves.
+ * Renders the homepage FAQ block.
  */
 export default function Faq() {
-  const [openIndex, setOpenIndex] = useState(null)
-
   return (
     <div className="w-full h-fit px-4 pb-20">
       <div className="mx-auto max-w-5xl w-full">
         <div className="mx-auto max-w-4xl w-full flex flex-col items-center divide-y divide-gray-900/10">
           <h2 className="text-4xl text-gray-900">Frequently asked questions</h2>
-
-          <dl className="mt-10 w-full space-y-6 divide-y divide-gray-900/10">
-            {FAQ_ITEMS.map((item, index) => {
-              const isOpen = openIndex === index
-
-              return (
-                <div key={item.question} className="pt-6">
-                  <dt className="w-full">
-                    <button
-                      type="button"
-                      onClick={() => setOpenIndex(isOpen ? null : index)}
-                      aria-expanded={isOpen}
-                      className="flex w-full items-start justify-between text-left text-gray-900"
-                    >
-                      <span className="text-base font-semibold leading-7">{item.question}</span>
-                      <span className="ml-6 flex h-7 items-center">
-                        <ToggleIcon isOpen={isOpen} />
-                      </span>
-                    </button>
-                  </dt>
-
-                  {isOpen && (
-                    <dd className="mt-2 pr-12 w-full">
-                      <p className="text-base leading-7 text-gray-600">{item.answer}</p>
-                    </dd>
-                  )}
-                </div>
-              )
-            })}
-          </dl>
+          <Accordion items={FAQ_ITEMS} />
         </div>
       </div>
     </div>

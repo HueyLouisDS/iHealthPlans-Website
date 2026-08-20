@@ -21,8 +21,21 @@ export const SMID = 'MULTIPLAN_IHP_WEB2025_C'
 export const CARRIER_COUNT = 10
 export const PRODUCT_COUNT = 38
 
+// A nav entry with `children` renders as a dropdown on desktop and as a nested
+// group in the mobile menu. Plans has no page of its own yet, so it is a menu
+// only. TODO give it a /plans overview page if one is ever wanted, at which
+// point add an href here and the dropdown label becomes a link.
 export const NAV_LINKS = [
   { label: 'Home', href: '/' },
+  {
+    label: 'Plans',
+    children: [
+      { label: 'Medicare Advantage', href: '/medicare-advantage' },
+      { label: 'Medicare Supplement', href: '/medicare-supplement' },
+      { label: 'Prescription Drug Plans', href: '/prescription-drug-plans' },
+      { label: 'Dual Eligible (D-SNP)', href: '/dual-eligible-snp' },
+    ],
+  },
   { label: 'Education', href: '/education' },
   { label: 'Careers', href: '/careers' },
 ]
