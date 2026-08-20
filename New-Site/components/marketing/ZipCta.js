@@ -1,19 +1,21 @@
 /**
- * Closing call to action, gradient card with a zip field and a quote button.
- * Recreated faithfully from the live site, including the fact that the zip
- * field is not wired to anything.
+ * Closing call to action, a gradient card with a zip field and a quote button.
+ * Appears at the foot of the homepage, the product pages, the enrollment
+ * pages, and the education index.
+ *
+ * The zip field used to be decorative. On the live site whatever a visitor
+ * types is discarded and the button is a plain link carrying nothing, so a
+ * person who has volunteered their location has it thrown away at the last
+ * step of the page. It now carries through to the quote form and prefills it.
+ *
+ * Written as a plain GET form rather than a client component with state. That
+ * means no JavaScript is needed to submit it, the browser handles the query
+ * string, and the resulting url is shareable and shows up in reporting with
+ * the zip attached.
  */
-
-import Link from 'next/link'
 
 /**
  * Renders the closing call to action.
- *
- * TODO the zip input is decorative on the live site. Whatever the visitor
- * types is discarded, and the button is a plain link to /quote-health-plans
- * that carries nothing with it. That is a lead captured and then thrown away
- * at the last step of the page. Wiring the value into the quote URL, and into
- * the session record, is the smallest high value fix on this page.
  */
 export default function ZipCta() {
   return (
@@ -23,26 +25,34 @@ export default function ZipCta() {
           Explore Medicare Advantage Solutions Options That May Meet Your Health Needs
         </h2>
 
-        <div className="w-full flex items-center justify-center gap-3 nm:gap-6 flex-col nm:flex-row">
+        <form
+          action="/quote-health-plans"
+          method="get"
+          className="w-full flex items-center justify-center gap-3 nm:gap-6 flex-col nm:flex-row"
+        >
           <label htmlFor="zipcode" className="sr-only">
             Enter your zipcode
           </label>
           <input
             id="zipcode"
-            name="zipcode"
+            name="zip"
             type="text"
             inputMode="numeric"
             autoComplete="postal-code"
+            // 5 digits, enforced again on the quote form and in the route
+            // handler. Here it only saves a wasted round trip.
+            pattern="[0-9]{5}"
+            maxLength={5}
             placeholder="Enter your zipcode"
-            className="max-w-none px-4 nm:max-w-xs w-full h-12 bg-white rounded-md"
+            className="max-w-none px-4 nm:max-w-xs w-full h-12 bg-white rounded-md text-base"
           />
-          <Link
-            href="/quote-health-plans"
-            className="h-12 px-6 rounded-md flex items-center justify-center bg-ihealthBlue text-lg text-white font-semibold flex-shrink-0"
+          <button
+            type="submit"
+            className="h-12 px-6 rounded-md flex items-center justify-center bg-ihealthBlue text-lg text-white font-semibold flex-shrink-0 hover:brightness-110 transition-[filter] focus:outline-none focus:ring-4 focus:ring-white/40"
           >
             Get a Free Quote
-          </Link>
-        </div>
+          </button>
+        </form>
       </div>
     </div>
   )

@@ -26,6 +26,8 @@ export async function generateMetadata({ searchParams }) {
 export default async function QuoteHealthPlansPage({ searchParams }) {
   const params = await searchParams
   const isCallback = params?.callback === '1'
+  // Carried from the zip field on the closing call to action
+  const initialZip = String(params?.zip || '')
 
   return (
     <>
@@ -45,7 +47,7 @@ export default async function QuoteHealthPlansPage({ searchParams }) {
         </div>
 
         <div className="w-full h-fit py-12 sm:py-16 px-4">
-          <QuoteForm isCallback={isCallback} />
+          <QuoteForm isCallback={isCallback} initialZip={initialZip} />
         </div>
       </main>
     </>

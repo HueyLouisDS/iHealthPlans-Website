@@ -105,8 +105,14 @@ function ChoiceGroup({ legend, name, options, value, onChange, error }) {
  * Renders the form, or the confirmation once a lead has been accepted.
  * `isCallback` only changes wording, never which fields are collected.
  */
-export default function QuoteForm({ isCallback = false }) {
-  const [values, setValues] = useState(EMPTY)
+export default function QuoteForm({ isCallback = false, initialZip = '' }) {
+  // Prefilled from the zip a visitor typed into the closing call to action.
+  // Sanitised here as well as on the way in, since it arrives from a query
+  // string and anything can put anything in one.
+  const [values, setValues] = useState({
+    ...EMPTY,
+    zip: /^[0-9]{5}$/.test(initialZip) ? initialZip : '',
+  })
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('editing')
 
