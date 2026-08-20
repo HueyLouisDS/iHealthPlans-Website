@@ -30,3 +30,7 @@ desktop.ini
 
 # vercel
 .vercel
+
+# Written and re-added by next dev, see
+# node_modules/next/dist/server/lib/generate-agent-files.js
+AGENTS.md
