@@ -32,15 +32,18 @@ function Sidebar({ user, currentPath }) {
   return (
     <>
       {/*
-        White strip behind the logo. The mark is #1a2a55 and #04a350, and the
-        sidebar is #1b2a56, so dropped straight onto it the wordmark would be
-        invisible. Filtering it white would work but throws away the green,
-        and a panel reads as a deliberate lockup rather than a workaround.
+        Reversed logo, sitting directly on the sidebar with no panel behind it.
+        The supplied mark is dark ink, #1a2a55 wordmark on a transparent
+        ground, which disappears against the #1b2a56 sidebar. The file itself
+        was always transparent, the problem was ink colour rather than
+        background, so the fix is a recoloured variant rather than a backdrop.
+        Generated from the original by lifting the dark inks and leaving the
+        brand green untouched. See public/icons/health-plans-logo-h-reversed.svg.
       */}
-      <div className="bg-white px-6 py-5">
+      <div className="px-6 py-5 border-b border-white/15">
         <Link href="/admin" className="block">
           <Image
-            src="/icons/health-plans-logo-h.svg"
+            src="/icons/health-plans-logo-h-reversed.svg"
             alt="iHealth Plans"
             width={1501}
             height={318}
@@ -48,7 +51,7 @@ function Sidebar({ user, currentPath }) {
             className="w-full h-auto"
           />
         </Link>
-        <p className="text-sm font-semibold uppercase tracking-[1.2px] text-[#6C7381] mt-2">
+        <p className="text-sm font-semibold uppercase tracking-[1.2px] text-white/60 mt-2">
           Reporting
         </p>
       </div>
