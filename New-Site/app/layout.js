@@ -1,13 +1,12 @@
 /**
- * Root layout. Loads the brand font, sets the shared metadata, and wraps every
- * route in the header and footer.
- * The analytics and attribution providers will mount here once they exist,
- * which is why the body has a single obvious insertion point.
+ * Root layout. Loads the brand font and sets the shared metadata for every
+ * route, public and admin alike.
+ * The header and footer live in app/(site)/layout.js so the admin area does
+ * not inherit them. Analytics and attribution providers will mount here, since
+ * session identity has to be established on every route.
  */
 
 import { Source_Sans_3 } from 'next/font/google'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
 import './globals.css'
 
 // Matches the live site, a variable weight face across the full 200 to 900
@@ -35,18 +34,16 @@ export const viewport = {
 }
 
 /**
- * Wraps every page.
- * Header is fixed, so pages that start with full bleed content are responsible
- * for rendering HeaderSpacer themselves rather than getting it for free here.
+ * The document shell, and nothing else.
+ * The public header and footer moved into app/(site)/layout.js when the admin
+ * area was added, because admin pages must not inherit the marketing chrome.
+ * Anything placed here appears on the admin area too, so put it here only if
+ * that is genuinely intended.
  */
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={sourceSans.variable}>
-      <body className="font-sans">
-        <Header />
-        {children}
-        <Footer />
-      </body>
+      <body className="font-sans">{children}</body>
     </html>
   )
 }
