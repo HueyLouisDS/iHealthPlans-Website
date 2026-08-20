@@ -75,7 +75,7 @@ export default function Footer() {
           <Link
             href="/admin/signin"
             rel="nofollow"
-            className="text-[#6C7381] hover:text-ihealthBlue hover:underline flex-shrink-0"
+            className="h-11 px-6 rounded-lg bg-ihealthGreen text-white font-semibold inline-flex items-center justify-center flex-shrink-0 w-fit hover:brightness-95 transition-[filter] focus:outline-none focus:ring-4 focus:ring-ihealthGreen/40"
           >
             Team Login
           </Link>
