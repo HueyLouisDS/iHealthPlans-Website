@@ -31,6 +31,124 @@
 export const LEGAL_LAST_UPDATED = 'TO CONFIRM: effective date, set when counsel signs off'
 
 export const LEGAL_PAGES = {
+  'privacy-policy': {
+    slug: 'privacy-policy',
+    title: 'Privacy Policy | iHealth Plans',
+    metaDescription:
+      'How iHealth Plans collects, uses, shares, and protects your personal information, including call recording and website tracking.',
+    headline: 'Privacy Policy',
+    intro:
+      'This policy explains what personal information iHealth Plans collects, why we collect it, who we share it with, and what control you have over it. iHealth Plans is a licensed insurance agency and a Third Party Marketing Organization. We are not an insurance company and we are not a health care provider.',
+
+    sections: [
+      {
+        heading: 'Information you give us',
+        body: ['You give us information directly when you contact us or complete a form on this site.'],
+        list: [
+          'Your name and contact details, including phone number and zip code.',
+          'Whether the enquiry is for you or for somebody you are helping, such as a parent or a person you hold power of attorney for.',
+          'When you would prefer to be called.',
+          'Anything you tell an agent during a call, which may include the medications you take, the providers you see, and your eligibility for Medicare or Medicaid, because those determine which plans are available to you.',
+        ],
+        afterBody: [
+          'TO CONFIRM: the previous version of this policy claimed to collect treatment plans and medical history. An insurance agency generally holds neither. Confirm exactly what is collected, and whether any of it is health information as defined by HIPAA, because that answer changes the obligations attached to it.',
+        ],
+      },
+      {
+        heading: 'Information collected automatically',
+        body: [
+          'When you use this website we collect technical information about the visit, including the pages you view, the site or advertisement that sent you, your approximate location derived from your network address, the device and browser you are using, and identifiers stored on your device.',
+          'We use this to understand which pages and campaigns lead people to contact us, so we can improve them.',
+        ],
+      },
+      {
+        heading: 'Calls are recorded',
+        body: [
+          'Calls between you and a licensed insurance agent are recorded, including any enrollment discussion. Recording is a requirement placed on Third Party Marketing Organizations, not a choice we make call by call.',
+          'Recordings, and any transcript made from them, are treated as personal information under this policy.',
+          'TO CONFIRM: how recordings are stored, for how long, who can access them, and the notice given at the start of a call. Also confirm the position on state consent laws, since some states require every party to consent and that has to sit alongside the federal recording requirement.',
+        ],
+      },
+      {
+        heading: 'Cookies and similar technologies',
+        body: [
+          'We use cookies and similar technologies to keep track of a visit, to remember which advertisement or search brought you here, and to measure whether a page led to a call or an enquiry.',
+          'TO CONFIRM: the full list of cookies and tags in use, including any advertising pixels, and whether a consent banner is required for the states you operate in. The site already runs analytics and an advertising pixel, and neither is described anywhere today.',
+        ],
+      },
+      {
+        heading: 'How we use your information',
+        list: [
+          'To have a licensed insurance agent contact you about Medicare Advantage and Part D plan options.',
+          'To work out which plans are available where you live and which fit what you have told us.',
+          'To submit an enrollment application on your behalf if you decide to enroll.',
+          'To measure which advertising, pages, and campaigns produce enquiries.',
+          'To meet legal, regulatory, and supervisory obligations, including call recording and record keeping.',
+        ],
+      },
+      {
+        heading: 'Who we share it with',
+        body: ['We share personal information in the following circumstances, and not otherwise.'],
+        list: [
+          'Licensed insurance agents, so that somebody can contact you and answer your questions.',
+          'Insurance carriers, where you ask us to submit an application or where a plan needs the information to process it.',
+          'Service providers who work for us, such as our telephone system and the systems that store our records. They may only use the information to provide that service to us.',
+          'Regulators and law enforcement, where the law requires it.',
+        ],
+        afterBody: [
+          'We do not share your information with health care providers for treatment purposes. An earlier version of this policy said we did, which was inaccurate for an insurance agency.',
+        ],
+      },
+      {
+        heading: 'Selling or sharing your information',
+        body: [
+          'TO CONFIRM: this is the most important open question in this policy and it needs counsel. Lead generation businesses frequently transfer personal information in ways that meet the statutory definition of a sale or a share under state privacy law, even when no money changes hands. Whether iHealth Plans does so decides what this section says, and whether a Do Not Sell or Share My Personal Information link is legally required in the site footer.',
+        ],
+      },
+      {
+        heading: 'How long we keep it',
+        body: [
+          'TO CONFIRM: retention periods, stated separately for lead records, call recordings, enrollment records, and do not call records. Medicare marketing and enrollment records carry their own retention requirements, so this cannot be a single number and it should not be guessed at.',
+        ],
+      },
+      {
+        heading: 'How we protect it',
+        body: [
+          'We restrict access to personal information to the people who need it to do their job, and we hold it in systems protected by access controls.',
+          'TO CONFIRM: describe the actual measures rather than asserting they are robust. A policy that says security is taken seriously and then lists nothing is worth little to a reader and no more than that to a regulator.',
+        ],
+      },
+      {
+        heading: 'Your choices and rights',
+        body: [
+          'You can ask us to stop contacting you at any time, and you can withdraw any consent you gave to be contacted. Our Do Not Call page explains how.',
+          'Depending on where you live you may also have rights to see, correct, or delete the information we hold, and to opt out of its sale or sharing. Our Your Privacy Rights page explains those and how to use them.',
+        ],
+      },
+      {
+        heading: 'Children',
+        body: [
+          'This site is intended for adults. We do not knowingly collect information from children. If you believe a child has given us information, contact us and we will delete it.',
+        ],
+      },
+      {
+        heading: 'Changes to this policy',
+        body: [
+          'We may update this policy. When we do we will change the date shown at the top of this page, and we will tell you directly if the change is significant.',
+        ],
+      },
+      {
+        heading: 'Contact us',
+        body: ['If you have a question about this policy, or about information we hold, contact us.'],
+        contacts: [
+          { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
+          { label: 'By email', value: 'TO CONFIRM: privacy contact email address' },
+          { label: 'By post', value: 'TO CONFIRM: business mailing address' },
+        ],
+      },
+    ],
+  },
+
   accessibility: {
     slug: 'accessibility',
     title: 'Accessibility Statement | iHealth Plans',
