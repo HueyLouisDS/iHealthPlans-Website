@@ -6,9 +6,7 @@
  */
 
 import Image from 'next/image'
-import Link from 'next/link'
-import CallLink from '@/components/tracking/CallLink'
-import { PHONE_NUMBER } from '@/lib/siteConfig'
+import OfficeStatusCta from '@/components/marketing/OfficeStatusCta'
 
 /**
  * Renders the hero.
@@ -36,19 +34,11 @@ export default function Hero() {
             Medicare Advantage plan options at no-cost or obligation in a consultative fashion.
           </p>
 
-          <div className="flex flex-wrap flex-col-reverse sm:flex-row items-start">
-            <Link
-              href="/quote-health-plans"
-              className="px-7 py-2.5 rounded-lg mt-4 sm:text-lg mr-5 bg-ihealthGreen text-white transition-all duration-500 ease-in-out min-w-[225px] text-center"
-            >
-              Learn More About Your Options
-            </Link>
-            <CallLink
-              location="heroCallNow"
-              className="bg-transparent text-white border hover:border-ihealthGreen transition-all duration-500 ease-in-out px-7 py-2.5 rounded-lg mt-4 sm:text-lg"
-            >
-              Call Now {PHONE_NUMBER}
-            </CallLink>
+          {/* Swaps the primary action depending on whether the phone line is
+              staffed. Closed roughly 75% of the week, and previously every one
+              of those visitors got a tel: link that rings out. */}
+          <div className="mt-4">
+            <OfficeStatusCta location="hero" tone="dark" />
           </div>
         </div>
       </div>
