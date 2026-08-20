@@ -1,0 +1,20 @@
+/**
+ * Global stylesheet. Tailwind layers plus the 2 brand colors.
+ * The variables are the canonical definition of the brand palette, everything
+ * else references them through the Tailwind theme in tailwind.config.js.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Read off the live site, do not round or "correct" these */
+  --ihealth-green: #08a350;
+  --ihealth-blue: #1b2a56;
+}
+
+body {
+  color: #1f2937;
+  background-color: #ffffff;
+}
