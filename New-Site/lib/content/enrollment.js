@@ -41,6 +41,7 @@ export const ENROLLMENT_WINDOWS = [
     dates: '1 January to 31 March',
     detail:
       'If you are already in a Medicare Advantage plan you can switch to a different one, or return to Original Medicare, once during this window. It is not available to people who are in Original Medicare on 1 January.',
+    href: '/medicare-advantage-open-enrollment',
   },
   {
     slug: 'general',
@@ -184,6 +185,95 @@ export const ENROLLMENT_PAGES = {
         question: 'Is this the same as open enrollment for other insurance?',
         answer:
           'No. Medicare has its own enrollment periods with their own dates, separate from the open enrollment periods used by employer plans or the health insurance marketplace.',
+      },
+    ],
+  },
+
+  'medicare-advantage-open-enrollment': {
+    slug: 'medicare-advantage-open-enrollment',
+    eyebrow: '1 January to 31 March',
+    headline: 'Medicare Advantage Open Enrollment',
+    title: 'Medicare Advantage Open Enrollment Period | iHealth Plans',
+    metaDescription:
+      'The Medicare Advantage Open Enrollment Period runs 1 January to 31 March. If you are already in a Medicare Advantage plan you can make one change.',
+    intro:
+      'The Medicare Advantage Open Enrollment Period runs from 1 January to 31 March each year. It exists so that someone who has started the year in a Medicare Advantage plan and finds it is not working for them is not stuck with it until the following January.',
+
+    // This page's whole reason to exist is that people confuse this window
+    // with the Annual Enrollment Period. Who it applies to leads everything.
+    whoItIsFor: {
+      heading: 'Who can use this window',
+      items: [
+        'You are enrolled in a Medicare Advantage plan on 1 January.',
+        'You want to make a change to that coverage between 1 January and 31 March.',
+        'You have not already used this window in the same year, it allows one change.',
+      ],
+    },
+
+    canDo: {
+      heading: 'What you can do',
+      items: [
+        'Switch from your Medicare Advantage plan to a different Medicare Advantage plan.',
+        'Leave your Medicare Advantage plan and return to Original Medicare.',
+        'Join a standalone Part D prescription drug plan when you return to Original Medicare.',
+      ],
+    },
+
+    cannotDo: {
+      heading: 'What this window does not allow',
+      items: [
+        {
+          term: 'Joining Medicare Advantage from Original Medicare',
+          detail:
+            'If you were in Original Medicare on 1 January, this window is not open to you. Joining a Medicare Advantage plan generally waits for the Annual Enrollment Period, unless a Special Enrollment Period applies.',
+        },
+        {
+          term: 'Adding Part D while staying in Original Medicare',
+          detail:
+            'You can pick up a standalone drug plan on the way out of a Medicare Advantage plan. If you were already in Original Medicare, this window does not let you add one.',
+        },
+        {
+          term: 'More than one change',
+          detail:
+            'This window allows a single change. Once it is made, the next opportunity is generally the Annual Enrollment Period, unless a Special Enrollment Period applies.',
+        },
+        {
+          term: 'Buying a Medigap policy without underwriting',
+          detail:
+            'Leaving a Medicare Advantage plan during this window does not by itself create a guaranteed issue right to buy a Medicare Supplement policy. Whether one applies depends on your circumstances and is worth checking before you make the change.',
+        },
+      ],
+    },
+
+    timing: {
+      heading: 'How this differs from the Annual Enrollment Period',
+      body: [
+        'Both are sometimes called open enrollment, which is where most of the confusion comes from. They are separate windows with different rules.',
+        'The Annual Enrollment Period runs 15 October to 7 December, is open to everyone with Medicare, and changes take effect on 1 January. This window runs 1 January to 31 March, is only open to people already in a Medicare Advantage plan, and allows one change.',
+        'A change made during this window generally takes effect on the first day of the month after the plan receives your request, rather than waiting until the following January.',
+      ],
+    },
+
+    faqs: [
+      {
+        question: 'How is this different from the Annual Enrollment Period?',
+        answer:
+          'The Annual Enrollment Period runs 15 October to 7 December and is open to everyone with Medicare. This window runs 1 January to 31 March and is only for people who are already in a Medicare Advantage plan. It also allows a single change rather than as many as you like.',
+      },
+      {
+        question: 'When does my change take effect?',
+        answer:
+          'Generally on the first day of the month after your new plan receives your request. That is different from the Annual Enrollment Period, where changes take effect on 1 January.',
+      },
+      {
+        question: 'Can I use this window to join a Medicare Advantage plan?',
+        answer:
+          'Not if you were in Original Medicare on 1 January. This window is for changing or leaving a Medicare Advantage plan you already have.',
+      },
+      {
+        question: 'Is this the same as the General Enrollment Period?',
+        answer:
+          'No, although they run over the same dates. The General Enrollment Period is for people who did not sign up for Part B when first eligible. This window is about changing Medicare Advantage coverage you already have.',
       },
     ],
   },

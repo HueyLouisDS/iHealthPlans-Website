@@ -37,11 +37,17 @@ export const NAV_LINKS = [
     ],
   },
   {
-    label: 'Enrollment',
+    label: 'Enrollment Period',
     children: [
       { label: 'All Enrollment Periods', href: '/medicare-enrollment-periods' },
-      { label: 'Annual Enrollment Period', href: '/annual-enrollment-period' },
-      { label: 'Special Enrollment Period', href: '/special-enrollment-period' },
+      // "Open Enrollment" here means the Medicare Advantage Open Enrollment
+      // Period, 1 January to 31 March. Worth knowing that Medicare.gov also
+      // uses "Open Enrollment" for the 15 Oct to 7 Dec window, which is the
+      // Annual Enrollment Period below. The url is explicit so the 2 pages do
+      // not compete for the same search.
+      { label: 'Open Enrollment', href: '/medicare-advantage-open-enrollment' },
+      { label: 'Special Enrollment', href: '/special-enrollment-period' },
+      { label: 'Annual Enrollment', href: '/annual-enrollment-period' },
     ],
   },
   { label: 'Education', href: '/education' },
