@@ -89,6 +89,39 @@ export function DataTable({ columns, rows, emptyMessage, getRowHref }) {
 }
 
 /**
+ * Coloured pill for a lead status, so a list can be scanned rather than read.
+ * Colour is a second channel here, never the only one, the label is always
+ * present for anyone who cannot distinguish them.
+ */
+export function StatusPill({ status }) {
+  const styles = {
+    new: 'bg-blue-100 text-blue-900',
+    contacted: 'bg-amber-100 text-amber-900',
+    qualified: 'bg-purple-100 text-purple-900',
+    enrolled: 'bg-green-100 text-green-900',
+    lost: 'bg-gray-200 text-gray-800',
+  }
+
+  return (
+    <span className={`inline-block px-2.5 py-1 rounded text-sm font-semibold capitalize ${styles[status] || 'bg-gray-100 text-gray-800'}`}>
+      {status}
+    </span>
+  )
+}
+
+/**
+ * Yes or no marker for whether a call matched back to a web session.
+ * Unmatched is the interesting case, so it is the one that draws the eye.
+ */
+export function MatchPill({ matched }) {
+  return (
+    <span className={`inline-block px-2.5 py-1 rounded text-sm font-semibold ${matched ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'}`}>
+      {matched ? 'Matched' : 'Unmatched'}
+    </span>
+  )
+}
+
+/**
  * Shown when a query returns nothing.
  */
 export function EmptyState({ message }) {
@@ -105,6 +138,39 @@ export function EmptyState({ message }) {
  * being captured yet, so every number is zero. Saying so plainly is better
  * than showing a confident zero that reads as "we had no leads".
  */
+/**
+ * Shown on every page while ADMIN_USE_FIXTURES is on.
+ * Loud and red on purpose. Fabricated numbers rendered in a real looking
+ * dashboard are worse than no numbers at all, so this must be impossible to
+ * miss and impossible to mistake for a styling flourish.
+ */
+export function DemoDataNotice() {
+  return (
+    <div className="mb-6 border-2 border-red-500 bg-red-50 px-5 py-4 rounded-lg">
+      <p className="text-sm font-bold uppercase tracking-[1.2px] text-red-800 mb-1">
+        Demo data, not real measurement
+      </p>
+      <p className="text-lg text-red-900">
+        Every figure on this page is fabricated. It exists so the reporting interface can be built
+        before tracking is in place. No decision should be made from anything shown here.
+      </p>
+      <p className="text-base text-red-900 mt-2">
+        Turn it off by removing <code className="font-mono font-semibold">ADMIN_USE_FIXTURES</code>{' '}
+        from <code className="font-mono font-semibold">.env.local</code>. It must never be set in a
+        deployed environment.
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Renders whichever notice is correct for the current mode, so no page has to
+ * decide for itself and none can accidentally show neither.
+ */
+export function DataSourceNotice({ isFixtures, needs }) {
+  return isFixtures ? <DemoDataNotice /> : <NoDataYetNotice needs={needs} />
+}
+
 export function NoDataYetNotice({ needs }) {
   return (
     <div className="mb-6 border-l-4 border-l-amber-500 bg-amber-50 px-5 py-4 rounded-r-lg">

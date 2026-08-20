@@ -73,7 +73,7 @@ export default function Footer() {
             is not one.
           */}
           <Link
-            href="/admin/signin"
+            href="/admin"
             rel="nofollow"
             className="h-11 px-6 rounded-lg bg-ihealthGreen text-white font-semibold inline-flex items-center justify-center flex-shrink-0 w-fit hover:brightness-95 transition-[filter] focus:outline-none focus:ring-4 focus:ring-ihealthGreen/40"
           >

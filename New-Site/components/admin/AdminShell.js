@@ -61,19 +61,23 @@ export default function AdminShell({ user, currentPath = '/admin', title, descri
 
           {/* Server action rather than a client handler, so signing out needs
               no JavaScript and cannot be left half done by a failed fetch */}
-          <form
-            action={async () => {
-              'use server'
-              await signOut({ redirectTo: '/admin/signin' })
-            }}
-          >
-            <button
-              type="submit"
-              className="mt-3 text-sm font-semibold text-white/80 hover:text-white underline underline-offset-4"
+          {user?.isDevBypass ? (
+            <p className="mt-3 text-sm text-white/60">No session to sign out of.</p>
+          ) : (
+            <form
+              action={async () => {
+                'use server'
+                await signOut({ redirectTo: '/admin/signin' })
+              }}
             >
-              Sign out
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="mt-3 text-sm font-semibold text-white/80 hover:text-white underline underline-offset-4"
+              >
+                Sign out
+              </button>
+            </form>
+          )}
 
           <Link href="/" className="mt-3 block text-sm text-white/60 hover:text-white">
             Back to the website
@@ -82,6 +86,20 @@ export default function AdminShell({ user, currentPath = '/admin', title, descri
       </aside>
 
       <main className="flex-1 min-w-0">
+        {/* Loud, because a page reached without real authentication must
+            never look like a page reached with it */}
+        {user?.isDevBypass && (
+          <div className="bg-red-600 text-white px-6 py-3">
+            <p className="font-bold">
+              Authentication bypassed. Development mode only, nobody signed in.
+            </p>
+            <p className="text-sm text-white/90">
+              Remove ADMIN_DEV_BYPASS_AUTH from .env.local to require a real Google sign in. It
+              cannot take effect in a production build.
+            </p>
+          </div>
+        )}
+
         <header className="bg-white border-b px-6 py-6">
           <h1 className="text-2xl font-bold text-ihealthBlue">{title}</h1>
           {description && <p className="text-base text-[#505258] mt-1">{description}</p>}

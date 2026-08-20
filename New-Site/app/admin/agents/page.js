@@ -8,10 +8,10 @@
  * admin area uses today.
  */
 
-import { auth } from '@/auth'
+import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
-import { DataTable, NoDataYetNotice } from '@/components/admin/AdminUi'
-import { getAgentPerformance } from '@/lib/admin/data'
+import { DataTable, DataSourceNotice } from '@/components/admin/AdminUi'
+import { getAgentPerformance , usingFixtures } from '@/lib/admin/data'
 
 const COLUMNS = [
   { key: 'name', label: 'Agent' },
@@ -23,7 +23,8 @@ const COLUMNS = [
 ]
 
 export default async function AdminAgentsPage({ searchParams }) {
-  const session = await auth()
+  const isFixtures = usingFixtures()
+  const session = await getAdminSession()
   if (!session?.user?.isAuthorised) return null
 
   const params = await searchParams
@@ -31,7 +32,7 @@ export default async function AdminAgentsPage({ searchParams }) {
 
   return (
     <AdminShell user={session.user} currentPath="/admin/agents" title="Agents" description="Performance by agent">
-      <NoDataYetNotice needs="an agent identifier on every call record, which has to come from the phone system" />
+      <DataSourceNotice isFixtures={isFixtures} needs="an agent identifier on every call record, which has to come from the phone system" />
       <DataTable columns={COLUMNS} rows={result.agents} emptyMessage="No agent data yet." />
     </AdminShell>
   )

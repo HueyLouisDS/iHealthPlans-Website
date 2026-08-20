@@ -5,23 +5,26 @@
  * useful on its own. Knowing it drove calls that became enrollments is.
  */
 
-import { auth } from '@/auth'
+import Link from 'next/link'
+import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
-import { DataTable, NoDataYetNotice } from '@/components/admin/AdminUi'
-import { getAttribution } from '@/lib/admin/data'
+import { DataTable, DataSourceNotice } from '@/components/admin/AdminUi'
+import { getAttribution , usingFixtures } from '@/lib/admin/data'
 
+// TODO sessions and call clicks per group need the session table, which does
+// not exist. Showing empty columns would read as zero rather than as unknown,
+// so they are left out until they can be populated.
 const COLUMNS = [
   { key: 'value', label: 'Value' },
-  { key: 'sessions', label: 'Sessions', align: 'right' },
-  { key: 'callClicks', label: 'Call clicks', align: 'right' },
-  { key: 'calls', label: 'Calls', align: 'right' },
   { key: 'leads', label: 'Leads', align: 'right' },
+  { key: 'calls', label: 'Calls', align: 'right' },
   { key: 'conversions', label: 'Conversions', align: 'right' },
   { key: 'conversionRate', label: 'Rate', align: 'right' },
 ]
 
 export default async function AdminAttributionPage({ searchParams }) {
-  const session = await auth()
+  const isFixtures = usingFixtures()
+  const session = await getAdminSession()
   if (!session?.user?.isAuthorised) return null
 
   const params = await searchParams
@@ -34,18 +37,19 @@ export default async function AdminAttributionPage({ searchParams }) {
       title="Attribution"
       description={`Grouped by ${result.groupBy}`}
     >
-      <NoDataYetNotice needs="first touch capture of utm parameters, gclid, fbclid, msclkid, referrer, and landing page, stored on the session and carried through to the lead" />
+      <DataSourceNotice isFixtures={isFixtures} needs="first touch capture of utm parameters, gclid, fbclid, msclkid, referrer, and landing page, stored on the session and carried through to the lead" />
 
       <div className="mb-4 flex flex-wrap gap-2">
         {result.availableDimensions.map((dimension) => (
-          <span
+          <Link
             key={dimension}
+            href={`/admin/attribution?groupBy=${dimension}`}
             className={`px-3 py-1.5 rounded-md text-sm font-semibold ${
               dimension === result.groupBy ? 'bg-ihealthBlue text-white' : 'bg-white border text-[#505258]'
             }`}
           >
             {dimension}
-          </span>
+          </Link>
         ))}
       </div>
 

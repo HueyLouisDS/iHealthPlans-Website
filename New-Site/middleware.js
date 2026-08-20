@@ -8,6 +8,7 @@
  */
 
 import { auth } from '@/auth'
+import { devAuthBypassEnabled } from '@/lib/admin/session'
 
 export default auth((request) => {
   const { pathname } = request.nextUrl
@@ -16,6 +17,9 @@ export default auth((request) => {
   if (pathname === '/admin/signin') return
 
   if (pathname.startsWith('/admin')) {
+    // Development only, see lib/admin/session.js. Cannot hold in a build.
+    if (devAuthBypassEnabled()) return
+
     if (!request.auth?.user?.isAuthorised) {
       const signInUrl = new URL('/admin/signin', request.nextUrl.origin)
       // Carry the intended destination so sign in returns them to it, and
