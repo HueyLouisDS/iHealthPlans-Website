@@ -31,6 +31,117 @@
 export const LEGAL_LAST_UPDATED = 'TO CONFIRM: effective date, set when counsel signs off'
 
 export const LEGAL_PAGES = {
+  'terms-of-service': {
+    slug: 'terms-of-service',
+    title: 'Terms of Service | iHealth Plans',
+    metaDescription:
+      'The terms that apply to using the iHealth Plans website, what we do and do not do, and the limits of the information published here.',
+    headline: 'Terms of Service',
+    intro:
+      'These terms apply when you use this website or contact us through it. Please read the section below headed what we do and what we do not do, because the distinction matters and it is easy to get wrong.',
+
+    sections: [
+      {
+        heading: 'What we do, and what we do not do',
+        body: [
+          'iHealth Plans is a licensed insurance agency and a Third Party Marketing Organization. We help people compare Medicare Advantage and Part D plan options and, if they choose to enroll, we help them submit an application.',
+        ],
+        list: [
+          'We do not issue insurance plans. Plans are issued by insurance companies that hold a contract with Medicare, and any coverage you obtain is between you and that company.',
+          'We do not offer every plan available in your area. Our footer states how many organizations and products we represent. For information on all of your options, contact Medicare.gov, 1-800-MEDICARE, or your State Health Insurance Assistance Program.',
+          'We are not connected with or endorsed by the U.S. government or the federal Medicare program.',
+          'We do not provide medical, legal, or tax advice.',
+        ],
+        afterBody: [
+          'An earlier version of these terms said iHealth Plans "provides Medicare-related insurance plans". That was inaccurate, it contradicted our own Federal Contracting Statement, and it has been corrected here.',
+        ],
+      },
+      {
+        heading: 'Who can use this site',
+        body: [
+          'This site is intended for adults in the United States who are able to enter into a binding agreement. It is not intended for children.',
+          'There is no account to create and nothing to log into. An earlier version of these terms referred to your account information and to terminating your access, neither of which exists for visitors to this site.',
+        ],
+      },
+      {
+        heading: 'The information published here',
+        body: [
+          'Everything on this site, including the education articles, is general information about how Medicare works. It is not advice about your situation, and it is not a statement of what any particular plan covers or costs.',
+          'Plan availability, benefits, provider networks, formularies, and costs are set by the insurance companies and change from one plan year to the next. What is accurate when it is published may not be accurate later. Confirm the details of any specific plan with a licensed insurance agent or with the plan itself before you rely on them.',
+        ],
+      },
+      {
+        heading: 'Contacting us, and us contacting you',
+        body: [
+          'If you give us your contact details, a licensed insurance agent may contact you about plan options. What you agree to when you submit a form is set out in full next to that form, and you can withdraw it at any time through our Do Not Call page.',
+          'Calls between you and a licensed insurance agent are recorded, including any enrollment discussion. Recording is a requirement placed on Third Party Marketing Organizations. Our Privacy Policy explains how recordings are handled.',
+        ],
+      },
+      {
+        heading: 'Enrolling in a plan',
+        body: [
+          'If you decide to enroll, we may help you complete and submit the application, but the enrollment itself is between you and the insurance company. Acceptance, effective dates, and the terms of your coverage are determined by that company and by Medicare, not by us.',
+          'Nothing on this site is an offer of insurance, and submitting a form does not enroll you in anything.',
+        ],
+      },
+      {
+        heading: 'Your responsibilities',
+        body: [
+          'Please give us accurate information. Eligibility for a plan, and which plans are available to you, depend on things like where you live and whether you have Medicaid, so inaccurate details can lead to a recommendation that does not actually apply to you.',
+        ],
+      },
+      {
+        heading: 'Content on this site',
+        body: [
+          'The text, images, and design of this site belong to iHealth Plans or to whoever licensed them to us. You are welcome to read, print, and share pages for your own use. Please do not republish or use them commercially without asking.',
+          'Plan names, carrier names, and their logos belong to the companies that own them, and appear here only to identify their plans.',
+        ],
+      },
+      {
+        heading: 'Links to other sites',
+        body: [
+          'We link to other sites, including Medicare.gov and insurance company sites, where that is the better source. We do not control those sites and we are not responsible for their content or their privacy practices.',
+        ],
+      },
+      {
+        heading: 'Disclaimers and limits on liability',
+        body: [
+          'This site is provided as it is. We work to keep it accurate and available, but we do not promise it will be uninterrupted or free of errors.',
+          'TO CONFIRM: the disclaimer and limitation of liability wording is a decision for counsel. Consumer facing limitations are read narrowly by courts and some are unenforceable in some states, so a broad carve out copied from a software agreement may not do what it appears to do. Note also that the previous version required consumers to indemnify iHealth Plans, which is unusual in a consumer context and worth a deliberate decision rather than inheritance.',
+        ],
+      },
+      {
+        heading: 'If something goes wrong',
+        body: [
+          'If you are unhappy with something, please tell us first. Most problems are resolved fastest by talking to us.',
+          'TO CONFIRM: whether these terms should include an arbitration clause and a class action waiver. That is a significant decision with real consequences for consumers and for the business, and it should be made deliberately rather than by copying a template. If one is included it has to be presented clearly and it must not be buried.',
+        ],
+      },
+      {
+        heading: 'Which law applies',
+        body: [
+          'TO CONFIRM: name the state. The previous version said the laws of the state in which iHealth Plans is headquartered, without saying which state that is, so a reader could not tell which law governed the agreement they were being asked to accept. Insurance is also regulated state by state, and nothing in these terms limits any right you have under the law of your own state.',
+        ],
+      },
+      {
+        heading: 'Changes to these terms',
+        body: [
+          'We may update these terms. When we do we will change the date shown at the top of this page.',
+          'TO CONFIRM: the previous version reserved the right to change the terms without notice. Changing consumer terms with no notice at all is difficult to enforce. Decide what notice is actually given, and say that instead.',
+        ],
+      },
+      {
+        heading: 'Contact us',
+        body: ['If you have a question about these terms, contact us.'],
+        contacts: [
+          { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
+          { label: 'By email', value: 'TO CONFIRM: contact email address' },
+          { label: 'By post', value: 'TO CONFIRM: business mailing address, and the full registered legal entity name' },
+        ],
+      },
+    ],
+  },
+
   'privacy-policy': {
     slug: 'privacy-policy',
     title: 'Privacy Policy | iHealth Plans',
