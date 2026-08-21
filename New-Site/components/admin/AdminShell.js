@@ -29,6 +29,30 @@ const ADMIN_NAV = [
 ]
 
 /**
+ * The Gmail mark, inlined.
+ *
+ * Inlined rather than fetched because the sidebar renders on every admin page
+ * and this is 5 paths. Decorative, so it is hidden from assistive tech, the
+ * name and address beside it already say whose account this is.
+ *
+ * Every account here is Google Workspace, which is the whole reason sign in is
+ * Google only, so the mark is doing real work rather than decoration. It says
+ * which credential you are holding, which matters on a machine where somebody
+ * may be signed into more than one.
+ */
+function GmailIcon() {
+  return (
+    <svg viewBox="0 0 48 48" className="w-6 h-6 flex-shrink-0" aria-hidden="true">
+      <path fill="#4caf50" d="M45,16.2l-5,2.75l-5,4.75L35,40h7c1.657,0,3-1.343,3-3V16.2z" />
+      <path fill="#1e88e5" d="M3,16.2l3.614,1.71L13,23.7V40H6c-1.657,0-3-1.343-3-3V16.2z" />
+      <polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,23.7 24,31.95 35,23.7 36,17" />
+      <path fill="#c62828" d="M3,12.298V16.2l10,7.5V11.2L9.876,8.859C9.132,8.301,8.228,8,7.298,8h0C4.924,8,3,9.924,3,12.298z" />
+      <path fill="#fbc02d" d="M45,12.298V16.2l-10,7.5V11.2l3.124-2.341C38.868,8.301,39.772,8,40.702,8h0C43.076,8,45,9.924,45,12.298z" />
+    </svg>
+  )
+}
+
+/**
  * The sidebar contents, rendered on the server and handed to AdminFrame.
  * Kept separate so the server action below never has to cross into a client
  * component, which it cannot do.
@@ -86,9 +110,25 @@ function Sidebar({ user, currentPath }) {
 
       {/* mt-auto holds this at the bottom when the nav is short,
           flex-shrink-0 stops it being squashed when the nav is long */}
-      <div className="mt-auto flex-shrink-0 px-6 py-5 border-t border-white/15">
-        <p className="text-sm text-white/60">Signed in as</p>
-        <p className="text-sm font-semibold break-words">{user?.email}</p>
+      <div className="mt-auto flex-shrink-0 px-4 py-4 border-t border-white/15">
+        {/* Bordered so it reads as one block rather than as 2 more lines of
+            sidebar text. It is a different kind of thing from the nav above
+            it, which is why it gets an edge of its own. */}
+        <div className="rounded-lg border border-white/25 bg-white/5 px-3 py-3 flex items-center gap-3">
+          <GmailIcon />
+
+          {/* min-w-0 is what lets the truncation below actually happen. A flex
+              child defaults to min-width:auto, so without this a long address
+              pushes the block wider instead of being clipped. */}
+          <div className="min-w-0">
+            <p className="text-sm font-semibold truncate">{user?.name || 'Signed in'}</p>
+            {/* The full address on hover, since a workspace address is exactly
+                the kind of string that gets cut off */}
+            <p className="text-xs text-white/60 truncate" title={user?.email}>
+              {user?.email}
+            </p>
+          </div>
+        </div>
 
         {user?.isDevBypass ? (
           <p className="mt-3 text-sm text-white/60">No session to sign out of.</p>
