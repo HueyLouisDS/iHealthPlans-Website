@@ -180,9 +180,16 @@ export function authHeaders(config) {
       base url        https://<tenant>.tldcrm.com
       auth            tld-api-id and tld-api-key headers
       response shape  results live at response.results
-      rate limit      5 per second, bucket capacity 50
-      query limit     100000
       leads endpoint  requires a date range, unlike the others
+
+    TLD imposes no rate limit. The token bucket and the 100000 query limit in
+    the LionsHead interpreter are its own settings, picked for throughput
+    rather than to satisfy anything on TLD's side, so do not read them here as
+    platform constraints.
+
+    That moves the cost from requests per second to payload size. A 100000 row
+    response is a large body to hold in memory and move across the wire, so the
+    lever on a big pull is narrowing the columns rather than pacing the calls.
 
     Before writing a TLD client in this repo, settle whether the website
     should be talking to TLD at all. LionsHead is a python library with a
