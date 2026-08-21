@@ -241,7 +241,8 @@ export async function getFunnelTrend({ days = 30 } = {}) {
  * lot of traffic and no leads is not a top source, it is a cost.
  */
 export async function getTopSources({ days = 30, limit = 5 } = {}) {
-  if (!usingFixtures()) return { rows: [], isEmpty: true }
+  const empty = { measures: { leads: [], conversions: [] }, isEmpty: true }
+  if (!usingFixtures()) return empty
 
   const { current } = splitByPeriod(getDataset().leads, 'createdAt', days)
   const groups = new Map()
@@ -253,16 +254,32 @@ export async function getTopSources({ days = 30, limit = 5 } = {}) {
     if (lead.status === 'enrolled') group.conversions += 1
   }
 
-  const rows = [...groups.values()].sort((a, b) => b.leads - a.leads).slice(0, limit)
-  const top = Math.max(1, ...rows.map((row) => row.leads))
+  const all = [...groups.values()]
+
+  /**
+   * Top `limit` sources by one measure, each bar scaled against the leader.
+   *
+   * Ranked independently per measure rather than re-sorting one list. Taking
+   * the top 5 by leads and then re-ordering those by enrollments would hide a
+   * source that converts well on modest volume, which is exactly the source
+   * worth finding.
+   */
+  const rank = (key) => {
+    const rows = [...all].sort((a, b) => b[key] - a[key]).slice(0, limit)
+    const top = Math.max(1, ...rows.map((row) => row[key]))
+
+    return rows.map((row) => ({
+      ...row,
+      // Against the leader rather than against the total, so the best row
+      // always fills its bar and the rest are read relative to it
+      share: row[key] / top,
+      conversionRate: row.leads ? `${((row.conversions / row.leads) * 100).toFixed(1)}%` : '0.0%',
+    }))
+  }
 
   return {
-    rows: rows.map((row) => ({
-      ...row,
-      share: row.leads / top,
-      conversionRate: `${((row.conversions / row.leads) * 100).toFixed(1)}%`,
-    })),
-    isEmpty: rows.length === 0,
+    measures: { leads: rank('leads'), conversions: rank('conversions') },
+    isEmpty: all.length === 0,
   }
 }
 

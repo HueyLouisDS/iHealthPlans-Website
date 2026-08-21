@@ -15,11 +15,16 @@ import Link from 'next/link'
 import { signOut } from '@/auth'
 import AdminFrame from '@/components/admin/AdminFrame'
 
+// `match` is the prefix that lights the item up, for when it differs from the
+// href. Attribution needs both: the link has to skip past /admin/attribution
+// because that path only redirects, and a redirect cannot be a soft
+// navigation, so routing the sidebar through it made the whole page flash on
+// every click. The item still has to stay lit on every dimension under it.
 const ADMIN_NAV = [
   { label: 'Dashboard', href: '/admin', exact: true },
   { label: 'Leads', href: '/admin/leads' },
   { label: 'Calls', href: '/admin/calls' },
-  { label: 'Attribution', href: '/admin/attribution' },
+  { label: 'Attribution', href: '/admin/attribution/source', match: '/admin/attribution' },
   { label: 'Agents', href: '/admin/agents' },
 ]
 
@@ -58,7 +63,9 @@ function Sidebar({ user, currentPath }) {
 
       <nav className="flex-1 min-h-0 overflow-y-auto py-4 flex flex-col">
         {ADMIN_NAV.map((item) => {
-          const isActive = item.exact ? currentPath === item.href : currentPath.startsWith(item.href)
+          const isActive = item.exact
+            ? currentPath === item.href
+            : currentPath.startsWith(item.match || item.href)
 
           return (
             <Link

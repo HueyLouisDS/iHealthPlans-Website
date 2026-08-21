@@ -13,6 +13,7 @@ import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
 import FunnelChart from '@/components/admin/FunnelChart'
 import TrendChart from '@/components/admin/TrendChart'
+import TopSources from '@/components/admin/TopSources'
 import { StatTile, DataSourceNotice, EmptyState, StatusPill } from '@/components/admin/AdminUi'
 import {
   getFunnelSummary,
@@ -47,39 +48,6 @@ function PeriodPicker({ days }) {
           </Link>
         )
       })}
-    </div>
-  )
-}
-
-/**
- * Sources ranked by leads produced rather than by traffic sent.
- * A source with high traffic and no leads is a cost, not a top source.
- */
-function TopSources({ rows }) {
-  return (
-    <div className="bg-white border rounded-lg p-5">
-      <div className="flex items-baseline justify-between mb-4">
-        <h2 className="text-lg font-bold text-ihealthBlue">Top sources</h2>
-        <Link href="/admin/attribution" className="text-sm font-semibold text-[#105fa8] hover:underline">
-          All attribution
-        </Link>
-      </div>
-
-      <ul className="flex flex-col gap-4">
-        {rows.map((row) => (
-          <li key={row.source} className="flex flex-col gap-1.5">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="text-base font-semibold text-ihealthBlue truncate">{row.source}</span>
-              <span className="text-sm text-[#505258] tabular-nums flex-shrink-0">
-                {row.leads} leads, {row.conversionRate}
-              </span>
-            </div>
-            <div className="w-full h-2 bg-[#eef0f4] rounded-full overflow-hidden">
-              <div className="h-full bg-ihealthGreen rounded-full" style={{ width: `${row.share * 100}%` }} />
-            </div>
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }
@@ -171,7 +139,7 @@ export default async function AdminDashboardPage({ searchParams }) {
           </div>
 
           <div className="flex flex-col gap-6">
-            <TopSources rows={sources.rows} />
+            <TopSources measures={sources.measures} />
             <RecentLeads rows={recent.rows} />
           </div>
         </div>
