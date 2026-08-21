@@ -62,9 +62,11 @@ export default function AdminFrame({ sidebar, title, description, showBypassBann
           isOpen ? 'w-[240px]' : 'w-0'
         }`}
       >
-        {/* The inner column scrolls independently if the nav ever outgrows the
-            viewport, rather than pushing the account block out of reach */}
-        <div className="w-[240px] h-full flex flex-col overflow-y-auto">{sidebar}</div>
+        {/* No overflow on this column. Scrolling belongs to the nav alone, so
+            the logo stays at the top and the account block stays at the
+            bottom no matter how many nav items there are. Putting the scroll
+            here instead would carry the account block away with it. */}
+        <div className="w-[240px] h-full flex flex-col">{sidebar}</div>
       </aside>
 
       <main className="flex-1 min-w-0">

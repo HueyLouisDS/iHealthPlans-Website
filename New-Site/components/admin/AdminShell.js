@@ -40,7 +40,7 @@ function Sidebar({ user, currentPath }) {
         Generated from the original by lifting the dark inks and leaving the
         brand green untouched. See public/icons/health-plans-logo-h-reversed.svg.
       */}
-      <div className="px-6 py-5 border-b border-white/15">
+      <div className="px-6 py-5 border-b border-white/15 flex-shrink-0">
         <Link href="/admin" className="block">
           <Image
             src="/icons/health-plans-logo-h-reversed.svg"
@@ -56,7 +56,7 @@ function Sidebar({ user, currentPath }) {
         </p>
       </div>
 
-      <nav className="flex-1 py-4 flex flex-col">
+      <nav className="flex-1 min-h-0 overflow-y-auto py-4 flex flex-col">
         {ADMIN_NAV.map((item) => {
           const isActive = item.exact ? currentPath === item.href : currentPath.startsWith(item.href)
 
@@ -77,7 +77,9 @@ function Sidebar({ user, currentPath }) {
         })}
       </nav>
 
-      <div className="px-6 py-5 border-t border-white/15">
+      {/* mt-auto holds this at the bottom when the nav is short,
+          flex-shrink-0 stops it being squashed when the nav is long */}
+      <div className="mt-auto flex-shrink-0 px-6 py-5 border-t border-white/15">
         <p className="text-sm text-white/60">Signed in as</p>
         <p className="text-sm font-semibold break-words">{user?.email}</p>
 
