@@ -1,12 +1,23 @@
 /**
  * Data access for the education section.
- * Reads the JSON index produced by scripts/extractEducationIndex.mjs, which is
- * the only thing that knows about the old site. Everything downstream of here
+ * Reads the JSON index produced by scripts/extractEducationIndex.mjs and the
+ * per article bodies produced by scripts/extractEducationBodies.mjs, which are
+ * the only things that know about the old site. Everything downstream of here
  * treats articles as plain data, so swapping the source for Sanity later means
  * rewriting this file and nothing else.
  */
 
+import fs from 'node:fs'
+import path from 'node:path'
 import articles from '@/content/education/articles.json'
+
+// Bodies are read from disk one at a time rather than imported as a bundle.
+// All 170 together are roughly 400KB of JSON, and an article page needs one.
+const BODIES_DIR = path.join(process.cwd(), 'content', 'education', 'bodies')
+
+// Parsed bodies, kept for the life of the process. The files never change at
+// runtime, so re-reading and re-parsing on every request would buy nothing.
+const bodyCache = new Map()
 
 // The live site paginates at 13, confirmed from its own render payload rather
 // than counted off the page. Changing this changes the featured row layout too,
@@ -89,4 +100,66 @@ export function getArticlePage({ categorySlug = null, page = 1 } = {}) {
  */
 export function getCategory(slug) {
   return getCategories().find((category) => category.slug === slug) || null
+}
+
+/**
+ * One article's metadata, or null if the slug is not one we publish.
+ * Every caller that touches the filesystem goes through this first, which is
+ * what makes the slug safe to put in a path below.
+ */
+export function getArticle(slug) {
+  return articles.find((article) => article.slug === slug) || null
+}
+
+/**
+ * One article's body blocks, or null when there is no body on disk.
+ *
+ * The slug is checked against the index before it reaches path.join, and never
+ * used raw. A slug arrives from the url, and `../../../.env` joined onto a
+ * content directory is a file read the visitor chose. Validating against a
+ * fixed list is the only version of this that cannot be talked around.
+ */
+export function getArticleBody(slug) {
+  if (!getArticle(slug)) return null
+  if (bodyCache.has(slug)) return bodyCache.get(slug)
+
+  let body = null
+  try {
+    body = JSON.parse(fs.readFileSync(path.join(BODIES_DIR, `${slug}.json`), 'utf8'))
+  } catch {
+    // A missing body is a content gap, not a crash. The page renders its
+    // heading and image and says the article is unavailable.
+    body = null
+  }
+
+  bodyCache.set(slug, body)
+  return body
+}
+
+/**
+ * Every article slug, for generateStaticParams.
+ */
+export function getAllSlugs() {
+  return articles.map((article) => article.slug)
+}
+
+/**
+ * Other articles worth reading after this one.
+ *
+ * Same category first, then whatever is newest, so a thin category still fills
+ * the rail rather than showing 1 card and a gap. The article itself is always
+ * excluded, which sounds obvious and is the bug every related rail ships with.
+ */
+export function getRelatedArticles(slug, limit = 3) {
+  const article = getArticle(slug)
+  if (!article) return []
+
+  const sameCategory = articles.filter(
+    (other) => other.slug !== slug && other.categorySlug === article.categorySlug
+  )
+  const rest = articles.filter(
+    (other) => other.slug !== slug && other.categorySlug !== article.categorySlug
+  )
+
+  return [...sameCategory, ...rest].slice(0, limit)
 }
