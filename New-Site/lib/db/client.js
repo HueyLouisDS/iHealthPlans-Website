@@ -8,6 +8,7 @@ import 'server-only'
  */
 
 import mysql from 'mysql2/promise'
+import { resolveDbConfig, databaseConfigured as configured } from '@/lib/db/dsn'
 
 /*================================================================================
     POOL SIZE IS DELIBERATELY TINY, AND SERVERLESS IS THE REASON
@@ -45,7 +46,7 @@ const globalForDb = globalThis
  * DATABASE_URL is a state, not an error.
  */
 export function databaseConfigured() {
-  return Boolean(process.env.DATABASE_URL)
+  return configured()
 }
 
 /**
@@ -57,12 +58,12 @@ export function databaseConfigured() {
  */
 export function pool() {
   if (!databaseConfigured()) {
-    throw new Error('DATABASE_URL is not set. Check databaseConfigured() before calling pool().')
+    throw new Error('No database configured. Check databaseConfigured() before calling pool().')
   }
 
   if (!globalForDb.__dbPool) {
     globalForDb.__dbPool = mysql.createPool({
-      uri: process.env.DATABASE_URL,
+      ...resolveDbConfig().config,
       connectionLimit: POOL_SIZE,
       waitForConnections: true,
       /*
@@ -73,18 +74,6 @@ export function pool() {
       /* Idle connections are closed so a quiet instance stops holding one */
       idleTimeout: 30_000,
       enableKeepAlive: true,
-      /*
-       * Dates come back as strings rather than as JS Date objects. The driver
-       * builds Dates in the server's local timezone, which on Vercel is UTC
-       * and on a developer laptop is not, so the same row would parse to 2
-       * different instants. Everything here is stored UTC and parsed
-       * explicitly where it is needed.
-       */
-      dateStrings: true,
-      timezone: 'Z',
-      /* Big ints as strings, since TLD ids can exceed the safe integer range */
-      supportBigNumbers: true,
-      bigNumberStrings: true,
       namedPlaceholders: true,
     })
   }

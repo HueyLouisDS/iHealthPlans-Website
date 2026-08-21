@@ -15,6 +15,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import mysql from 'mysql2/promise'
+import { resolveDbConfig, describeDbConfig } from '../lib/db/dsn.js'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const appRoot = path.join(scriptDir, '..')
@@ -84,18 +85,15 @@ function statements(sql) {
  * credentials problem to anybody who has not seen it before.
  *
  * Only the database is created. Nothing here creates a user or grants
- * anything, so the credentials in the url still have to be real.
+ * anything, so the credentials still have to be real.
  */
 async function connect() {
-  const url = new URL(process.env.DATABASE_URL)
-  const database = url.pathname.replace(/^\//, '')
+  const { config } = resolveDbConfig()
+  const { database, ...server } = config
 
   if (database) {
     /* Connect with no database selected, so this works before it exists */
-    const server = new URL(url)
-    server.pathname = '/'
-
-    const bootstrap = await mysql.createConnection({ uri: server.toString() })
+    const bootstrap = await mysql.createConnection(server)
     try {
       const [before] = await bootstrap.query('SHOW DATABASES LIKE ?', [database])
       if (before.length === 0) {
@@ -111,14 +109,25 @@ async function connect() {
     }
   }
 
-  return mysql.createConnection({ uri: process.env.DATABASE_URL })
+  return mysql.createConnection(config)
 }
 
 async function run() {
-  if (!process.env.DATABASE_URL) {
-    /* Naming the resolved path, since this script can be run from either the
-       repository root or from New-Site and the file is only in one of them */
-    console.error(`DATABASE_URL is not set. Add it to ${path.join(appRoot, '.env.local')}`)
+  /*
+   * --check reports what the settings resolved to without connecting. The
+   * password length is the useful part, since a 15 character password
+   * reported as 4 means a url truncated it at a special character, which is a
+   * different problem from a wrong password.
+   */
+  if (process.argv.includes('--check')) {
+    console.log(describeDbConfig())
+    return
+  }
+
+  const { config, problems } = resolveDbConfig()
+  if (!config) {
+    for (const problem of problems) console.error(problem)
+    console.error(`Set them in ${path.join(appRoot, '.env.local')}`)
     process.exitCode = 1
     return
   }
