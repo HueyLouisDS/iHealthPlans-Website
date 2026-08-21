@@ -35,7 +35,7 @@ import {
  */
 const FOCUS_ID = 'stage-focus'
 
-/**
+/*
  * Builds a dashboard url, keeping the period and setting the stage.
  *
  * Period has to survive selecting a stage, or every click would silently throw
