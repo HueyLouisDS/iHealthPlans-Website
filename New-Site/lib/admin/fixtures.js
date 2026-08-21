@@ -1,26 +1,26 @@
 /**
  * Demo data for the admin area, so the reporting UI can be built and reviewed
  * before the database and tracking exist.
- *
- * ============================================================================
- * THIS IS FABRICATED DATA. It is not measurement and no decision should ever
- * be made from it.
- *
- * It is only ever returned when ADMIN_USE_FIXTURES is explicitly set to true,
- * which lives in .env.local and must never be set in a deployed environment.
- * Any page rendering it shows a banner saying so. See lib/admin/data.js for
- * the switch.
- *
- * Two rules held throughout:
- * 1. Every generated person is obviously fictional. Names are invented, phone
- *    numbers use the 555-01xx range reserved for fiction, and emails are
- *    @example.com. Nothing here should ever be mistaken for a real lead, and
- *    nothing here resembles a real person's details.
- * 2. Everything is seeded and deterministic. Math.random would produce
- *    different numbers on every server render, so the same page would
- *    contradict itself on refresh and nobody could review a layout.
- * ============================================================================
  */
+
+/*=============================================
+    THIS IS FABRICATED DATA. It is not measurement and no decision should ever
+    be made from it.
+
+    It is only ever returned when ADMIN_USE_FIXTURES is explicitly set to true,
+    which lives in .env.local and must never be set in a deployed environment.
+    Any page rendering it shows a banner saying so. See lib/admin/data.js for
+    the switch.
+
+    Two rules held throughout:
+    1. Every generated person is obviously fictional. Names are invented, phone
+       numbers use the 555-01xx range reserved for fiction, and emails are
+       @example.com. Nothing here should ever be mistaken for a real lead, and
+       nothing here resembles a real person's details.
+    2. Everything is seeded and deterministic. Math.random would produce
+       different numbers on every server render, so the same page would
+       contradict itself on refresh and nobody could review a layout.
+=============================================*/
 
 /**
  * Small seeded generator, mulberry32.

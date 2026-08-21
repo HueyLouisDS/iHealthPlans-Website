@@ -6,27 +6,29 @@
  * and /admin/attribution report them side by side with `google / cpc` and
  * `(direct)`, ranked by the same measures. "Is the site cheaper than the
  * vendor" stops being an argument and becomes a row in a table.
- *
- * ============================================================================
- * WHY THE CONSENT RECORD IS MANDATORY HERE
- *
- * From the Spark agent and agency website guidelines, 7 November 2024:
- *
- *   "The following requirements and expectations apply to all websites
- *    leveraged by TPMOs, whether owned and operated or utilized for leads.
- *    The TPMOs are accountable to ensure compliance to all websites involved
- *    in their business operations."
- *
- * So the agency is accountable for how a vendor collected a lead, not the
- * vendor. "They told us they had consent" is not a defence. This endpoint
- * therefore refuses any lead that does not arrive with the evidence, the exact
- * wording shown, when, from where, and on what page.
- *
- * That will cost some volume. A vendor who cannot produce the consent they
- * claim to have is a vendor whose leads were always a liability, and finding
- * that out at integration time is much cheaper than finding out at audit.
- * ============================================================================
- *
+ */
+
+/*=============================================
+    WHY THE CONSENT RECORD IS MANDATORY HERE
+
+    From the Spark agent and agency website guidelines, 7 November 2024:
+
+      "The following requirements and expectations apply to all websites
+       leveraged by TPMOs, whether owned and operated or utilized for leads.
+       The TPMOs are accountable to ensure compliance to all websites involved
+       in their business operations."
+
+    So the agency is accountable for how a vendor collected a lead, not the
+    vendor. "They told us they had consent" is not a defence. This endpoint
+    therefore refuses any lead that does not arrive with the evidence, the exact
+    wording shown, when, from where, and on what page.
+
+    That will cost some volume. A vendor who cannot produce the consent they
+    claim to have is a vendor whose leads were always a liability, and finding
+    that out at integration time is much cheaper than finding out at audit.
+=============================================*/
+
+/**
  * TODO this route validates and logs and delivers nowhere, exactly like
  * /api/lead. Wire both to the CRM and the leads table together, so owned and
  * bought leads cannot diverge in how they are stored.

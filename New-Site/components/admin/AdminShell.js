@@ -28,6 +28,7 @@ const ADMIN_NAV = [
   { label: 'Calls', href: '/admin/calls' },
   { label: 'Attribution', href: '/admin/attribution/source', match: '/admin/attribution' },
   { label: 'Agents', href: '/admin/agents' },
+  { label: 'Integrations', href: '/admin/integrations' },
 ]
 
 /**

@@ -34,3 +34,10 @@ desktop.ini
 # Written and re-added by next dev, see
 # node_modules/next/dist/server/lib/generate-agent-files.js
 AGENTS.md
+
+# Book of business. Thousands of Medicare beneficiaries with names and phone
+# numbers, so it must never reach the repository. The import writes here, the
+# admin area reads from here, and neither is ever committed.
+/content/book/
+/private/
+*.book.csv

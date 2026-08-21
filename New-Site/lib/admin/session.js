@@ -1,24 +1,24 @@
 /**
  * Resolves the admin session, with a development only bypass.
- *
- * ============================================================================
- * THE BYPASS EXISTS SO THE ADMIN UI CAN BE BUILT BEFORE A GOOGLE OAUTH CLIENT
- * IS SET UP. It is guarded twice and both must hold.
- *
- *   NODE_ENV !== 'production'      next build always sets production, so a
- *                                  built and deployed app can never take this
- *                                  path no matter what the environment says.
- *   ADMIN_DEV_BYPASS_AUTH==='true' explicit opt in, exact string, in .env.local
- *
- * That means the bypass only works under `next dev` on a developer's machine.
- * It is not a flag somebody can flip in production hosting and it is not a
- * default. Any page reached through it shows a banner saying authentication is
- * bypassed.
- *
- * Delete this file once a Google OAuth client exists. It has no reason to
- * survive past that point.
- * ============================================================================
  */
+
+/*=============================================
+    THE BYPASS EXISTS SO THE ADMIN UI CAN BE BUILT BEFORE A GOOGLE OAUTH CLIENT
+    IS SET UP. It is guarded twice and both must hold.
+
+      NODE_ENV !== 'production'      next build always sets production, so a
+                                     built and deployed app can never take this
+                                     path no matter what the environment says.
+      ADMIN_DEV_BYPASS_AUTH==='true' explicit opt in, exact string, in .env.local
+
+    That means the bypass only works under `next dev` on a developer's machine.
+    It is not a flag somebody can flip in production hosting and it is not a
+    default. Any page reached through it shows a banner saying authentication is
+    bypassed.
+
+    Delete this file once a Google OAuth client exists. It has no reason to
+    survive past that point.
+=============================================*/
 
 import { auth } from '@/auth'
 

@@ -1,31 +1,31 @@
 /**
  * The TCPA and TPMO disclosure that must appear on any form collecting contact
  * details for a licensed agent to follow up on.
- *
- * ============================================================================
- * WHY THIS IS A COMPONENT AND NOT PASTED INTO THE FORM
- *
- * The live site publishes the CMS guidance *instruction* rather than the
- * disclosure itself. Its quote page currently reads, verbatim and visibly:
- *
- *   "In accordance with Telephone Consumer Protection Act (TCPA) guidelines,
- *    when requesting contact information from a consumer, TPMOs must, at a
- *    minimum, disclose in a readable font that: Example: This is a
- *    solicitation for insurance..."
- *
- * Somebody copied the guidance document, including the words "TPMOs must" and
- * "Example:", into the page. Only the text after "Example:" was ever meant to
- * be shown. That is fixed here.
- *
- * The reference to Medicare Supplement is also removed, because the agency
- * does not sell it and a consent that names products they cannot place is
- * both inaccurate and pointless.
- *
- * TO CONFIRM before this goes live: the exact wording is a compliance
- * decision. Have it reviewed alongside the material id question, and confirm
- * it matches the consent language used on every other lead capture channel.
- * ============================================================================
  */
+
+/*=============================================
+    WHY THIS IS A COMPONENT AND NOT PASTED INTO THE FORM
+
+    The live site publishes the CMS guidance *instruction* rather than the
+    disclosure itself. Its quote page currently reads, verbatim and visibly:
+
+      "In accordance with Telephone Consumer Protection Act (TCPA) guidelines,
+       when requesting contact information from a consumer, TPMOs must, at a
+       minimum, disclose in a readable font that: Example: This is a
+       solicitation for insurance..."
+
+    Somebody copied the guidance document, including the words "TPMOs must" and
+    "Example:", into the page. Only the text after "Example:" was ever meant to
+    be shown. That is fixed here.
+
+    The reference to Medicare Supplement is also removed, because the agency
+    does not sell it and a consent that names products they cannot place is
+    both inaccurate and pointless.
+
+    TO CONFIRM before this goes live: the exact wording is a compliance
+    decision. Have it reviewed alongside the material id question, and confirm
+    it matches the consent language used on every other lead capture channel.
+=============================================*/
 
 import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS, SMID } from '@/lib/siteConfig'
 

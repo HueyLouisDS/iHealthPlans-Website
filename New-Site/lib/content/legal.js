@@ -1,30 +1,30 @@
 /**
  * Content for the 5 legal and compliance notices.
- *
- * ============================================================================
- * READ THIS BEFORE PUBLISHING ANY OF THESE PAGES.
- *
- * This is DRAFT text. It follows the standard structure for each notice and
- * uses the standard language where that language is set by regulation, but it
- * has NOT been reviewed by counsel and it is not legal advice.
- *
- * Every place a fact is needed that only the client can supply is written as a
- * string beginning "TO CONFIRM:". Those render as a visible amber block on the
- * page, so an unreviewed notice cannot be published without somebody noticing.
- * Resolve all of them, have counsel review the result, then delete this notice.
- *
- * Specific items counsel must rule on:
- * 1. Whether iHealth Plans is a covered entity under Section 1557 of the ACA.
- *    Agencies generally are not unless they receive federal financial
- *    assistance, but MA marketing obligations can still apply. That decides
- *    whether the nondiscrimination notice is required or merely good practice.
- * 2. The language assistance tagline list, which is set per state.
- * 3. Which state privacy laws they are in scope for, which depends on where
- *    their leads are and on volume thresholds.
- * 4. Call recording consent, which varies by state and interacts with the CMS
- *    requirement that TPMOs record calls with beneficiaries in their entirety.
- * ============================================================================
  */
+
+/*=============================================
+    READ THIS BEFORE PUBLISHING ANY OF THESE PAGES.
+
+    This is DRAFT text. It follows the standard structure for each notice and
+    uses the standard language where that language is set by regulation, but it
+    has NOT been reviewed by counsel and it is not legal advice.
+
+    Every place a fact is needed that only the client can supply is written as a
+    string beginning "TO CONFIRM:". Those render as a visible amber block on the
+    page, so an unreviewed notice cannot be published without somebody noticing.
+    Resolve all of them, have counsel review the result, then delete this notice.
+
+    Specific items counsel must rule on:
+    1. Whether iHealth Plans is a covered entity under Section 1557 of the ACA.
+       Agencies generally are not unless they receive federal financial
+       assistance, but MA marketing obligations can still apply. That decides
+       whether the nondiscrimination notice is required or merely good practice.
+    2. The language assistance tagline list, which is set per state.
+    3. Which state privacy laws they are in scope for, which depends on where
+       their leads are and on volume thresholds.
+    4. Call recording consent, which varies by state and interacts with the CMS
+       requirement that TPMOs record calls with beneficiaries in their entirety.
+=============================================*/
 
 /*
  * Rendered on every notice. A legal page with no date is not much use to
