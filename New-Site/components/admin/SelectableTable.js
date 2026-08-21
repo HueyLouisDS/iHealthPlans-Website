@@ -35,6 +35,22 @@ const FORMATTERS = {
     value ? value : <span className="text-[#6C7381]">{column.emptyLabel || 'none'}</span>,
   boolLabel: (value, column) =>
     value ? column.trueLabel || 'yes' : <span className="text-[#6C7381]">{column.falseLabel || 'none'}</span>,
+  // A rate calculated over a handful of records, shown at the same weight as
+  // one calculated over hundreds, is how somebody moves budget onto 3 lucky
+  // enrollments. The row is still shown, just marked so it cannot be read
+  // straight off the page.
+  thinRate: (value, column, row) =>
+    row.lowVolume ? (
+      <span className="text-[#6C7381]">
+        {value}
+        <span className="ml-1.5 text-xs font-bold uppercase tracking-[0.5px]" aria-hidden="true">
+          thin
+        </span>
+        <span className="sr-only">, based on only {row.leads} leads, too few to read as a rate</span>
+      </span>
+    ) : (
+      value
+    ),
 }
 
 /**
@@ -191,7 +207,10 @@ export default function SelectableTable({
 
                   {columns.map((column, index) => {
                     const formatter = column.format ? FORMATTERS[column.format] : null
-                    const content = formatter ? formatter(row[column.key], column) : row[column.key]
+                    // The whole row is passed as well as the cell, because some
+                    // formatters need a sibling field to decide how to render,
+                    // like a rate that has to know its own denominator
+                    const content = formatter ? formatter(row[column.key], column, row) : row[column.key]
 
                     return (
                       <td

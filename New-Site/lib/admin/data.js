@@ -592,36 +592,168 @@ export async function getCall(callId) {
   }
 }
 
+// The dimensions a lead can be grouped by. `label` is the tab, `column` is the
+// heading of the first table column, which has to change with the grouping or
+// every view reads as an unlabelled list of strings.
+export const ATTRIBUTION_DIMENSIONS = [
+  { value: 'source', label: 'Source', column: 'Source / medium' },
+  { value: 'campaign', label: 'Campaign', column: 'Campaign' },
+  { value: 'landingPage', label: 'Landing page', column: 'Landing page' },
+  { value: 'device', label: 'Device', column: 'Device' },
+  // What the enquiry form calls "who are you enquiring for". Worth its own
+  // dimension because a daughter researching for a parent behaves nothing like
+  // a beneficiary shopping for themselves, and the 2 convert differently.
+  { value: 'onBehalfOf', label: 'Enquiring for', column: 'Enquiring for' },
+]
+
+export const ATTRIBUTION_SORTS = [
+  { value: 'leads', label: 'Most leads' },
+  { value: 'conversions', label: 'Most enrollments' },
+  { value: 'rate', label: 'Best rate' },
+  { value: 'calls', label: 'Most calls' },
+]
+
+// Under this many leads, a conversion rate is noise rather than a measurement.
+// 2 enrollments out of 3 leads is 66.7%, which will out rank every real source
+// on the page and send somebody off to move budget onto luck. Rows below the
+// threshold still show their rate, but marked, so it cannot be read straight.
+export const LOW_VOLUME_LEADS = 25
+
+/**
+ * Turns a groupBy parameter into a dimension, falling back to source.
+ * Comes off a query string, so an unknown value must not reach the lookup.
+ */
+export function parseDimension(value) {
+  return ATTRIBUTION_DIMENSIONS.some((d) => d.value === value) ? value : 'source'
+}
+
+/**
+ * A url and selection safe id for a group.
+ *
+ * Group values are arbitrary text, and the table's selection export passes ids
+ * as a comma separated list. A value containing a comma would silently split
+ * into 2 ids and export the wrong rows, so the id is a slug rather than the
+ * value itself.
+ */
+function slugify(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'unknown'
+}
+
 /**
  * Attribution breakdown, grouped by a dimension.
+ *
  * Reported all the way down the funnel rather than stopping at sessions.
  * Knowing a campaign drove traffic is not useful on its own. Knowing it drove
  * calls that became enrollments is.
+ *
+ * The device and onBehalfOf filters narrow the leads before grouping, so you
+ * can ask a real question like "which campaigns work on mobile" rather than
+ * only ever seeing one dimension at a time.
+ *
+ * TODO calls that never became a lead carry no source, because that lives on
+ * the session and there is no session table. They are counted and reported
+ * separately rather than dropped, since a report that quietly omits two thirds
+ * of the call volume is worse than one that admits the gap.
  */
-export async function getAttribution({ groupBy = 'source' } = {}) {
-  const dimensions = ['source', 'campaign', 'landingPage', 'device', 'onBehalfOf']
-  if (!usingFixtures()) return { groupBy, availableDimensions: dimensions, rows: [], isEmpty: true }
+export async function getAttribution({ groupBy = 'source', days = 30, device, onBehalfOf, sort = 'leads' } = {}) {
+  const dimension = ATTRIBUTION_DIMENSIONS.find((d) => d.value === groupBy) || ATTRIBUTION_DIMENSIONS[0]
+
+  const empty = {
+    groupBy: dimension.value,
+    dimension,
+    days,
+    rows: [],
+    summary: { leads: 0, calls: 0, conversions: 0, conversionRate: '0.0%', groups: 0 },
+    unattributedCalls: 0,
+    totalCalls: 0,
+    devices: [],
+    audiences: [],
+    isEmpty: true,
+  }
+  if (!usingFixtures()) return empty
 
   const data = getDataset()
-  const keyFor = (lead) =>
-    ({ source: lead.source, campaign: lead.campaign, landingPage: lead.landingPage, device: lead.device, onBehalfOf: lead.onBehalfOf })[groupBy] ||
-    '(unknown)'
+  const from = startOfDaysAgo(days)
+
+  let leads = data.leads.filter((lead) => lead.createdAt >= from)
+  if (device) leads = leads.filter((lead) => lead.device === device)
+  if (onBehalfOf) leads = leads.filter((lead) => lead.onBehalfOf === onBehalfOf)
+
+  const periodCalls = data.calls.filter((call) => call.startedAt >= from)
 
   const groups = new Map()
-  for (const lead of data.leads) {
-    const key = keyFor(lead)
-    if (!groups.has(key)) groups.set(key, { value: key, leads: 0, calls: 0, conversions: 0 })
+  for (const lead of leads) {
+    const key = lead[dimension.value] || '(unknown)'
+    if (!groups.has(key)) {
+      groups.set(key, { id: slugify(key), value: key, leads: 0, calls: 0, conversions: 0 })
+    }
     const group = groups.get(key)
     group.leads += 1
     group.calls += lead.callCount
     if (lead.status === 'enrolled') group.conversions += 1
   }
 
-  const rows = [...groups.values()]
-    .map((group) => ({ ...group, conversionRate: `${((group.conversions / group.leads) * 100).toFixed(1)}%` }))
-    .sort((a, b) => b.leads - a.leads)
+  const totalLeads = leads.length
+  const totalConversions = leads.filter((lead) => lead.status === 'enrolled').length
 
-  return { groupBy, availableDimensions: dimensions, rows, isEmpty: false }
+  const rows = [...groups.values()].map((group) => ({
+    ...group,
+    // Share of the filtered leads, not of everything, so the column always
+    // adds up to 100 against the table it is sitting in
+    leadShare: totalLeads ? `${((group.leads / totalLeads) * 100).toFixed(1)}%` : '0.0%',
+    callsPerLead: group.leads ? (group.calls / group.leads).toFixed(2) : '0.00',
+    conversionRate: group.leads ? `${((group.conversions / group.leads) * 100).toFixed(1)}%` : '0.0%',
+    lowVolume: group.leads < LOW_VOLUME_LEADS,
+  }))
+
+  const sorters = {
+    leads: (a, b) => b.leads - a.leads,
+    conversions: (a, b) => b.conversions - a.conversions,
+    calls: (a, b) => b.calls - a.calls,
+    // Thin rows sink to the bottom of a rate sort rather than winning it,
+    // which is the whole reason the flag exists
+    rate: (a, b) =>
+      Number(a.lowVolume) - Number(b.lowVolume) ||
+      Number.parseFloat(b.conversionRate) - Number.parseFloat(a.conversionRate),
+  }
+  rows.sort(sorters[sort] || sorters.leads)
+
+  return {
+    groupBy: dimension.value,
+    dimension,
+    days,
+    rows,
+    summary: {
+      leads: totalLeads,
+      calls: leads.reduce((sum, lead) => sum + lead.callCount, 0),
+      conversions: totalConversions,
+      conversionRate: totalLeads ? `${((totalConversions / totalLeads) * 100).toFixed(1)}%` : '0.0%',
+      groups: rows.length,
+    },
+    // Calls in the period that never became a lead, so no source can be put
+    // against them yet. Surfaced on the page rather than hidden.
+    unattributedCalls: periodCalls.filter((call) => !call.leadId).length,
+    totalCalls: periodCalls.length,
+    devices: [...new Set(data.leads.map((lead) => lead.device))].sort(),
+    audiences: [...new Set(data.leads.map((lead) => lead.onBehalfOf))].sort(),
+    isEmpty: totalLeads === 0,
+  }
+}
+
+/**
+ * The same breakdown, unpaginated, for the csv export.
+ * `ids` narrows to an explicit selection from the table, and can only ever
+ * narrow what the filters already permit.
+ */
+export async function getAttributionForExport(filters = {}, ids = null) {
+  const result = await getAttribution(filters)
+  if (!ids || ids.length === 0) return result.rows
+
+  const wanted = new Set(ids)
+  return result.rows.filter((row) => wanted.has(row.id))
 }
 
 /**
