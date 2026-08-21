@@ -805,37 +805,116 @@ export async function getAttributionForExport(filters = {}, ids = null) {
   return result.rows.filter((row) => wanted.has(row.id))
 }
 
+export const AGENT_SORTS = [
+  { value: 'conversions', label: 'Most enrollments' },
+  { value: 'rate', label: 'Best rate' },
+  { value: 'calls', label: 'Most calls' },
+  { value: 'talk', label: 'Most talk time' },
+  { value: 'name', label: 'Name' },
+]
+
+/**
+ * Formats a large duration as hours and minutes.
+ * formatDuration gives m:ss, which is right for one call and useless for a
+ * quarter's worth of them. Nobody can read 1543:20.
+ */
+function formatTalkTime(seconds) {
+  // Rounded to whole minutes first, then split. Rounding the remainder instead
+  // produces "14h 60m", which is what this did until 53,999 seconds turned up.
+  const totalMinutes = Math.round(seconds / 60)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return hours ? `${hours}h ${minutes}m` : `${minutes}m`
+}
+
 /**
  * Agent performance.
+ *
+ * Every agent is returned, including one who did nothing in the period. An
+ * absence is a fact about the period, and dropping the row makes it look like
+ * the person is not on the team.
  *
  * TODO this page ranks people. Before it is shown beyond the management team,
  * decide what an agent may see about themselves and about others. The
  * straightforward answer is that an agent sees only their own row, which needs
  * a role on the session rather than the single allowlist used today.
+ *
+ * TODO the conversion rate here is not a like for like comparison. Lead quality
+ * varies by source, by hour, and by how the lead arrived, and none of that is
+ * held constant. Comparing agents properly means comparing them within a
+ * source, which needs the session table.
  */
-export async function getAgentPerformance() {
-  if (!usingFixtures()) return { agents: [], isEmpty: true }
+export async function getAgentPerformance({ days = 30, sort = 'conversions' } = {}) {
+  const empty = {
+    agents: [],
+    days,
+    summary: { agents: 0, calls: 0, talkTime: '0m', leads: 0, conversions: 0, conversionRate: '0.0%' },
+    isEmpty: true,
+  }
+  if (!usingFixtures()) return empty
 
   const data = getDataset()
+  const from = startOfDaysAgo(days)
+
+  const periodCalls = data.calls.filter((call) => call.startedAt >= from)
+  const periodLeads = data.leads.filter((lead) => lead.createdAt >= from)
 
   const agents = AGENTS.map((agent) => {
-    const calls = data.calls.filter((call) => call.agentId === agent.id)
-    const leads = data.leads.filter((lead) => lead.agentId === agent.id)
+    const calls = periodCalls.filter((call) => call.agentId === agent.id)
+    const leads = periodLeads.filter((lead) => lead.agentId === agent.id)
     const conversions = leads.filter((lead) => lead.status === 'enrolled').length
+    const connected = calls.filter((call) => call.disposition === 'connected').length
     const talkSeconds = calls.reduce((sum, call) => sum + call.durationSeconds, 0)
 
     return {
       id: agent.id,
       name: agent.name,
       calls: calls.length,
-      talkTime: formatDuration(talkSeconds),
+      connected,
+      connectedRate: calls.length ? `${((connected / calls.length) * 100).toFixed(1)}%` : '0.0%',
+      talkSeconds,
+      talkTime: formatTalkTime(talkSeconds),
+      // Averaged over connected calls only. Including the ones nobody picked
+      // up drags every agent towards zero and measures the dialler, not them.
+      averageCall: connected ? formatDuration(Math.round(talkSeconds / connected)) : '-',
       leads: leads.length,
       conversions,
-      conversionRate: leads.length ? `${((conversions / leads.length) * 100).toFixed(1)}%` : '-',
+      conversionRate: leads.length ? `${((conversions / leads.length) * 100).toFixed(1)}%` : '0.0%',
+      lowVolume: leads.length < LOW_VOLUME_LEADS,
     }
-  }).sort((a, b) => b.conversions - a.conversions)
+  })
 
-  return { agents, isEmpty: false }
+  const sorters = {
+    conversions: (a, b) => b.conversions - a.conversions,
+    calls: (a, b) => b.calls - a.calls,
+    talk: (a, b) => b.talkSeconds - a.talkSeconds,
+    name: (a, b) => a.name.localeCompare(b.name),
+    // Thin rows sink rather than win, same as attribution. An agent handed 8
+    // leads who closed 3 is not outperforming one handed 60 who closed 14.
+    rate: (a, b) =>
+      Number(a.lowVolume) - Number(b.lowVolume) ||
+      Number.parseFloat(b.conversionRate) - Number.parseFloat(a.conversionRate),
+  }
+  const sorted = [...agents].sort(sorters[sort] || sorters.conversions)
+
+  const totalLeads = agents.reduce((sum, agent) => sum + agent.leads, 0)
+  const totalConversions = agents.reduce((sum, agent) => sum + agent.conversions, 0)
+  const totalTalk = agents.reduce((sum, agent) => sum + agent.talkSeconds, 0)
+
+  return {
+    agents: sorted,
+    days,
+    summary: {
+      // Counted by who actually handled a call, not by how many rows exist
+      agents: agents.filter((agent) => agent.calls > 0).length,
+      calls: agents.reduce((sum, agent) => sum + agent.calls, 0),
+      talkTime: formatTalkTime(totalTalk),
+      leads: totalLeads,
+      conversions: totalConversions,
+      conversionRate: totalLeads ? `${((totalConversions / totalLeads) * 100).toFixed(1)}%` : '0.0%',
+    },
+    isEmpty: false,
+  }
 }
 
 /**
