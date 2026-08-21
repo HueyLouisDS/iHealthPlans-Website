@@ -22,14 +22,78 @@ import {
   getRecentLeads,
   usingFixtures,
   parsePeriod,
+  parseStage,
   PERIODS,
+  FUNNEL_STAGES,
 } from '@/lib/admin/data'
+
+/**
+ * Builds a dashboard url, keeping the period and setting the stage.
+ * Period has to survive selecting a stage, or every click would silently throw
+ * the reader back to the default 30 days.
+ */
+function dashboardHref(days, stageSlug) {
+  const params = new URLSearchParams()
+  if (days !== 30) params.set('period', String(days))
+  if (stageSlug) params.set('stage', stageSlug)
+  const query = params.toString()
+  return query ? `/admin?${query}` : '/admin'
+}
+
+/**
+ * What the selected stage means, sitting between the tiles and the charts.
+ *
+ * Exists because a green ring on a tile says which one is selected but not
+ * what selecting it did. This says what the number is, what it cost to reach
+ * it, and where the underlying records are.
+ */
+function StageContext({ stage, summary, days }) {
+  const current = summary.stages.find((entry) => entry.key === stage.key)
+  const index = summary.stages.findIndex((entry) => entry.key === stage.key)
+  const previous = index > 0 ? summary.stages[index - 1] : null
+  const lost = previous ? previous.count - current.count : null
+
+  return (
+    <div className="mb-6 bg-white border-2 border-ihealthGreen rounded-lg px-5 py-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+      <p className="text-base text-[#505258]">
+        <span className="font-bold text-ihealthBlue">{current.count.toLocaleString()}</span>{' '}
+        {stage.noun} in the last {days} days
+        {previous && (
+          <>
+            {', '}
+            <span className="font-bold text-ihealthBlue">{lost.toLocaleString()}</span> lost between{' '}
+            {previous.label.toLowerCase()} and here
+          </>
+        )}
+      </p>
+
+      {/* Only where a page actually exists. Sessions and call clicks have no
+          table, and a link to an empty page is worse than none. */}
+      {stage.onward ? (
+        <Link href={stage.onward.href} className="text-sm font-semibold text-[#105fa8] hover:underline">
+          {stage.onward.label}
+        </Link>
+      ) : (
+        <span className="text-sm text-[#6C7381]">
+          No record level view yet, {stage.noun} are counted rather than stored
+        </span>
+      )}
+
+      <Link
+        href={dashboardHref(days, null)}
+        className="text-sm font-semibold text-[#105fa8] hover:underline ml-auto"
+      >
+        Clear
+      </Link>
+    </div>
+  )
+}
 
 /**
  * Period selector. Plain links rather than a control, so each view has its own
  * url that can be bookmarked and shared.
  */
-function PeriodPicker({ days }) {
+function PeriodPicker({ days, stageSlug = null }) {
   return (
     <div className="flex flex-wrap gap-2">
       {PERIODS.map((period) => {
@@ -38,7 +102,9 @@ function PeriodPicker({ days }) {
         return (
           <Link
             key={period.value}
-            href={`/admin?period=${period.value}`}
+            // The selected stage rides along, so changing the period does not
+            // silently drop the thing the reader is looking at
+            href={dashboardHref(Number(period.value), stageSlug)}
             aria-current={isActive ? 'page' : undefined}
             className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
               isActive ? 'bg-ihealthBlue text-white' : 'bg-white border text-[#505258] hover:border-ihealthBlue'
@@ -93,6 +159,7 @@ export default async function AdminDashboardPage({ searchParams }) {
 
   const params = await searchParams
   const days = parsePeriod(params?.period)
+  const stage = parseStage(params?.stage)
 
   const [summary, trend, sources, recent] = await Promise.all([
     getFunnelSummary({ days }),
@@ -114,20 +181,38 @@ export default async function AdminDashboardPage({ searchParams }) {
       />
 
       <div className="mb-6">
-        <PeriodPicker days={days} />
+        <PeriodPicker days={days} stageSlug={stage?.slug || null} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        {summary.stages.map((stage) => (
-          <StatTile
-            key={stage.key}
-            label={stage.label}
-            value={stage.count.toLocaleString()}
-            delta={stage.delta}
-            isMuted={summary.isEmpty}
-          />
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {summary.stages.map((entry) => {
+          const definition = FUNNEL_STAGES.find((item) => item.key === entry.key)
+          const isSelected = stage?.key === entry.key
+
+          return (
+            <StatTile
+              key={entry.key}
+              label={entry.label}
+              value={entry.count.toLocaleString()}
+              delta={entry.delta}
+              isMuted={summary.isEmpty}
+              // Nothing to select while the funnel is empty, and a tile that
+              // filters to zero of nothing is a control that only frustrates
+              href={
+                summary.isEmpty || !definition
+                  ? undefined
+                  : // Clicking the selected tile clears it, so the way out is
+                    // the same control as the way in
+                    dashboardHref(days, isSelected ? null : definition.slug)
+              }
+              isSelected={isSelected}
+              selectedLabel={isSelected ? '(selected, click to clear)' : undefined}
+            />
+          )
+        })}
       </div>
+
+      {stage && !summary.isEmpty && <StageContext stage={stage} summary={summary} days={days} />}
 
       {summary.isEmpty ? (
         <EmptyState message="No funnel to draw yet. This fills in once sessions and calls are being recorded." />
@@ -135,7 +220,7 @@ export default async function AdminDashboardPage({ searchParams }) {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-6 mb-6">
           <div>
             <h2 className="text-lg font-bold text-ihealthBlue mb-3">Where the funnel leaks</h2>
-            <FunnelChart stages={summary.stages} />
+            <FunnelChart stages={summary.stages} selectedKey={stage?.key || null} />
           </div>
 
           <div className="flex flex-col gap-6">
@@ -145,7 +230,7 @@ export default async function AdminDashboardPage({ searchParams }) {
         </div>
       )}
 
-      {!trend.isEmpty && <TrendChart days={trend.days} peak={trend.peak} />}
+      {!trend.isEmpty && <TrendChart days={trend.days} peak={trend.peak} stage={stage} />}
     </AdminShell>
   )
 }

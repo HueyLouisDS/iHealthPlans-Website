@@ -13,10 +13,26 @@
 
 import { useState } from 'react'
 
+// "Connected" rather than "Calls", because the series counts connected calls
+// only, matching the funnel stage above it. It used to count every call, which
+// put a peak of 45 on a chart sitting under a tile reading 528 connected out
+// of 939. Two numbers for the same word on one screen is how a dashboard
+// stops being believed.
 const SERIES = [
   { key: 'leads', label: 'Leads', colour: 'bg-ihealthBlue' },
-  { key: 'calls', label: 'Calls', colour: 'bg-ihealthGreen' },
+  { key: 'calls', label: 'Connected', colour: 'bg-ihealthGreen' },
 ]
+
+// Colour per funnel stage, for when a tile has focused the chart on one of
+// them. Leads and calls keep the colours they have in the default 2 series
+// view, or selecting a tile would recolour a series the reader just learned.
+const STAGE_COLOURS = {
+  sessions: 'bg-ihealthGreen',
+  callClicks: 'bg-ihealthGreen',
+  calls: 'bg-ihealthGreen',
+  leads: 'bg-ihealthBlue',
+  conversions: 'bg-ihealthBlue',
+}
 
 /**
  * One legend entry, which is also the control that shows and hides its series.
@@ -55,7 +71,7 @@ function LegendToggle({ series, isVisible, onToggle }) {
  * leaving the axis alone would leave leads as a row of stubs and the filter
  * would show you nothing you could not already see.
  */
-export default function TrendChart({ days, peak: fullPeak }) {
+export default function TrendChart({ days, peak: fullPeak, stage = null }) {
   const [hidden, setHidden] = useState(() => new Set())
 
   /**
@@ -75,7 +91,12 @@ export default function TrendChart({ days, peak: fullPeak }) {
     })
   }
 
-  const visible = SERIES.filter((series) => !hidden.has(series.key))
+  // A selected funnel stage overrides the legend entirely. The 2 series view
+  // and a single focused stage are different questions, and offering both
+  // controls at once would let you hide the very series you just asked for.
+  const visible = stage
+    ? [{ key: stage.key, label: stage.label, colour: STAGE_COLOURS[stage.key] || 'bg-ihealthGreen' }]
+    : SERIES.filter((series) => !hidden.has(series.key))
 
   // Rescaled to what is on screen. Never below 1, or a period with no activity
   // divides by zero and every bar renders as NaN percent.
@@ -88,21 +109,37 @@ export default function TrendChart({ days, peak: fullPeak }) {
   // gaps between them are dropped rather than the bars themselves
   const gap = days.length > 45 ? 'gap-px' : 'gap-1'
 
+  // The axis labels sit in this gutter. Sessions run to 4 digits where leads
+  // run to 2, so a fixed gutter would let "1117" sit on top of the first bar.
+  const gutter = peak >= 1000 ? 'pl-12' : 'pl-8'
+
   return (
     <div className="bg-white border rounded-lg p-5">
-      <div className="flex items-baseline justify-between gap-4 mb-4">
-        <h2 className="text-lg font-bold text-ihealthBlue">Daily trend</h2>
+      <div className="flex items-baseline justify-between gap-4 mb-4 flex-wrap">
+        <h2 className="text-lg font-bold text-ihealthBlue">
+          {stage ? `Daily ${stage.noun}` : 'Daily trend'}
+        </h2>
 
-        <div className="flex items-center gap-1">
-          {SERIES.map((series) => (
-            <LegendToggle
-              key={series.key}
-              series={series}
-              isVisible={!hidden.has(series.key)}
-              onToggle={() => toggle(series.key)}
+        {stage ? (
+          <span className="flex items-center gap-2 text-sm font-semibold text-[#505258]">
+            <span
+              className={`w-3 h-3 rounded-sm ${STAGE_COLOURS[stage.key] || 'bg-ihealthGreen'}`}
+              aria-hidden="true"
             />
-          ))}
-        </div>
+            {stage.label}
+          </span>
+        ) : (
+          <div className="flex items-center gap-1">
+            {SERIES.map((series) => (
+              <LegendToggle
+                key={series.key}
+                series={series}
+                isVisible={!hidden.has(series.key)}
+                onToggle={() => toggle(series.key)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="relative h-[200px]">
@@ -119,7 +156,7 @@ export default function TrendChart({ days, peak: fullPeak }) {
           </div>
         ))}
 
-        <div className={`absolute inset-0 flex items-end ${gap} pl-8`}>
+        <div className={`absolute inset-0 flex items-end ${gap} ${gutter}`}>
           {days.map((day) => (
             <div
               key={day.date.toISOString()}
@@ -141,7 +178,7 @@ export default function TrendChart({ days, peak: fullPeak }) {
         </div>
       </div>
 
-      <div className="flex justify-between items-baseline gap-4 text-xs text-[#878F99] mt-2 pl-8">
+      <div className={`flex justify-between items-baseline gap-4 text-xs text-[#878F99] mt-2 ${gutter}`}>
         <span>{days[0]?.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
 
         {/* Says the axis moved. Without this a rescaled chart looks like the

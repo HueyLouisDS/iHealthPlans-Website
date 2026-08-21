@@ -210,6 +210,61 @@ export async function getFunnelSummary({ days = 30 } = {}) {
  * One row per day so a gap renders as zero rather than vanishing, which is
  * what makes a drop off visible.
  */
+/**
+ * The 5 funnel stages, in order, as the one definition the dashboard reads.
+ *
+ * `slug` is what appears in ?stage=, kebab case because a url is read by
+ * people. It is a query parameter rather than a path segment because
+ * /admin/leads is already the lead list, so /admin/<stage> would collide with
+ * a real page the moment anyone selected the leads tile.
+ *
+ * `onward` is where to go for the records behind the number, and null where no
+ * such page exists yet. Sessions and call clicks have no table, and inventing
+ * a link to an empty page would be worse than admitting the gap.
+ */
+export const FUNNEL_STAGES = [
+  { key: 'sessions', slug: 'sessions', label: 'Sessions', noun: 'sessions', onward: null },
+  { key: 'callClicks', slug: 'call-clicks', label: 'Call clicks', noun: 'call clicks', onward: null },
+  {
+    key: 'calls',
+    slug: 'calls-connected',
+    label: 'Calls connected',
+    noun: 'connected calls',
+    onward: { href: '/admin/calls?disposition=connected', label: 'Open the call log' },
+  },
+  {
+    key: 'leads',
+    slug: 'leads',
+    label: 'Leads',
+    noun: 'leads',
+    onward: { href: '/admin/leads', label: 'Open the lead list' },
+  },
+  {
+    key: 'conversions',
+    slug: 'conversions',
+    label: 'Conversions',
+    noun: 'enrollments',
+    onward: { href: '/admin/leads?status=enrolled', label: 'Open the enrolled leads' },
+  },
+]
+
+/**
+ * Turns a stage parameter into a stage, or null when none is selected.
+ * Null for anything unrecognised too, so a hand typed ?stage=banana shows the
+ * unfiltered dashboard rather than erroring.
+ */
+export function parseStage(slug) {
+  return FUNNEL_STAGES.find((stage) => stage.slug === slug) || null
+}
+
+/**
+ * Daily figures for the trend chart, over the selected period.
+ *
+ * One row per day so a gap renders as zero rather than vanishing, which is
+ * what makes a drop off visible. Every funnel stage is returned rather than
+ * only leads and calls, because selecting a tile focuses the chart on that
+ * stage and the data has to be there for all 5.
+ */
 export async function getFunnelTrend({ days = 30 } = {}) {
   if (!usingFixtures()) return { days: [], isEmpty: true }
 
@@ -219,20 +274,46 @@ export async function getFunnelTrend({ days = 30 } = {}) {
   for (let day = days - 1; day >= 0; day -= 1) {
     const date = new Date()
     date.setDate(date.getDate() - day)
-    buckets.set(date.toDateString(), { date, leads: 0, calls: 0 })
+    buckets.set(date.toDateString(), {
+      date,
+      sessions: 0,
+      callClicks: 0,
+      calls: 0,
+      leads: 0,
+      conversions: 0,
+    })
+  }
+
+  // Sessions and call clicks are a daily series in the fixtures rather than
+  // individual records, since neither has a table yet
+  for (const row of data.daily) {
+    const bucket = buckets.get(row.date.toDateString())
+    if (!bucket) continue
+    bucket.sessions += row.sessions
+    bucket.callClicks += row.callClicks
   }
 
   for (const lead of data.leads) {
     const bucket = buckets.get(lead.createdAt.toDateString())
-    if (bucket) bucket.leads += 1
+    if (!bucket) continue
+    bucket.leads += 1
+    if (lead.status === 'enrolled') bucket.conversions += 1
   }
+
+  // Connected only, matching the funnel stage. Counting every call here would
+  // put a bigger number on the chart than the tile it is meant to explain.
   for (const call of data.calls) {
+    if (call.disposition !== 'connected') continue
     const bucket = buckets.get(call.startedAt.toDateString())
     if (bucket) bucket.calls += 1
   }
 
   const rows = [...buckets.values()]
-  return { days: rows, peak: Math.max(1, ...rows.map((d) => Math.max(d.leads, d.calls))), isEmpty: false }
+  return {
+    days: rows,
+    peak: Math.max(1, ...rows.map((row) => Math.max(row.leads, row.calls))),
+    isEmpty: false,
+  }
 }
 
 /**

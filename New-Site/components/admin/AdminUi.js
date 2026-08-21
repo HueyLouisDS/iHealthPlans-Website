@@ -10,10 +10,28 @@ import Link from 'next/link'
 /**
  * A single number with its label, and optionally the rate it converts at from
  * the stage above it in the funnel.
+ *
+ * Pass `href` to make the whole tile a link, which is what the funnel tiles on
+ * the dashboard use to select a stage. `isSelected` draws the green ring.
+ * Without an href it stays a plain div rather than a link that goes nowhere.
  */
-export function StatTile({ label, value, rate, delta, isMuted = false }) {
-  return (
-    <div className={`bg-white border rounded-lg p-5 flex flex-col gap-1 ${isMuted ? 'opacity-60' : ''}`}>
+export function StatTile({ label, value, rate, delta, isMuted = false, href, isSelected = false, selectedLabel }) {
+  const className = `bg-white border rounded-lg p-5 flex flex-col gap-1 transition-[box-shadow,opacity,border-color] ${
+    isMuted ? 'opacity-60' : ''
+  } ${
+    isSelected
+      ? 'border-ihealthGreen ring-2 ring-ihealthGreen'
+      : href
+        ? // Hover is blue, selected is green, so the 2 states are different
+          // colours rather than 2 strengths of one. Focus gets the full green
+          // ring, since a keyboard user never sees hover at all and needs to
+          // know where the selection would land.
+          'hover:border-ihealthBlue/40 hover:ring-2 hover:ring-ihealthBlue/25 focus-visible:outline-none focus-visible:border-ihealthGreen focus-visible:ring-2 focus-visible:ring-ihealthGreen'
+        : ''
+  }`
+
+  const body = (
+    <>
       <p className="text-sm font-semibold uppercase tracking-[1.2px] text-[#6C7381]">{label}</p>
 
       <div className="flex items-baseline gap-2 flex-wrap">
@@ -24,7 +42,23 @@ export function StatTile({ label, value, rate, delta, isMuted = false }) {
       {rate !== null && rate !== undefined && (
         <p className="text-sm text-[#505258]">{rate} from previous stage</p>
       )}
-    </div>
+    </>
+  )
+
+  if (!href) return <div className={className}>{body}</div>
+
+  return (
+    <Link
+      href={href}
+      // aria-current says which tile is driving the page, and the ring is not
+      // the only signal. Colour alone is unreadable for anyone with a red
+      // green deficiency, so the state is announced as well as drawn.
+      aria-current={isSelected ? 'true' : undefined}
+      className={className}
+    >
+      {body}
+      {selectedLabel && <span className="sr-only">{selectedLabel}</span>}
+    </Link>
   )
 }
 

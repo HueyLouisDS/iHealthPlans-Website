@@ -15,14 +15,18 @@
  * One stage. Width is its share of the top of the funnel, so the taper is
  * proportional to real volume rather than decorative.
  */
-function Stage({ stage, isLast }) {
+function Stage({ stage, isLast, isSelected, isDimmed }) {
   // Below about 2% a proportional bar is a sliver nobody can see or click, so
   // there is a floor. It distorts the taper at the bottom, which is why the
   // percentage is always printed as well and never inferred from the width.
   const width = Math.max(stage.shareOfTop * 100, 2)
 
   return (
-    <div className="w-full">
+    <div
+      className={`w-full transition-opacity ${isDimmed ? 'opacity-40' : ''} ${
+        isSelected ? 'ring-2 ring-ihealthGreen rounded-md -m-2 p-2' : ''
+      }`}
+    >
       <div className="flex items-baseline justify-between gap-4 mb-1.5">
         <p className="text-sm font-semibold uppercase tracking-[1.2px] text-[#6C7381]">{stage.label}</p>
         <div className="flex items-baseline gap-3">
@@ -58,7 +62,7 @@ function Stage({ stage, isLast }) {
  * Takes the stages straight from getFunnelSummary, and computes each stage's
  * loss to the next one so the drop offs read down the page.
  */
-export default function FunnelChart({ stages }) {
+export default function FunnelChart({ stages, selectedKey = null }) {
   const withDrops = stages.map((stage, index) => ({
     ...stage,
     dropToNext: index < stages.length - 1 ? stage.count - stages[index + 1].count : 0,
@@ -67,7 +71,16 @@ export default function FunnelChart({ stages }) {
   return (
     <div className="bg-white border rounded-lg p-6 flex flex-col gap-5">
       {withDrops.map((stage, index) => (
-        <Stage key={stage.key} stage={stage} isLast={index === withDrops.length - 1} />
+        <Stage
+          key={stage.key}
+          stage={stage}
+          isLast={index === withDrops.length - 1}
+          isSelected={stage.key === selectedKey}
+          // The others fade rather than disappear. A funnel with a stage
+          // removed is not a funnel, and the whole point of the shape is what
+          // the selected stage sits between.
+          isDimmed={Boolean(selectedKey) && stage.key !== selectedKey}
+        />
       ))}
     </div>
   )
