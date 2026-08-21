@@ -16,6 +16,8 @@ import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
 import FilterPanel from '@/components/admin/FilterPanel'
 import SelectableTable from '@/components/admin/SelectableTable'
+import SnapFocus from '@/components/admin/SnapFocus'
+import { buildHref } from '@/lib/admin/urls'
 import { DataSourceNotice, StatTile } from '@/components/admin/AdminUi'
 import {
   getAgentPerformance,
@@ -28,6 +30,21 @@ import {
 
 const BASE = '/admin/agents'
 const PARAM_KEYS = ['period', 'sort']
+
+// Where the page snaps to when a tile is clicked. The filter panel and the
+// table below it are what the tile changed, so landing here shows the result.
+const FOCUS_ID = 'agent-table'
+
+// The tiles rank the table rather than filter it. Filtering to one agent is
+// what clicking their name already does, and it goes somewhere more useful,
+// their call log. What a tile is good for here is asking to see the table
+// ordered by that column.
+const TILE_SORTS = {
+  agents: 'name',
+  calls: 'calls',
+  talk: 'talk',
+  conversions: 'conversions',
+}
 
 const COLUMNS = [
   { key: 'name', label: 'Agent', nowrap: true },
@@ -69,6 +86,24 @@ export default async function AdminAgentsPage({ searchParams }) {
     },
   ]
 
+  /**
+   * The url a tile points at.
+   *
+   * Clicking the ranked tile again returns to the default, so the way out is
+   * the same control as the way in. The period is kept, since it says which
+   * window is being looked at rather than how to order it.
+   */
+  const tileHref = (name) => {
+    const next = TILE_SORTS[name]
+    const isOn = sort === next
+    const href = buildHref(BASE, PARAM_KEYS, filters, { sort: isOn ? undefined : next })
+
+    // The fragment snaps to the table. Not when clearing, since scrolling
+    // somebody down the page as they undo a choice is the opposite of what
+    // they asked for.
+    return isOn ? href : `${href}#${FOCUS_ID}`
+  }
+
   const exportHref = `${BASE}/export?${new URLSearchParams(
     Object.entries(filters).filter(([, value]) => Boolean(value))
   ).toString()}`
@@ -88,13 +123,34 @@ export default async function AdminAgentsPage({ searchParams }) {
       {!result.isEmpty && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <StatTile label="Agents on calls" value={String(result.summary.agents)} />
-            <StatTile label="Calls handled" value={result.summary.calls.toLocaleString()} />
-            <StatTile label="Talk time" value={result.summary.talkTime} />
+            <StatTile
+              label="Agents on calls"
+              value={String(result.summary.agents)}
+              href={tileHref('agents')}
+              isSelected={sort === 'name'}
+              selectedLabel={sort === 'name' ? '(table ranked by this, click to clear)' : undefined}
+            />
+            <StatTile
+              label="Calls handled"
+              value={result.summary.calls.toLocaleString()}
+              href={tileHref('calls')}
+              isSelected={sort === 'calls'}
+              selectedLabel={sort === 'calls' ? '(table ranked by this, click to clear)' : undefined}
+            />
+            <StatTile
+              label="Talk time"
+              value={result.summary.talkTime}
+              href={tileHref('talk')}
+              isSelected={sort === 'talk'}
+              selectedLabel={sort === 'talk' ? '(table ranked by this, click to clear)' : undefined}
+            />
             <StatTile
               label="Enrollments"
               value={result.summary.conversions.toLocaleString()}
               rate={result.summary.conversionRate}
+              href={tileHref('conversions')}
+              isSelected={sort === 'conversions'}
+              selectedLabel={sort === 'conversions' ? '(table ranked by this)' : undefined}
             />
           </div>
 
@@ -116,6 +172,18 @@ export default async function AdminAgentsPage({ searchParams }) {
             </p>
           </div>
 
+          {/* Everything a tile changes lives inside here, so the snap puts
+              the whole result on screen in one movement */}
+          <SnapFocus targetId={FOCUS_ID} value={sort} />
+
+          <section
+            id={FOCUS_ID}
+            // Focusable so the snap moves the keyboard caret here too, not
+            // only the scroll position
+            tabIndex={-1}
+            aria-label="Agent performance"
+            className="scroll-mt-6 focus:outline-none"
+          >
           <FilterPanel
             basePath={BASE}
             paramKeys={PARAM_KEYS}
@@ -140,6 +208,7 @@ export default async function AdminAgentsPage({ searchParams }) {
               Export
             </a>
           </div>
+          </section>
         </>
       )}
 

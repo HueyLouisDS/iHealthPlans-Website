@@ -16,6 +16,7 @@ import AdminShell from '@/components/admin/AdminShell'
 import FilterPanel from '@/components/admin/FilterPanel'
 import SelectableTable from '@/components/admin/SelectableTable'
 import { buildHref } from '@/lib/admin/urls'
+import SnapFocus from '@/components/admin/SnapFocus'
 import { DataSourceNotice, StatTile } from '@/components/admin/AdminUi'
 import {
   getLeads,
@@ -36,7 +37,20 @@ const SORTS = [
 ]
 
 const BASE = '/admin/leads'
-const PARAM_KEYS = ['period', 'source', 'status', 'q', 'sort', 'perPage', 'page']
+const PARAM_KEYS = ['period', 'source', 'status', 'audience', 'hasCall', 'q', 'sort', 'perPage', 'page']
+
+// Where the page snaps to when a tile is clicked. The filter panel and the
+// table below it are what the tile changed, so landing here shows the result.
+const FOCUS_ID = 'lead-filters'
+
+// Each tile is a filter. `params` is what it sets, and clicking a tile that is
+// already on clears it, so the way out is the same control as the way in.
+const TILE_FILTERS = {
+  all: {},
+  enrolled: { status: 'enrolled' },
+  family: { audience: 'other' },
+  noCall: { hasCall: 'no' },
+}
 
 const COLUMNS = [
   { key: 'name', label: 'Name' },
@@ -64,6 +78,8 @@ export default async function AdminLeadsPage({ searchParams }) {
     period: params?.period,
     source: params?.source,
     status: params?.status,
+    audience: params?.audience,
+    hasCall: params?.hasCall,
     q: params?.q,
     sort: params?.sort,
     perPage: params?.perPage,
@@ -75,6 +91,8 @@ export default async function AdminLeadsPage({ searchParams }) {
     days,
     source: params?.source,
     status: params?.status,
+    audience: params?.audience,
+    hasCall: params?.hasCall,
     query: params?.q,
     sort: params?.sort,
   })
@@ -84,11 +102,18 @@ export default async function AdminLeadsPage({ searchParams }) {
     Object.entries(filters).filter(([key, value]) => Boolean(value) && key !== 'perPage')
   ).toString()}`
 
-  const hasFilters = Boolean(params?.source || params?.status || params?.q)
+  const hasFilters = Boolean(
+    params?.source || params?.status || params?.audience || params?.hasCall || params?.q
+  )
 
   const applied = [
     params?.status && { key: 'status', label: `Status: ${params.status}` },
     params?.source && { key: 'source', label: `Source: ${params.source}` },
+    params?.audience && {
+      key: 'audience',
+      label: params.audience === 'other' ? 'For a family member' : 'For themselves',
+    },
+    params?.hasCall && { key: 'hasCall', label: params.hasCall === 'no' ? 'No call yet' : 'Has called' },
     params?.q && { key: 'q', label: `Search: ${params.q}` },
   ].filter(Boolean)
 
@@ -124,6 +149,30 @@ export default async function AdminLeadsPage({ searchParams }) {
       options: [{ value: undefined, label: 'All' }, ...result.sources.map((s) => ({ value: s, label: s }))],
     },
     {
+      key: 'audience',
+      label: 'Enquiring for',
+      paramKey: 'audience',
+      activeValue: params?.audience,
+      isApplied: Boolean(params?.audience),
+      options: [
+        { value: undefined, label: 'All' },
+        { value: 'self', label: 'Themselves' },
+        { value: 'other', label: 'A family member', count: result.summary.onBehalfOfOther },
+      ],
+    },
+    {
+      key: 'hasCall',
+      label: 'Called',
+      paramKey: 'hasCall',
+      activeValue: params?.hasCall,
+      isApplied: Boolean(params?.hasCall),
+      options: [
+        { value: undefined, label: 'All' },
+        { value: 'yes', label: 'Has called' },
+        { value: 'no', label: 'No call yet', count: result.summary.withoutCall },
+      ],
+    },
+    {
       key: 'sort',
       label: 'Sort',
       paramKey: 'sort',
@@ -131,6 +180,42 @@ export default async function AdminLeadsPage({ searchParams }) {
       options: SORTS,
     },
   ]
+
+  /**
+   * The url a tile points at.
+   *
+   * Every tile clears the other tiles' filters as well as setting its own, so
+   * the 4 behave as one control with 4 positions rather than as 3 checkboxes
+   * and a reset. Search, source, period, and sort are all kept, since those
+   * say which population is being looked at rather than which slice of it.
+   */
+  const tileHref = (name) => {
+    const isOn = Object.entries(TILE_FILTERS[name]).every(([key, value]) => filters[key] === value)
+    const isClearing = isOn || name === 'all'
+    const next = isClearing ? {} : TILE_FILTERS[name]
+
+    const href = buildHref(BASE, PARAM_KEYS, filters, {
+      status: undefined,
+      audience: undefined,
+      hasCall: undefined,
+      page: 1,
+      ...next,
+    })
+
+    // The fragment snaps the page to the results. Not when clearing, since
+    // scrolling somebody down the page as they undo a filter is the opposite
+    // of what they asked for.
+    return isClearing ? href : `${href}#${FOCUS_ID}`
+  }
+
+  // "All" is selected when none of the others are, which is what makes it read
+  // as the neutral position rather than as a 4th filter
+  const activeTile =
+    (params?.status === 'enrolled' && !params?.audience && !params?.hasCall && 'enrolled') ||
+    (params?.audience === 'other' && !params?.status && !params?.hasCall && 'family') ||
+    (params?.hasCall === 'no' && !params?.status && !params?.audience && 'noCall') ||
+    (!params?.status && !params?.audience && !params?.hasCall && 'all') ||
+    null
 
   return (
     <AdminShell
@@ -147,12 +232,48 @@ export default async function AdminLeadsPage({ searchParams }) {
       {!result.isEmpty && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatTile label="Leads" value={result.summary.total.toLocaleString()} />
-            <StatTile label="Enrolled" value={result.summary.enrolled.toLocaleString()} rate={result.summary.conversionRate} />
-            <StatTile label="For a family member" value={result.summary.onBehalfOfOther.toLocaleString()} />
-            <StatTile label="No call yet" value={result.summary.withoutCall.toLocaleString()} />
+            <StatTile
+              label="Leads"
+              value={result.summary.total.toLocaleString()}
+              href={tileHref('all')}
+              isSelected={activeTile === 'all'}
+            />
+            <StatTile
+              label="Enrolled"
+              value={result.summary.enrolled.toLocaleString()}
+              rate={result.summary.conversionRate}
+              href={tileHref('enrolled')}
+              isSelected={activeTile === 'enrolled'}
+              selectedLabel={activeTile === 'enrolled' ? '(selected, click to clear)' : undefined}
+            />
+            <StatTile
+              label="For a family member"
+              value={result.summary.onBehalfOfOther.toLocaleString()}
+              href={tileHref('family')}
+              isSelected={activeTile === 'family'}
+              selectedLabel={activeTile === 'family' ? '(selected, click to clear)' : undefined}
+            />
+            <StatTile
+              label="No call yet"
+              value={result.summary.withoutCall.toLocaleString()}
+              href={tileHref('noCall')}
+              isSelected={activeTile === 'noCall'}
+              selectedLabel={activeTile === 'noCall' ? '(selected, click to clear)' : undefined}
+            />
           </div>
 
+          {/* Everything a tile changes lives inside here, so the snap puts
+              the whole result on screen in one movement */}
+          <SnapFocus targetId={FOCUS_ID} value={`${params?.status || ''}|${params?.audience || ''}|${params?.hasCall || ''}`} />
+
+          <section
+            id={FOCUS_ID}
+            // Focusable so the snap moves the keyboard caret here too, not
+            // only the scroll position
+            tabIndex={-1}
+            aria-label="Filtered leads"
+            className="scroll-mt-6 focus:outline-none"
+          >
           <FilterPanel
             basePath={BASE}
             paramKeys={PARAM_KEYS}
@@ -180,6 +301,7 @@ export default async function AdminLeadsPage({ searchParams }) {
               Export
             </a>
           </div>
+          </section>
         </>
       )}
 

@@ -22,6 +22,7 @@ import AdminShell from '@/components/admin/AdminShell'
 import FilterPanel from '@/components/admin/FilterPanel'
 import SelectableTable from '@/components/admin/SelectableTable'
 import { buildHref } from '@/lib/admin/urls'
+import SnapFocus from '@/components/admin/SnapFocus'
 import { DataSourceNotice, StatTile } from '@/components/admin/AdminUi'
 import {
   getAttribution,
@@ -36,6 +37,23 @@ import {
 
 // Only the filters live in the query string now. The grouping is in the path.
 const PARAM_KEYS = ['period', 'device', 'audience', 'sort']
+
+// Where the page snaps to when a tile is clicked. The filter panel and the
+// table below it are what the tile changed, so landing here shows the result.
+const FOCUS_ID = 'attribution-table'
+
+// This page's tiles rank the table rather than filter it, because that is what
+// attribution offers. There is no "leads only" view of a leads breakdown, but
+// there is very much a question of which column you want it ordered by.
+//
+// "Calls with no lead" has no entry on purpose. Those calls carry no source at
+// all, so there is no column to sort by and no rows to filter to. It is the
+// gap in the data, not a slice of it, which is why it stays muted and inert.
+const TILE_SORTS = {
+  leads: 'leads',
+  calls: 'calls',
+  conversions: 'conversions',
+}
 
 /**
  * Names the tab after the breakdown being shown, since these are separate pages
@@ -135,6 +153,26 @@ export default async function AdminAttributionPage({ params, searchParams }) {
     },
   ].filter(Boolean)
 
+  const activeSort = query?.sort || 'leads'
+
+  /**
+   * The url a tile points at.
+   *
+   * Clicking the ranked tile again returns to the default, so the way out is
+   * the same control as the way in. Every filter is kept, since the tiles say
+   * how to order the table rather than which rows belong in it.
+   */
+  const tileHref = (name) => {
+    const sort = TILE_SORTS[name]
+    const isOn = activeSort === sort
+    const href = buildHref(base, PARAM_KEYS, filters, { sort: isOn ? undefined : sort })
+
+    // The fragment snaps to the table. Not when clearing, since scrolling
+    // somebody down the page as they undo a choice is the opposite of what
+    // they asked for.
+    return isOn ? href : `${href}#${FOCUS_ID}`
+  }
+
   // The export sits under this dimension's path too, so the file and the page
   // can never disagree about what was grouped
   const exportQuery = new URLSearchParams(
@@ -157,12 +195,27 @@ export default async function AdminAttributionPage({ params, searchParams }) {
       {!result.isEmpty && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <StatTile label="Leads" value={result.summary.leads.toLocaleString()} />
-            <StatTile label="Calls from those leads" value={result.summary.calls.toLocaleString()} />
+            <StatTile
+              label="Leads"
+              value={result.summary.leads.toLocaleString()}
+              href={tileHref('leads')}
+              isSelected={activeSort === 'leads'}
+              selectedLabel={activeSort === 'leads' ? '(table ranked by this)' : undefined}
+            />
+            <StatTile
+              label="Calls from those leads"
+              value={result.summary.calls.toLocaleString()}
+              href={tileHref('calls')}
+              isSelected={activeSort === 'calls'}
+              selectedLabel={activeSort === 'calls' ? '(table ranked by this, click to clear)' : undefined}
+            />
             <StatTile
               label="Enrollments"
               value={result.summary.conversions.toLocaleString()}
               rate={result.summary.conversionRate}
+              href={tileHref('conversions')}
+              isSelected={activeSort === 'conversions'}
+              selectedLabel={activeSort === 'conversions' ? '(table ranked by this, click to clear)' : undefined}
             />
             {/* Muted on purpose. It is a gap in the data rather than a result,
                 and it should not sit next to the others looking like one. */}
@@ -214,6 +267,18 @@ export default async function AdminAttributionPage({ params, searchParams }) {
             </div>
           </nav>
 
+          {/* Everything a tile changes lives inside here, so the snap puts
+              the whole result on screen in one movement */}
+          <SnapFocus targetId={FOCUS_ID} value={activeSort} />
+
+          <section
+            id={FOCUS_ID}
+            // Focusable so the snap moves the keyboard caret here too, not
+            // only the scroll position
+            tabIndex={-1}
+            aria-label={`${dimension.label} breakdown`}
+            className="scroll-mt-6 focus:outline-none"
+          >
           <FilterPanel
             basePath={base}
             paramKeys={PARAM_KEYS}
@@ -237,6 +302,7 @@ export default async function AdminAttributionPage({ params, searchParams }) {
               Export
             </a>
           </div>
+          </section>
         </>
       )}
 

@@ -389,7 +389,19 @@ export async function getRecentLeads({ limit = 6 } = {}) {
  * status rather than collapsing to the one that is selected. A filter control
  * that hides its own options is unusable.
  */
-export async function getLeads({ page = 1, perPage = 25, days = 30, source, status, query, sort = 'newest' } = {}) {
+export async function getLeads({
+  page = 1,
+  perPage = 25,
+  days = 30,
+  source,
+  status,
+  // Who the enquiry is for. "other" means somebody acting for a relative.
+  audience,
+  // "no" for leads that never produced a call, "yes" for those that did.
+  hasCall,
+  query,
+  sort = 'newest',
+} = {}) {
   const empty = {
     leads: [],
     total: 0,
@@ -446,7 +458,15 @@ export async function getLeads({ page = 1, perPage = 25, days = 30, source, stat
     withoutCall: beforeStatus.filter((lead) => lead.callCount === 0).length,
   }
 
+  // Applied after the summary on purpose, along with status. The tiles
+  // describe the period so they can be clicked to filter, and a tile whose own
+  // number changes the moment you click it is a control that argues with
+  // itself.
   if (status) rows = rows.filter((lead) => lead.status === status)
+  if (audience === 'other') rows = rows.filter((lead) => lead.onBehalfOf !== 'Myself')
+  if (audience === 'self') rows = rows.filter((lead) => lead.onBehalfOf === 'Myself')
+  if (hasCall === 'no') rows = rows.filter((lead) => lead.callCount === 0)
+  if (hasCall === 'yes') rows = rows.filter((lead) => lead.callCount > 0)
 
   const sorters = {
     newest: (a, b) => b.createdAt - a.createdAt,

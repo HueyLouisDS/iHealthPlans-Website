@@ -14,6 +14,7 @@ import AdminShell from '@/components/admin/AdminShell'
 import FunnelChart from '@/components/admin/FunnelChart'
 import TrendChart from '@/components/admin/TrendChart'
 import TopSources from '@/components/admin/TopSources'
+import SnapFocus from '@/components/admin/SnapFocus'
 import { StatTile, DataSourceNotice, EmptyState, StatusPill } from '@/components/admin/AdminUi'
 import {
   getFunnelSummary,
@@ -27,17 +28,29 @@ import {
   FUNNEL_STAGES,
 } from '@/lib/admin/data'
 
+// The id the page snaps to when a stage is selected. Everything the selection
+// changes sits below it, so landing here puts the whole focused view on screen
+// in one movement.
+const FOCUS_ID = 'stage-focus'
+
 /**
  * Builds a dashboard url, keeping the period and setting the stage.
+ *
  * Period has to survive selecting a stage, or every click would silently throw
  * the reader back to the default 30 days.
+ *
+ * Selecting a stage carries a fragment so the browser snaps to the focused
+ * view. Clearing does not, since scrolling somebody down the page as they undo
+ * a selection is the opposite of what they asked for.
  */
-function dashboardHref(days, stageSlug) {
+function dashboardHref(days, stageSlug, { snap = true } = {}) {
   const params = new URLSearchParams()
   if (days !== 30) params.set('period', String(days))
   if (stageSlug) params.set('stage', stageSlug)
+
   const query = params.toString()
-  return query ? `/admin?${query}` : '/admin'
+  const path = query ? `/admin?${query}` : '/admin'
+  return stageSlug && snap ? `${path}#${FOCUS_ID}` : path
 }
 
 /**
@@ -54,7 +67,15 @@ function StageContext({ stage, summary, days }) {
   const lost = previous ? previous.count - current.count : null
 
   return (
-    <div className="mb-6 bg-white border-2 border-ihealthGreen rounded-lg px-5 py-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+    <section
+      id={FOCUS_ID}
+      // Focusable so the snap moves the keyboard caret here too, not only the
+      // scroll position. Without this a keyboard user is jumped visually and
+      // then tabs from wherever they were, which is the tile they just left.
+      tabIndex={-1}
+      aria-label={`${stage.label} selected`}
+      className="scroll-mt-6 mb-6 bg-white border-2 border-ihealthGreen rounded-lg px-5 py-4 flex flex-wrap items-center gap-x-6 gap-y-2 focus:outline-none"
+    >
       <p className="text-base text-[#505258]">
         <span className="font-bold text-ihealthBlue">{current.count.toLocaleString()}</span>{' '}
         {stage.noun} in the last {days} days
@@ -85,7 +106,7 @@ function StageContext({ stage, summary, days }) {
       >
         Clear
       </Link>
-    </div>
+    </section>
   )
 }
 
@@ -103,8 +124,10 @@ function PeriodPicker({ days, stageSlug = null }) {
           <Link
             key={period.value}
             // The selected stage rides along, so changing the period does not
-            // silently drop the thing the reader is looking at
-            href={dashboardHref(Number(period.value), stageSlug)}
+            // silently drop the thing the reader is looking at. No snap
+            // though, since asking for a different period is not asking to be
+            // moved down the page away from the control you just used.
+            href={dashboardHref(Number(period.value), stageSlug, { snap: false })}
             aria-current={isActive ? 'page' : undefined}
             className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
               isActive ? 'bg-ihealthBlue text-white' : 'bg-white border text-[#505258] hover:border-ihealthBlue'
@@ -212,7 +235,12 @@ export default async function AdminDashboardPage({ searchParams }) {
         })}
       </div>
 
-      {stage && !summary.isEmpty && <StageContext stage={stage} summary={summary} days={days} />}
+      {stage && !summary.isEmpty && (
+        <>
+          <SnapFocus targetId={FOCUS_ID} value={stage.slug} />
+          <StageContext stage={stage} summary={summary} days={days} />
+        </>
+      )}
 
       {summary.isEmpty ? (
         <EmptyState message="No funnel to draw yet. This fills in once sessions and calls are being recorded." />

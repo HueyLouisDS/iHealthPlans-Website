@@ -14,6 +14,7 @@ import AdminShell from '@/components/admin/AdminShell'
 import FilterPanel from '@/components/admin/FilterPanel'
 import SelectableTable from '@/components/admin/SelectableTable'
 import { buildHref } from '@/lib/admin/urls'
+import SnapFocus from '@/components/admin/SnapFocus'
 import { DataSourceNotice, StatTile } from '@/components/admin/AdminUi'
 import {
   getCalls,
@@ -28,6 +29,19 @@ import {
 
 const BASE = '/admin/calls'
 const PARAM_KEYS = ['period', 'matched', 'disposition', 'agent', 'recording', 'sort', 'perPage', 'page']
+
+// Where the page snaps to when a tile is clicked. The filter panel and the
+// table below it are what the tile changed, so landing here shows the result.
+const FOCUS_ID = 'call-filters'
+
+// Each tile is a filter. Clicking one that is already on clears it, so the way
+// out is the same control as the way in.
+const TILE_FILTERS = {
+  all: {},
+  connected: { disposition: 'connected' },
+  matched: { matched: 'yes' },
+  unmatched: { matched: 'no' },
+}
 
 const DISPOSITIONS = ['connected', 'voicemail', 'no answer', 'abandoned']
 
@@ -152,6 +166,41 @@ export default async function AdminCallsPage({ searchParams }) {
     },
   ]
 
+  /**
+   * The url a tile points at.
+   *
+   * Every tile clears the other tiles' filters as well as setting its own, so
+   * the 4 behave as one control with 4 positions rather than as 3 checkboxes
+   * and a reset. Period, agent, recording, and sort are all kept, since those
+   * say which population is being looked at rather than which slice of it.
+   */
+  const tileHref = (name) => {
+    const isOn = Object.entries(TILE_FILTERS[name]).every(([key, value]) => filters[key] === value)
+    const isClearing = isOn || name === 'all'
+    const next = isClearing ? {} : TILE_FILTERS[name]
+
+    const href = buildHref(BASE, PARAM_KEYS, filters, {
+      matched: undefined,
+      disposition: undefined,
+      page: 1,
+      ...next,
+    })
+
+    // The fragment snaps the page to the results. Not when clearing, since
+    // scrolling somebody down the page as they undo a filter is the opposite
+    // of what they asked for.
+    return isClearing ? href : `${href}#${FOCUS_ID}`
+  }
+
+  // "All" is selected when none of the others are, which is what makes it read
+  // as the neutral position rather than as a 4th filter
+  const activeTile =
+    (params?.disposition === 'connected' && !params?.matched && 'connected') ||
+    (params?.matched === 'yes' && !params?.disposition && 'matched') ||
+    (params?.matched === 'no' && !params?.disposition && 'unmatched') ||
+    (!params?.matched && !params?.disposition && 'all') ||
+    null
+
   // perPage is excluded on purpose, an export is never paginated
   const exportHref = `${BASE}/export?${new URLSearchParams(
     Object.entries(filters).filter(([key, value]) => Boolean(value) && key !== 'perPage')
@@ -172,14 +221,50 @@ export default async function AdminCallsPage({ searchParams }) {
       {!result.isEmpty && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatTile label="Calls" value={result.summary.total.toLocaleString()} />
-            <StatTile label="Connected" value={result.summary.connected.toLocaleString()} rate={result.summary.connectedRate} />
-            <StatTile label="Matched to a session" value={result.summary.matchedRate} />
+            <StatTile
+              label="Calls"
+              value={result.summary.total.toLocaleString()}
+              href={tileHref('all')}
+              isSelected={activeTile === 'all'}
+            />
+            <StatTile
+              label="Connected"
+              value={result.summary.connected.toLocaleString()}
+              rate={result.summary.connectedRate}
+              href={tileHref('connected')}
+              isSelected={activeTile === 'connected'}
+              selectedLabel={activeTile === 'connected' ? '(selected, click to clear)' : undefined}
+            />
+            <StatTile
+              label="Matched to a session"
+              value={result.summary.matchedRate}
+              href={tileHref('matched')}
+              isSelected={activeTile === 'matched'}
+              selectedLabel={activeTile === 'matched' ? '(selected, click to clear)' : undefined}
+            />
             {/* Unmatched gets a count rather than a rate, because it is the
                 number somebody has to go and fix */}
-            <StatTile label="Unmatched" value={result.summary.unmatched.toLocaleString()} />
+            <StatTile
+              label="Unmatched"
+              value={result.summary.unmatched.toLocaleString()}
+              href={tileHref('unmatched')}
+              isSelected={activeTile === 'unmatched'}
+              selectedLabel={activeTile === 'unmatched' ? '(selected, click to clear)' : undefined}
+            />
           </div>
 
+          {/* Everything a tile changes lives inside here, so the snap puts
+              the whole result on screen in one movement */}
+          <SnapFocus targetId={FOCUS_ID} value={`${params?.matched || ''}|${params?.disposition || ''}`} />
+
+          <section
+            id={FOCUS_ID}
+            // Focusable so the snap moves the keyboard caret here too, not
+            // only the scroll position
+            tabIndex={-1}
+            aria-label="Filtered calls"
+            className="scroll-mt-6 focus:outline-none"
+          >
           <FilterPanel
             basePath={BASE}
             paramKeys={PARAM_KEYS}
@@ -206,6 +291,7 @@ export default async function AdminCallsPage({ searchParams }) {
               Export
             </a>
           </div>
+          </section>
         </>
       )}
 
