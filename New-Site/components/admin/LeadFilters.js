@@ -14,8 +14,14 @@
  * have traded all of that for nothing.
  */
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
+// Asking for this many rows or more gets a confirmation first. Large pages are
+// slow to render and hard to scan, and the person almost always wants an
+// export rather than a very long table.
+const LARGE_PAGE_THRESHOLD = 200
 
 const TABS = [
   { key: 'period', label: 'Period' },
@@ -46,7 +52,7 @@ function buildHref(params, overrides) {
 /**
  * One group of filter chips.
  */
-function Chips({ options, activeValue, params, paramKey }) {
+function Chips({ options, activeValue, params, paramKey, onIntercept }) {
   return (
     <div className="flex flex-wrap gap-2">
       {options.map((option) => {
@@ -59,6 +65,9 @@ function Chips({ options, activeValue, params, paramKey }) {
           <Link
             key={option.label}
             href={href}
+            // Still a real link. The handler only intercepts when it has
+            // something to ask, so this keeps working without JavaScript.
+            onClick={(event) => onIntercept?.(event, option.value, href)}
             aria-current={isActive ? 'page' : undefined}
             className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
               isActive ? 'bg-ihealthBlue text-white' : 'bg-white border text-[#505258] hover:border-ihealthBlue'
@@ -71,6 +80,84 @@ function Chips({ options, activeValue, params, paramKey }) {
           </Link>
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * Confirmation shown before loading a very large page.
+ *
+ * A real dialog rather than window.confirm, because a native confirm cannot be
+ * styled, cannot offer a third option, and reads as a browser error to anyone
+ * who is not expecting it.
+ *
+ * Focus moves to the cancel button on open and Escape closes it, so the
+ * keyboard path out is the same as the mouse one.
+ */
+function LargePageDialog({ rows, onConfirm, onCancel, exportHref }) {
+  const cancelRef = useRef(null)
+
+  useEffect(() => {
+    cancelRef.current?.focus()
+
+    function onKeyDown(event) {
+      if (event.key === 'Escape') onCancel()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onCancel])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      // Clicking the backdrop cancels, but only the backdrop itself, not a
+      // click that started inside the panel and drifted out
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onCancel()
+      }}
+    >
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="large-page-title"
+        className="bg-white rounded-xl max-w-md w-full p-6 flex flex-col gap-4"
+      >
+        <h2 id="large-page-title" className="text-xl font-bold text-ihealthBlue">
+          Show {rows.toLocaleString()} rows?
+        </h2>
+
+        <p className="text-base text-[#505258]">
+          A page this long takes noticeably longer to load and is hard to scan. If you are after
+          the whole set rather than reading it on screen, an export is usually the better tool.
+        </p>
+
+        <div className="flex flex-wrap gap-3 mt-1">
+          <button
+            ref={cancelRef}
+            type="button"
+            onClick={onCancel}
+            className="h-11 px-5 rounded-md border bg-white text-[#505258] font-semibold hover:border-ihealthBlue transition-colors"
+          >
+            Cancel
+          </button>
+
+          <a
+            href={exportHref}
+            onClick={onCancel}
+            className="h-11 px-5 rounded-md bg-ihealthGreen text-white font-semibold inline-flex items-center hover:brightness-95 transition-[filter]"
+          >
+            Export instead
+          </a>
+
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="h-11 px-5 rounded-md bg-ihealthBlue text-white font-semibold hover:brightness-110 transition-[filter] ml-auto"
+          >
+            Show {rows.toLocaleString()}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -101,7 +188,35 @@ function Chevron({ isOpen }) {
  * summarised on the header row while collapsed, because a hidden filter that
  * is silently narrowing the results is how people end up mistrusting a report.
  */
-export default function LeadFilters({ params, days, perPage, periods, statuses, statusCounts, sources, sorts, perPageOptions }) {
+export default function LeadFilters({
+  params,
+  days,
+  perPage,
+  periods,
+  statuses,
+  statusCounts,
+  sources,
+  sorts,
+  perPageOptions,
+  perPageMin,
+  perPageMax,
+  exportHref,
+}) {
+  const router = useRouter()
+  // Set while a large page is waiting on confirmation
+  const [pending, setPending] = useState(null)
+
+  /**
+   * Stops a chip or the custom form from navigating straight to a very long
+   * page, and asks first. Anything below the threshold passes through
+   * untouched so the common case is never interrupted.
+   */
+  function guardLargePage(event, value, href) {
+    const rows = Number.parseInt(value, 10)
+    if (!Number.isFinite(rows) || rows < LARGE_PAGE_THRESHOLD) return
+    event.preventDefault()
+    setPending({ rows, href })
+  }
   const applied = [
     params.status && { key: 'status', label: `Status: ${params.status}` },
     params.source && { key: 'source', label: `Source: ${params.source}` },
@@ -251,20 +366,69 @@ export default function LeadFilters({ params, days, perPage, periods, statuses, 
             )}
 
             {tab === 'show' && (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <Chips
                   params={params}
                   paramKey="perPage"
                   activeValue={String(perPage)}
                   options={perPageOptions.map((size) => ({ value: String(size), label: `${size} per page` }))}
+                  onIntercept={guardLargePage}
                 />
-                <p className="text-sm text-[#6C7381]">
-                  Past 200 rows this stops being a list to read and becomes a report to export.
-                </p>
+
+                {/* A GET form, so a typed size works without JavaScript too.
+                    The handler only intercepts to confirm a large page. */}
+                <form
+                  action="/admin/leads"
+                  method="get"
+                  onSubmit={(event) => {
+                    const value = new FormData(event.currentTarget).get('perPage')
+                    guardLargePage(event, value, buildHref(params, { perPage: value, page: 1 }))
+                  }}
+                  className="flex flex-wrap items-center gap-2"
+                >
+                  {['period', 'source', 'status', 'sort', 'q'].map((key) =>
+                    params[key] ? <input key={key} type="hidden" name={key} value={params[key]} /> : null
+                  )}
+                  <label htmlFor="perPage" className="text-sm font-semibold text-[#6C7381]">
+                    Or type a number
+                  </label>
+                  <input
+                    id="perPage"
+                    name="perPage"
+                    type="number"
+                    min={perPageMin}
+                    max={perPageMax}
+                    step="1"
+                    defaultValue={perPage}
+                    className="w-24 h-10 px-3 border rounded-md text-base focus:outline-none focus:border-ihealthBlue"
+                  />
+                  <button
+                    type="submit"
+                    className="h-10 px-4 rounded-md border bg-white text-ihealthBlue font-semibold hover:border-ihealthBlue transition-colors"
+                  >
+                    Apply
+                  </button>
+                  <span className="text-sm text-[#6C7381]">
+                    {perPageMin} to {perPageMax}, anything outside that is clamped
+                  </span>
+                </form>
               </div>
             )}
           </div>
         </div>
+      )}
+
+      {pending && (
+        <LargePageDialog
+          rows={pending.rows}
+          exportHref={exportHref}
+          onCancel={() => setPending(null)}
+          onConfirm={() => {
+            const href = pending.href
+            setPending(null)
+            router.push(href)
+          }}
+        />
       )}
     </div>
   )

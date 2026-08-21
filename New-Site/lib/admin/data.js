@@ -29,19 +29,27 @@ export function usingFixtures() {
 }
 
 
-// How many rows to show at once. Capped at 200 because beyond that the page
-// stops being a list somebody reads and becomes a report they should export.
+// Shortcuts on the Show tab. Any number between the bounds below can also be
+// typed, these are just the sizes people actually pick.
 export const PER_PAGE_OPTIONS = [25, 50, 100, 200]
 
+// Bounds for a typed value. The ceiling exists because this parameter comes off
+// a query string, so without it anyone could ask for every record in a single
+// request, which is both a slow page and a trivial way to load the server.
+export const PER_PAGE_MIN = 5
+export const PER_PAGE_MAX = 500
+export const PER_PAGE_DEFAULT = 25
+
 /**
- * Turns a perPage parameter into a row count, clamped to the offered options.
- * Anything unrecognised falls back to 25 rather than erroring, since this comes
- * off a query string and an arbitrary number would let anyone ask for every
- * record in one request.
+ * Turns a perPage parameter into a row count.
+ * Clamped rather than rejected, so typing 5000 gives the largest allowed page
+ * instead of an error, and anything that is not a number falls back to the
+ * default. Never trust this value, it is user supplied.
  */
 export function parsePerPage(value) {
   const size = Number.parseInt(value, 10)
-  return PER_PAGE_OPTIONS.includes(size) ? size : 25
+  if (!Number.isFinite(size)) return PER_PAGE_DEFAULT
+  return Math.min(Math.max(size, PER_PAGE_MIN), PER_PAGE_MAX)
 }
 
 // Periods the dashboard offers. 90 is the limit because that is how much

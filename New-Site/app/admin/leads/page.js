@@ -23,6 +23,8 @@ import {
   parsePerPage,
   PERIODS,
   PER_PAGE_OPTIONS,
+  PER_PAGE_MIN,
+  PER_PAGE_MAX,
   LEAD_STATUSES,
 } from '@/lib/admin/data'
 
@@ -115,6 +117,9 @@ export default async function AdminLeadsPage({ searchParams }) {
             sorts={SORTS}
             perPage={perPage}
             perPageOptions={PER_PAGE_OPTIONS}
+            perPageMin={PER_PAGE_MIN}
+            perPageMax={PER_PAGE_MAX}
+            exportHref={exportHref}
           />
 
           <div className="flex items-center justify-between gap-4 mb-3">
