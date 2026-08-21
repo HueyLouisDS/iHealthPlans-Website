@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
 import FunnelChart from '@/components/admin/FunnelChart'
+import TrendChart from '@/components/admin/TrendChart'
 import { StatTile, DataSourceNotice, EmptyState, StatusPill } from '@/components/admin/AdminUi'
 import {
   getFunnelSummary,
@@ -46,67 +47,6 @@ function PeriodPicker({ days }) {
           </Link>
         )
       })}
-    </div>
-  )
-}
-
-/**
- * Daily leads and calls.
- * Gridlines and a peak label rather than a bare row of bars, so a reader can
- * tell roughly what a bar is worth without hovering it.
- */
-function TrendChart({ days, peak }) {
-  // A long period would render bars a pixel wide, so past a point only the
-  // gaps between them are dropped rather than the bars themselves
-  const gap = days.length > 45 ? 'gap-px' : 'gap-1'
-
-  return (
-    <div className="bg-white border rounded-lg p-5">
-      <div className="flex items-baseline justify-between mb-4">
-        <h2 className="text-lg font-bold text-ihealthBlue">Daily trend</h2>
-        <div className="flex items-center gap-4 text-sm text-[#505258]">
-          <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-ihealthBlue" /> Leads
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-ihealthGreen" /> Calls
-          </span>
-        </div>
-      </div>
-
-      <div className="relative h-[200px]">
-        {/* Gridlines at the quarters, with the peak labelled so the vertical
-            scale is readable */}
-        {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
-          <div
-            key={fraction}
-            className="absolute left-0 right-0 border-t border-dashed border-gray-200 flex items-start"
-            style={{ top: `${fraction * 100}%` }}
-          >
-            <span className="text-xs text-[#878F99] tabular-nums -mt-2 bg-white pr-2">
-              {Math.round(peak * (1 - fraction))}
-            </span>
-          </div>
-        ))}
-
-        <div className={`absolute inset-0 flex items-end ${gap} pl-8`}>
-          {days.map((day) => (
-            <div
-              key={day.date.toISOString()}
-              className="flex-1 flex items-end gap-px h-full"
-              title={`${day.date.toDateString()}: ${day.leads} leads, ${day.calls} calls`}
-            >
-              <div className="flex-1 bg-ihealthBlue rounded-t" style={{ height: `${(day.leads / peak) * 100}%` }} />
-              <div className="flex-1 bg-ihealthGreen rounded-t" style={{ height: `${(day.calls / peak) * 100}%` }} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex justify-between text-xs text-[#878F99] mt-2 pl-8">
-        <span>{days[0]?.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
-        <span>{days[days.length - 1]?.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
-      </div>
     </div>
   )
 }
