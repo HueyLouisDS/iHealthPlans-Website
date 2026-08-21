@@ -14,27 +14,17 @@ import Link from 'next/link'
 import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
 import LeadFilters from '@/components/admin/LeadFilters'
-import { DataTable, DataSourceNotice, StatTile, StatusPill } from '@/components/admin/AdminUi'
-import { getLeads, usingFixtures, parsePeriod, PERIODS, LEAD_STATUSES } from '@/lib/admin/data'
-
-const COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'phone', label: 'Phone' },
-  { key: 'zip', label: 'Zip' },
-  { key: 'source', label: 'Source' },
-  { key: 'campaign', label: 'Campaign' },
-  { key: 'onBehalfOf', label: 'For' },
-  { key: 'status', label: 'Status', render: (row) => <StatusPill status={row.status} /> },
-  { key: 'createdAtLabel', label: 'Received' },
-  {
-    key: 'callCount',
-    label: 'Calls',
-    align: 'right',
-    // A lead with no call is either waiting on a callback or has been missed,
-    // so it is worth marking rather than printing a quiet zero
-    render: (row) => (row.callCount === 0 ? <span className="text-[#6C7381]">none</span> : row.callCount),
-  },
-]
+import LeadTable from '@/components/admin/LeadTable'
+import { DataSourceNotice, StatTile } from '@/components/admin/AdminUi'
+import {
+  getLeads,
+  usingFixtures,
+  parsePeriod,
+  parsePerPage,
+  PERIODS,
+  PER_PAGE_OPTIONS,
+  LEAD_STATUSES,
+} from '@/lib/admin/data'
 
 const SORTS = [
   { value: 'newest', label: 'Newest first' },
@@ -51,7 +41,7 @@ function buildHref(params, overrides) {
   const next = new URLSearchParams()
   const merged = { ...params, ...overrides }
 
-  for (const key of ['period', 'source', 'status', 'q', 'sort', 'page']) {
+  for (const key of ['period', 'source', 'status', 'q', 'sort', 'perPage', 'page']) {
     const value = merged[key]
     if (value && !(key === 'page' && String(value) === '1')) next.set(key, String(value))
   }
@@ -67,16 +57,19 @@ export default async function AdminLeadsPage({ searchParams }) {
 
   const params = await searchParams
   const days = parsePeriod(params?.period)
+  const perPage = parsePerPage(params?.perPage)
   const filters = {
     period: params?.period,
     source: params?.source,
     status: params?.status,
     q: params?.q,
     sort: params?.sort,
+    perPage: params?.perPage,
   }
 
   const result = await getLeads({
     page: Number.parseInt(params?.page, 10) || 1,
+    perPage,
     days,
     source: params?.source,
     status: params?.status,
@@ -84,8 +77,9 @@ export default async function AdminLeadsPage({ searchParams }) {
     sort: params?.sort,
   })
 
+  // perPage is excluded on purpose, an export is never paginated
   const exportHref = `/admin/leads/export?${new URLSearchParams(
-    Object.entries(filters).filter(([, value]) => Boolean(value))
+    Object.entries(filters).filter(([key, value]) => Boolean(value) && key !== 'perPage')
   ).toString()}`
 
   const hasFilters = Boolean(params?.source || params?.status || params?.q)
@@ -119,6 +113,8 @@ export default async function AdminLeadsPage({ searchParams }) {
             statusCounts={result.statusCounts}
             sources={result.sources}
             sorts={SORTS}
+            perPage={perPage}
+            perPageOptions={PER_PAGE_OPTIONS}
           />
 
           <div className="flex items-center justify-between gap-4 mb-3">
@@ -128,18 +124,17 @@ export default async function AdminLeadsPage({ searchParams }) {
             {/* Every export is audited. See app/admin/leads/export/route.js */}
             <a
               href={exportHref}
-              className="h-11 px-5 rounded-md border bg-white text-ihealthBlue font-semibold inline-flex items-center hover:border-ihealthBlue"
+              className="h-11 px-5 rounded-md bg-ihealthGreen text-white font-semibold inline-flex items-center hover:brightness-95 transition-[filter] focus:outline-none focus:ring-4 focus:ring-ihealthGreen/40"
             >
-              Export CSV
+              Export
             </a>
           </div>
         </>
       )}
 
-      <DataTable
-        columns={COLUMNS}
-        rows={result.leads}
-        getRowHref={(row) => `/admin/leads/${row.id}`}
+      <LeadTable
+        leads={result.leads}
+        exportBase={exportHref}
         emptyMessage={hasFilters ? 'No leads match these filters.' : 'No leads yet.'}
       />
 

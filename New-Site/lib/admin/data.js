@@ -29,6 +29,21 @@ export function usingFixtures() {
 }
 
 
+// How many rows to show at once. Capped at 200 because beyond that the page
+// stops being a list somebody reads and becomes a report they should export.
+export const PER_PAGE_OPTIONS = [25, 50, 100, 200]
+
+/**
+ * Turns a perPage parameter into a row count, clamped to the offered options.
+ * Anything unrecognised falls back to 25 rather than erroring, since this comes
+ * off a query string and an arbitrary number would let anyone ask for every
+ * record in one request.
+ */
+export function parsePerPage(value) {
+  const size = Number.parseInt(value, 10)
+  return PER_PAGE_OPTIONS.includes(size) ? size : 25
+}
+
 // Periods the dashboard offers. 90 is the limit because that is how much
 // history the fixtures hold, and because a Medicare business thinks in
 // enrollment seasons rather than in years.
@@ -360,11 +375,17 @@ export async function getLeads({ page = 1, perPage = 25, days = 30, source, stat
  * the page the user happened to be looking at, and it must not be reachable
  * without going through the audit in the route handler.
  */
-export async function getLeadsForExport(filters = {}) {
+export async function getLeadsForExport(filters = {}, ids = null) {
   const first = await getLeads({ ...filters, page: 1, perPage: 1 })
   if (first.isEmpty) return []
+
   const all = await getLeads({ ...filters, page: 1, perPage: Math.max(first.total, 1) })
-  return all.leads
+
+  // A selection still runs through the filters first, so a stale id from
+  // another view cannot pull back a record the current filters exclude
+  if (!ids || ids.length === 0) return all.leads
+  const wanted = new Set(ids)
+  return all.leads.filter((lead) => wanted.has(lead.id))
 }
 
 /**

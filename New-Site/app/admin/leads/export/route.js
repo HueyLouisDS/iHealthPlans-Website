@@ -73,7 +73,11 @@ export async function GET(request) {
     sort: searchParams.get('sort') || 'newest',
   }
 
-  const leads = await getLeadsForExport(filters)
+  // An explicit selection from the table. Still filtered first, so this can
+  // only ever narrow what the current view already permits.
+  const ids = (searchParams.get('ids') || '').split(',').map((id) => id.trim()).filter(Boolean)
+
+  const leads = await getLeadsForExport(filters, ids)
 
   // Written before the response is returned, so an export that is interrupted
   // mid download is still recorded as having been taken
@@ -82,6 +86,8 @@ export async function GET(request) {
     at: new Date().toISOString(),
     records: leads.length,
     filters,
+    // Recorded so an audit can tell a whole view from a hand picked subset
+    selection: ids.length ? ids.length : 'all matching',
     // Flagged so a fabricated export is never mistaken for a real one in the log
     fixtures: usingFixtures(),
   })

@@ -22,6 +22,7 @@ const TABS = [
   { key: 'status', label: 'Status' },
   { key: 'source', label: 'Source' },
   { key: 'sort', label: 'Sort' },
+  { key: 'show', label: 'Show' },
 ]
 
 /**
@@ -33,7 +34,7 @@ function buildHref(params, overrides) {
   const next = new URLSearchParams()
   const merged = { ...params, ...overrides }
 
-  for (const key of ['period', 'source', 'status', 'q', 'sort', 'page']) {
+  for (const key of ['period', 'source', 'status', 'q', 'sort', 'perPage', 'page']) {
     const value = merged[key]
     if (value && !(key === 'page' && String(value) === '1')) next.set(key, String(value))
   }
@@ -100,7 +101,7 @@ function Chevron({ isOpen }) {
  * summarised on the header row while collapsed, because a hidden filter that
  * is silently narrowing the results is how people end up mistrusting a report.
  */
-export default function LeadFilters({ params, days, periods, statuses, statusCounts, sources, sorts }) {
+export default function LeadFilters({ params, days, perPage, periods, statuses, statusCounts, sources, sorts, perPageOptions }) {
   const applied = [
     params.status && { key: 'status', label: `Status: ${params.status}` },
     params.source && { key: 'source', label: `Source: ${params.source}` },
@@ -119,7 +120,7 @@ export default function LeadFilters({ params, days, periods, statuses, statusCou
           be a bad trade. A GET form, so it works without JavaScript and the
           result is a real url. */}
       <form action="/admin/leads" method="get" className="px-5 pt-5 pb-4 flex flex-wrap gap-3">
-        {['period', 'source', 'status', 'sort'].map((key) =>
+        {['period', 'source', 'status', 'sort', 'perPage'].map((key) =>
           params[key] ? <input key={key} type="hidden" name={key} value={params[key]} /> : null
         )}
         <label htmlFor="q" className="sr-only">
@@ -247,6 +248,20 @@ export default function LeadFilters({ params, days, periods, statuses, statusCou
 
             {tab === 'sort' && (
               <Chips params={params} paramKey="sort" activeValue={params.sort || 'newest'} options={sorts} />
+            )}
+
+            {tab === 'show' && (
+              <div className="flex flex-col gap-2">
+                <Chips
+                  params={params}
+                  paramKey="perPage"
+                  activeValue={String(perPage)}
+                  options={perPageOptions.map((size) => ({ value: String(size), label: `${size} per page` }))}
+                />
+                <p className="text-sm text-[#6C7381]">
+                  Past 200 rows this stops being a list to read and becomes a report to export.
+                </p>
+              </div>
             )}
           </div>
         </div>
