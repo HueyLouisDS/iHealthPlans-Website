@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 `
 
-/**
+/*
  * Splits a migration file into statements.
  *
  * MySQL's protocol runs one statement per call unless multipleStatements is
@@ -74,6 +74,44 @@ function statements(sql) {
     .split(';')
     .map((statement) => statement.trim())
     .filter(Boolean)
+}
+
+/**
+ * Connects, creating the database first if it does not exist yet.
+ *
+ * Saves a separate step and a confusing first error. A url naming a database
+ * that has not been created fails with ER_BAD_DB_ERROR, which reads like a
+ * credentials problem to anybody who has not seen it before.
+ *
+ * Only the database is created. Nothing here creates a user or grants
+ * anything, so the credentials in the url still have to be real.
+ */
+async function connect() {
+  const url = new URL(process.env.DATABASE_URL)
+  const database = url.pathname.replace(/^\//, '')
+
+  if (database) {
+    /* Connect with no database selected, so this works before it exists */
+    const server = new URL(url)
+    server.pathname = '/'
+
+    const bootstrap = await mysql.createConnection({ uri: server.toString() })
+    try {
+      const [before] = await bootstrap.query('SHOW DATABASES LIKE ?', [database])
+      if (before.length === 0) {
+        /* Backtick quoted rather than parameterised, because an identifier
+           cannot be a placeholder. The backticks inside the name are stripped
+           so the quoting cannot be escaped out of. */
+        await bootstrap.query(`CREATE DATABASE \`${database.replace(/`/g, '')}\`
+          CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`)
+        console.log(`  created  database ${database}`)
+      }
+    } finally {
+      await bootstrap.end()
+    }
+  }
+
+  return mysql.createConnection({ uri: process.env.DATABASE_URL })
 }
 
 async function run() {
@@ -96,7 +134,7 @@ async function run() {
     return
   }
 
-  const connection = await mysql.createConnection({ uri: process.env.DATABASE_URL })
+  const connection = await connect()
 
   try {
     await connection.execute(LEDGER)
