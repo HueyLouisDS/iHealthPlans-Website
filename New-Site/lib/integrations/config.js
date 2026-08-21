@@ -154,12 +154,11 @@ export function describe(config) {
  * Authorization headers for an outbound request.
  *
  * Here rather than at each call site so there is one place that knows how the
- * credential is presented, and one place to change when the vendor is
- * identified and turns out to want something other than a bearer token.
+ * credential is presented.
  *
- * TODO confirm the scheme against the dialer's documentation. Bearer with the
- * id in a companion header is the common shape, but plenty of telephony
- * vendors want basic auth with the id as the username instead.
+ * TLDialer takes 2 flat headers rather than a bearer token, confirmed against
+ * AUTH_HEADER_NAMES in the LionsHead tld interpreter. Both are required, the
+ * id alone authenticates nothing.
  */
 export function authHeaders(config) {
   if (!config.isConfigured) {
@@ -167,10 +166,39 @@ export function authHeaders(config) {
   }
 
   return {
-    Authorization: `Bearer ${config.apiKey}`,
-    'X-Api-Id': config.apiId,
+    'tld-api-id': config.apiId,
+    'tld-api-key': config.apiKey,
   }
 }
+
+/*=============================================
+    THE DIALER IS TLDIALER, AND LIONSHEAD ALREADY SPEAKS IT
+
+    Everything this file needs to know about TLD came from the LionsHead
+    interpreter rather than from guesswork:
+
+      base url        https://<tenant>.tldcrm.com
+      auth            tld-api-id and tld-api-key headers
+      response shape  results live at response.results
+      rate limit      5 per second, bucket capacity 50
+      query limit     100000
+      leads endpoint  requires a date range, unlike the others
+
+    Before writing a TLD client in this repo, settle whether the website
+    should be talking to TLD at all. LionsHead is a python library with a
+    working interpreter, rate limiter, pagination, and payload mapping. A
+    second client here would duplicate all of it and drift the moment TLD
+    changes anything.
+
+    The 3 options, in the order I would rank them:
+
+      1. LionsHead syncs TLD into a shared database and this app reads it.
+         No duplicate client, and the admin pages stay fast because they are
+         not waiting on somebody else's api.
+      2. LionsHead grows a small http surface and this app calls that.
+      3. This app talks to TLD directly. Only worth it if the website needs
+         something LionsHead will never carry.
+=============================================*/
 
 /**
  * The dialer. Reads DIALER_BASE_URL, DIALER_API_ID, DIALER_API_KEY.
