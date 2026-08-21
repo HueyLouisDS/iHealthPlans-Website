@@ -17,7 +17,23 @@ import { fileURLToPath } from 'node:url'
 import mysql from 'mysql2/promise'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
-const migrationsDir = path.join(scriptDir, '..', 'db', 'migrations')
+const appRoot = path.join(scriptDir, '..')
+const migrationsDir = path.join(appRoot, 'db', 'migrations')
+
+/*
+ * Next loads .env.local automatically, plain node does not, so a script run
+ * from a terminal would see no DATABASE_URL and report it as unset when it is
+ * sitting right there in the file.
+ *
+ * Resolved against the app root rather than the working directory, so this
+ * works whether it is run from New-Site or from the repository root.
+ */
+try {
+  process.loadEnvFile(path.join(appRoot, '.env.local'))
+} catch {
+  /* No .env.local is normal in CI, where the variable comes from the
+     environment directly. The missing DATABASE_URL check below reports it. */
+}
 
 /*================================================================================
     MIGRATIONS ARE APPLIED, NEVER EDITED
@@ -62,7 +78,9 @@ function statements(sql) {
 
 async function run() {
   if (!process.env.DATABASE_URL) {
-    console.error('DATABASE_URL is not set. Put it in .env.local.')
+    /* Naming the resolved path, since this script can be run from either the
+       repository root or from New-Site and the file is only in one of them */
+    console.error(`DATABASE_URL is not set. Add it to ${path.join(appRoot, '.env.local')}`)
     process.exitCode = 1
     return
   }
