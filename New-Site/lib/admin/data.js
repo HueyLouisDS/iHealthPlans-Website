@@ -449,24 +449,80 @@ export async function getLead(leadId) {
 }
 
 /**
- * Call log.
- * `matched` is the column that matters. It says whether the call was tied back
- * to a web session, and the share that are unmatched is the single best health
- * metric for the whole attribution system.
+ * Call log, filtered, with the facets needed for the filter panel and the
+ * tiles above it.
+ *
+ * The matched share is the number that matters here. It says what proportion
+ * of calls were tied back to a web session, and it is the single best health
+ * metric for the whole attribution system. A falling matched rate means the
+ * click to call binding is breaking, and nothing else on the site would show
+ * that.
  */
-export async function getCalls({ page = 1, perPage = 25, matched } = {}) {
-  const empty = { calls: [], total: 0, page, perPage, totalPages: 1, matchedRate: null, isEmpty: true }
+export async function getCalls({
+  page = 1,
+  perPage = 25,
+  days = 30,
+  matched,
+  disposition,
+  agentId,
+  hasRecording,
+  sort = 'newest',
+} = {}) {
+  const empty = {
+    calls: [],
+    total: 0,
+    page,
+    perPage,
+    totalPages: 1,
+    dispositionCounts: {},
+    agents: [],
+    summary: { total: 0, connected: 0, connectedRate: '0.0%', matched: 0, matchedRate: '0.0%', unmatched: 0, averageTalk: '0:00' },
+    isEmpty: true,
+  }
   if (!usingFixtures()) return empty
 
-  const data = getDataset()
-  let rows = data.calls
+  const { current } = splitByPeriod(getDataset().calls, 'startedAt', days)
+
+  // Tiles describe the period, not the filtered subset, so narrowing to
+  // unmatched calls does not make the matched rate read as 0%
+  const connected = current.filter((call) => call.disposition === 'connected')
+  const matchedCalls = current.filter((call) => call.matched)
+  const talkSeconds = connected.reduce((total, call) => total + call.durationSeconds, 0)
+
+  const summary = {
+    total: current.length,
+    connected: connected.length,
+    connectedRate: current.length ? `${((connected.length / current.length) * 100).toFixed(1)}%` : '0.0%',
+    matched: matchedCalls.length,
+    matchedRate: current.length ? `${((matchedCalls.length / current.length) * 100).toFixed(1)}%` : '0.0%',
+    unmatched: current.length - matchedCalls.length,
+    averageTalk: formatDuration(connected.length ? Math.round(talkSeconds / connected.length) : 0),
+  }
+
+  const dispositionCounts = {}
+  for (const call of current) {
+    dispositionCounts[call.disposition] = (dispositionCounts[call.disposition] || 0) + 1
+  }
+
+  let rows = current
   if (matched === 'yes') rows = rows.filter((call) => call.matched)
   if (matched === 'no') rows = rows.filter((call) => !call.matched)
+  if (disposition) rows = rows.filter((call) => call.disposition === disposition)
+  if (agentId) rows = rows.filter((call) => call.agentId === agentId)
+  if (hasRecording === 'yes') rows = rows.filter((call) => call.hasRecording)
+  if (hasRecording === 'no') rows = rows.filter((call) => !call.hasRecording)
+
+  const sorters = {
+    newest: (a, b) => b.startedAt - a.startedAt,
+    oldest: (a, b) => a.startedAt - b.startedAt,
+    longest: (a, b) => b.durationSeconds - a.durationSeconds,
+    shortest: (a, b) => a.durationSeconds - b.durationSeconds,
+  }
+  rows = [...rows].sort(sorters[sort] || sorters.newest)
 
   const totalPages = Math.max(1, Math.ceil(rows.length / perPage))
-  const current = Math.min(Math.max(1, page), totalPages)
-  const start = (current - 1) * perPage
-  const matchedCount = data.calls.filter((call) => call.matched).length
+  const currentPage = Math.min(Math.max(1, page), totalPages)
+  const start = (currentPage - 1) * perPage
 
   return {
     calls: rows.slice(start, start + perPage).map((call) => ({
@@ -475,13 +531,31 @@ export async function getCalls({ page = 1, perPage = 25, matched } = {}) {
       durationLabel: formatDuration(call.durationSeconds),
     })),
     total: rows.length,
-    page: current,
+    page: currentPage,
     perPage,
     totalPages,
-    matchedRate: `${((matchedCount / data.calls.length) * 100).toFixed(1)}%`,
-    unmatchedCount: data.calls.length - matchedCount,
+    dispositionCounts,
+    agents: AGENTS,
+    summary,
     isEmpty: false,
   }
+}
+
+/**
+ * Every call matching the filters, unpaginated, for export.
+ * Separate from getCalls for the same reason as the lead version. An export
+ * must not silently return only the page on screen, and a selection must still
+ * pass through the filters so a stale id cannot reach outside the view.
+ */
+export async function getCallsForExport(filters = {}, ids = null) {
+  const first = await getCalls({ ...filters, page: 1, perPage: 1 })
+  if (first.isEmpty) return []
+
+  const all = await getCalls({ ...filters, page: 1, perPage: Math.max(first.total, 1) })
+  if (!ids || ids.length === 0) return all.calls
+
+  const wanted = new Set(ids)
+  return all.calls.filter((call) => wanted.has(call.id))
 }
 
 /**

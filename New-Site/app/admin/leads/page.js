@@ -13,8 +13,9 @@
 import Link from 'next/link'
 import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
-import LeadFilters from '@/components/admin/LeadFilters'
-import LeadTable from '@/components/admin/LeadTable'
+import FilterPanel from '@/components/admin/FilterPanel'
+import SelectableTable from '@/components/admin/SelectableTable'
+import { buildHref } from '@/lib/admin/urls'
 import { DataSourceNotice, StatTile } from '@/components/admin/AdminUi'
 import {
   getLeads,
@@ -34,23 +35,22 @@ const SORTS = [
   { value: 'name', label: 'Name' },
 ]
 
-/**
- * Builds a pagination url that preserves the active filters.
- * A trimmed copy of the one in LeadFilters. Paging is the only link this page
- * still builds itself, everything else moved into the filter panel.
- */
-function buildHref(params, overrides) {
-  const next = new URLSearchParams()
-  const merged = { ...params, ...overrides }
+const BASE = '/admin/leads'
+const PARAM_KEYS = ['period', 'source', 'status', 'q', 'sort', 'perPage', 'page']
 
-  for (const key of ['period', 'source', 'status', 'q', 'sort', 'perPage', 'page']) {
-    const value = merged[key]
-    if (value && !(key === 'page' && String(value) === '1')) next.set(key, String(value))
-  }
-
-  const query = next.toString()
-  return query ? `/admin/leads?${query}` : '/admin/leads'
-}
+const COLUMNS = [
+  { key: 'name', label: 'Name' },
+  { key: 'phone', label: 'Phone', nowrap: true },
+  { key: 'zip', label: 'Zip' },
+  { key: 'source', label: 'Source' },
+  { key: 'campaign', label: 'Campaign' },
+  { key: 'onBehalfOf', label: 'For' },
+  { key: 'status', label: 'Status', format: 'statusPill' },
+  { key: 'createdAtLabel', label: 'Received', nowrap: true },
+  // A lead with no call is either waiting on a callback or has been missed,
+  // so it is worth marking rather than printing a quiet zero
+  { key: 'callCount', label: 'Calls', align: 'right', format: 'zeroNone' },
+]
 
 export default async function AdminLeadsPage({ searchParams }) {
   const isFixtures = usingFixtures()
@@ -86,6 +86,52 @@ export default async function AdminLeadsPage({ searchParams }) {
 
   const hasFilters = Boolean(params?.source || params?.status || params?.q)
 
+  const applied = [
+    params?.status && { key: 'status', label: `Status: ${params.status}` },
+    params?.source && { key: 'source', label: `Source: ${params.source}` },
+    params?.q && { key: 'q', label: `Search: ${params.q}` },
+  ].filter(Boolean)
+
+  const tabs = [
+    {
+      key: 'period',
+      label: 'Period',
+      paramKey: 'period',
+      activeValue: String(days),
+      options: PERIODS.map((period) => ({ value: period.value, label: period.label })),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      paramKey: 'status',
+      activeValue: params?.status,
+      isApplied: Boolean(params?.status),
+      options: [
+        { value: undefined, label: 'All' },
+        ...LEAD_STATUSES.map((status) => ({
+          value: status.value,
+          label: status.label,
+          count: result.statusCounts[status.value] || 0,
+        })),
+      ],
+    },
+    {
+      key: 'source',
+      label: 'Source',
+      paramKey: 'source',
+      activeValue: params?.source,
+      isApplied: Boolean(params?.source),
+      options: [{ value: undefined, label: 'All' }, ...result.sources.map((s) => ({ value: s, label: s }))],
+    },
+    {
+      key: 'sort',
+      label: 'Sort',
+      paramKey: 'sort',
+      activeValue: params?.sort || 'newest',
+      options: SORTS,
+    },
+  ]
+
   return (
     <AdminShell
       user={session.user}
@@ -107,19 +153,19 @@ export default async function AdminLeadsPage({ searchParams }) {
             <StatTile label="No call yet" value={result.summary.withoutCall.toLocaleString()} />
           </div>
 
-          <LeadFilters
+          <FilterPanel
+            basePath={BASE}
+            paramKeys={PARAM_KEYS}
             params={filters}
-            days={days}
-            periods={PERIODS}
-            statuses={LEAD_STATUSES}
-            statusCounts={result.statusCounts}
-            sources={result.sources}
-            sorts={SORTS}
+            tabs={tabs}
+            applied={applied}
+            search={{ name: 'q', placeholder: 'Search name, phone, or zip' }}
             perPage={perPage}
             perPageOptions={PER_PAGE_OPTIONS}
             perPageMin={PER_PAGE_MIN}
             perPageMax={PER_PAGE_MAX}
             exportHref={exportHref}
+            summaryLabel={`Last ${days} days`}
           />
 
           <div className="flex items-center justify-between gap-4 mb-3">
@@ -137,9 +183,13 @@ export default async function AdminLeadsPage({ searchParams }) {
         </>
       )}
 
-      <LeadTable
-        leads={result.leads}
+      <SelectableTable
+        rows={result.leads}
+        columns={COLUMNS}
+        rowHrefBase="/admin/leads/"
+        rowLabelKey="name"
         exportBase={exportHref}
+        selectionNoun="leads"
         emptyMessage={hasFilters ? 'No leads match these filters.' : 'No leads yet.'}
       />
 
@@ -147,7 +197,7 @@ export default async function AdminLeadsPage({ searchParams }) {
         <div className="mt-4 flex items-center gap-3">
           {result.page > 1 && (
             <Link
-              href={buildHref(filters, { page: result.page - 1 })}
+              href={buildHref(BASE, PARAM_KEYS, filters, { page: result.page - 1 })}
               className="px-4 py-2 bg-white border rounded-md text-sm font-semibold hover:bg-[#f7f7f7]"
             >
               Previous
@@ -158,7 +208,7 @@ export default async function AdminLeadsPage({ searchParams }) {
           </span>
           {result.page < result.totalPages && (
             <Link
-              href={buildHref(filters, { page: result.page + 1 })}
+              href={buildHref(BASE, PARAM_KEYS, filters, { page: result.page + 1 })}
               className="px-4 py-2 bg-white border rounded-md text-sm font-semibold hover:bg-[#f7f7f7]"
             >
               Next
