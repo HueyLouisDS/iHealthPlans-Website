@@ -4,7 +4,7 @@ import 'server-only'
  * Credentials for the outbound integrations, the dialer and the CRM.
  */
 
-/*=============================================
+/*================================================================================
     WHY THE FIRST LINE OF THIS FILE IS `import 'server-only'`
 
     It makes the build fail if any client component imports this module, even
@@ -25,7 +25,7 @@ import 'server-only'
          key is present without ever saying what it is.
       3. Never in an error. A thrown request error can carry the config that
          produced it, so nothing here puts the key in a message.
-=============================================*/
+==================================================================================*/
 
 /*
  * Variable names that must never carry the NEXT_PUBLIC_ prefix. Checked as a
