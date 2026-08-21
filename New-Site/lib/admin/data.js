@@ -260,27 +260,83 @@ export async function getRecentLeads({ limit = 6 } = {}) {
 }
 
 /**
- * Paginated lead list.
- * Filters are the ones a manager actually asks for, a date range, where the
- * lead came from, what state it is in, and free text on name or phone.
+ * Paginated, filtered lead list, plus the facets needed to build the filter
+ * controls and the summary tiles above it.
+ *
+ * Facet counts are computed before the status filter is applied but after
+ * everything else, so the status pills keep showing how many leads are in each
+ * status rather than collapsing to the one that is selected. A filter control
+ * that hides its own options is unusable.
  */
-export async function getLeads({ page = 1, perPage = 25, source, status, query } = {}) {
-  const empty = { leads: [], total: 0, page, perPage, totalPages: 1, isEmpty: true }
+export async function getLeads({ page = 1, perPage = 25, days = 30, source, status, query, sort = 'newest' } = {}) {
+  const empty = {
+    leads: [],
+    total: 0,
+    page,
+    perPage,
+    totalPages: 1,
+    sources: [],
+    statusCounts: {},
+    summary: { total: 0, enrolled: 0, conversionRate: '0.0%', onBehalfOfOther: 0, withoutCall: 0 },
+    isEmpty: true,
+  }
   if (!usingFixtures()) return empty
 
-  const data = getDataset()
-  let rows = data.leads
+  const { current } = splitByPeriod(getDataset().leads, 'createdAt', days)
 
+  let rows = current
   if (source) rows = rows.filter((lead) => lead.source === source)
-  if (status) rows = rows.filter((lead) => lead.status === status)
-  if (query) {
-    const needle = query.toLowerCase()
-    rows = rows.filter((lead) => lead.name.toLowerCase().includes(needle) || lead.phone.includes(needle))
+  if (query && query.trim()) {
+    const needle = query.trim().toLowerCase()
+    const digits = needle.replace(/[^0-9]/g, '')
+
+    rows = rows.filter((lead) => {
+      if (lead.name.toLowerCase().includes(needle)) return true
+
+      // Only compare against the phone and zip when the term actually contains
+      // digits. Stripping non digits from a text search leaves an empty
+      // string, and "5550110".includes("") is true for every record, so a
+      // search for a name silently matched the entire table.
+      if (!digits) return false
+
+      return lead.phone.replace(/[^0-9]/g, '').includes(digits) || lead.zip.includes(digits)
+    })
   }
 
+  // Everything above this line also feeds the tiles and the status counts
+  const beforeStatus = rows
+
+  const statusCounts = {}
+  for (const lead of beforeStatus) {
+    statusCounts[lead.status] = (statusCounts[lead.status] || 0) + 1
+  }
+
+  const enrolled = beforeStatus.filter((lead) => lead.status === 'enrolled').length
+  const summary = {
+    total: beforeStatus.length,
+    enrolled,
+    conversionRate: beforeStatus.length ? `${((enrolled / beforeStatus.length) * 100).toFixed(1)}%` : '0.0%',
+    // How many enquiries come from somebody acting for a relative. Worth its
+    // own tile because those calls need a different opening and the split is
+    // not visible anywhere else.
+    onBehalfOfOther: beforeStatus.filter((lead) => lead.onBehalfOf !== 'Myself').length,
+    // Leads that never produced a call. Either they are waiting for a callback
+    // or somebody has not picked them up, and both are worth knowing.
+    withoutCall: beforeStatus.filter((lead) => lead.callCount === 0).length,
+  }
+
+  if (status) rows = rows.filter((lead) => lead.status === status)
+
+  const sorters = {
+    newest: (a, b) => b.createdAt - a.createdAt,
+    oldest: (a, b) => a.createdAt - b.createdAt,
+    name: (a, b) => a.name.localeCompare(b.name),
+  }
+  rows = [...rows].sort(sorters[sort] || sorters.newest)
+
   const totalPages = Math.max(1, Math.ceil(rows.length / perPage))
-  const current = Math.min(Math.max(1, page), totalPages)
-  const start = (current - 1) * perPage
+  const currentPage = Math.min(Math.max(1, page), totalPages)
+  const start = (currentPage - 1) * perPage
 
   return {
     leads: rows.slice(start, start + perPage).map((lead) => ({
@@ -288,12 +344,27 @@ export async function getLeads({ page = 1, perPage = 25, source, status, query }
       createdAtLabel: formatDateTime(lead.createdAt),
     })),
     total: rows.length,
-    page: current,
+    page: currentPage,
     perPage,
     totalPages,
-    sources: [...new Set(data.leads.map((lead) => lead.source))].sort(),
+    sources: [...new Set(current.map((lead) => lead.source))].sort(),
+    statusCounts,
+    summary,
     isEmpty: false,
   }
+}
+
+/**
+ * Every lead matching the filters, unpaginated, for export.
+ * Separate from getLeads on purpose. An export must not silently return only
+ * the page the user happened to be looking at, and it must not be reachable
+ * without going through the audit in the route handler.
+ */
+export async function getLeadsForExport(filters = {}) {
+  const first = await getLeads({ ...filters, page: 1, perPage: 1 })
+  if (first.isEmpty) return []
+  const all = await getLeads({ ...filters, page: 1, perPage: Math.max(first.total, 1) })
+  return all.leads
 }
 
 /**
