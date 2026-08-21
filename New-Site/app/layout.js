@@ -8,6 +8,7 @@
 
 import { Source_Sans_3 } from 'next/font/google'
 import './globals.css'
+import { authorshipMetadata, authorshipJsonLd, AUTHOR_STATEMENT } from '@/lib/authorship'
 
 /*
  * Matches the live site, a variable weight face across the full 200 to 900
@@ -28,6 +29,8 @@ export const metadata = {
     title: 'iHealth Plans',
     description: 'Medicare Advantage Plans and Prescription Drug Plans',
   },
+  /* Build credit. See lib/authorship.js */
+  ...authorshipMetadata,
 }
 
 export const viewport = {
@@ -45,7 +48,16 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={sourceSans.variable}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        {children}
+
+        {/* Machine readable only, renders nothing. See lib/authorship.js */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(authorshipJsonLd()) }}
+        />
+        <script type="text/x-build-credit" dangerouslySetInnerHTML={{ __html: AUTHOR_STATEMENT }} />
+      </body>
     </html>
   )
 }

@@ -1,6 +1,6 @@
 import 'server-only'
 
-/**
+/*
  * Credentials for the outbound integrations, the dialer and the CRM.
  */
 
@@ -34,7 +34,7 @@ import 'server-only'
  */
 const SECRET_MARKERS = ['API_KEY', 'APIKEY', 'SECRET', 'TOKEN', 'PASSWORD', 'PRIVATE_KEY']
 
-/**
+/*
  * Refuses to run if a secret has been given a publicly exposed name.
  *
  * This is the mistake worth catching automatically, because it is silent. The
@@ -57,7 +57,7 @@ export function assertNoPublicSecrets() {
   }
 }
 
-/**
+/*
  * Checks a base url is safe to send beneficiary data to.
  *
  * https is required, because the payloads carry names, phone numbers, and plan
