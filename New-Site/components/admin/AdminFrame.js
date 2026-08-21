@@ -46,20 +46,25 @@ export default function AdminFrame({ sidebar, title, description, showBypassBann
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7] flex">
+    // items-start rather than the default stretch, because a flex child that is
+    // stretched to the container height has nowhere left to stick to
+    <div className="min-h-screen bg-[#f7f7f7] flex items-start">
       {/*
-        Width transition rather than unmounting, so the sidebar keeps its
-        scroll position and the nav is still in the dom for assistive
-        technology to find when it reopens. aria-hidden and inert would be
-        needed if it were reachable while collapsed, which it is not, since it
-        has zero width and clips its contents.
+        Sticky and full viewport height, so the nav and the account block stay
+        put while the page scrolls. A lead list runs to hundreds of rows and
+        the navigation should not disappear off the top of it.
+
+        Width transition rather than unmounting, so the nav is still in the dom
+        for assistive technology when it reopens.
       */}
       <aside
-        className={`bg-ihealthBlue text-white flex-shrink-0 overflow-hidden transition-[width] duration-200 ${
+        className={`sticky top-0 h-screen bg-ihealthBlue text-white flex-shrink-0 overflow-hidden transition-[width] duration-200 ${
           isOpen ? 'w-[240px]' : 'w-0'
         }`}
       >
-        <div className="w-[240px] min-h-screen flex flex-col">{sidebar}</div>
+        {/* The inner column scrolls independently if the nav ever outgrows the
+            viewport, rather than pushing the account block out of reach */}
+        <div className="w-[240px] h-full flex flex-col overflow-y-auto">{sidebar}</div>
       </aside>
 
       <main className="flex-1 min-w-0">

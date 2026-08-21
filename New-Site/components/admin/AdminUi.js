@@ -11,15 +11,54 @@ import Link from 'next/link'
  * A single number with its label, and optionally the rate it converts at from
  * the stage above it in the funnel.
  */
-export function StatTile({ label, value, rate, isMuted = false }) {
+export function StatTile({ label, value, rate, delta, isMuted = false }) {
   return (
     <div className={`bg-white border rounded-lg p-5 flex flex-col gap-1 ${isMuted ? 'opacity-60' : ''}`}>
       <p className="text-sm font-semibold uppercase tracking-[1.2px] text-[#6C7381]">{label}</p>
-      <p className="text-3xl font-bold text-ihealthBlue tabular-nums">{value}</p>
+
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <p className="text-3xl font-bold text-ihealthBlue tabular-nums">{value}</p>
+        {delta && <DeltaBadge delta={delta} />}
+      </div>
+
       {rate !== null && rate !== undefined && (
         <p className="text-sm text-[#505258]">{rate} from previous stage</p>
       )}
     </div>
+  )
+}
+
+/**
+ * Change against the previous period of the same length.
+ *
+ * Direction is carried by an arrow and a word as well as by colour, because
+ * colour alone is unreadable for anyone with a red green deficiency, and that
+ * is roughly 1 in 12 men.
+ *
+ * No judgement is attached to the direction. On this dashboard up is good for
+ * leads and bad for unmatched calls, and the component has no way to know
+ * which it is looking at.
+ */
+export function DeltaBadge({ delta }) {
+  const styles = {
+    up: 'bg-green-100 text-green-900',
+    down: 'bg-red-100 text-red-900',
+    flat: 'bg-gray-100 text-gray-700',
+  }
+  const arrows = { up: '↑', down: '↓', flat: '→' }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-sm font-semibold ${styles[delta.direction]}`}
+      title="Compared with the previous period of the same length"
+    >
+      <span aria-hidden="true">{arrows[delta.direction]}</span>
+      {delta.value}
+      <span className="sr-only">
+        {delta.direction === 'up' ? 'increase' : delta.direction === 'down' ? 'decrease' : 'no change'} on the
+        previous period
+      </span>
+    </span>
   )
 }
 

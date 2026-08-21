@@ -28,6 +28,62 @@ export function usingFixtures() {
   return process.env.ADMIN_USE_FIXTURES === 'true'
 }
 
+
+// Periods the dashboard offers. 90 is the limit because that is how much
+// history the fixtures hold, and because a Medicare business thinks in
+// enrollment seasons rather than in years.
+export const PERIODS = [
+  { value: '7', label: 'Last 7 days' },
+  { value: '30', label: 'Last 30 days' },
+  { value: '90', label: 'Last 90 days' },
+]
+
+/**
+ * Turns a period parameter into a day count, clamped to what exists.
+ * Anything unrecognised falls back to 30 rather than erroring, since this
+ * comes off a query string.
+ */
+export function parsePeriod(value) {
+  const days = Number.parseInt(value, 10)
+  return PERIODS.some((p) => Number(p.value) === days) ? days : 30
+}
+
+/**
+ * Start of the day N days ago, so a range includes whole days.
+ */
+function startOfDaysAgo(days) {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() - days + 1)
+}
+
+/**
+ * Splits the dataset into the selected period and the one immediately before
+ * it, which is what makes a percentage change possible.
+ * Without a comparison a number like 268 leads is unreadable. Nobody knows
+ * whether that is good.
+ */
+function splitByPeriod(items, dateKey, days) {
+  const currentFrom = startOfDaysAgo(days)
+  const previousFrom = startOfDaysAgo(days * 2)
+
+  return {
+    current: items.filter((item) => item[dateKey] >= currentFrom),
+    previous: items.filter((item) => item[dateKey] >= previousFrom && item[dateKey] < currentFrom),
+  }
+}
+
+/**
+ * Percentage change between two counts, as a signed display string.
+ * Returns null when there is no previous figure to compare against, because
+ * "up 100%" from zero is meaningless and reads as a real result.
+ */
+function delta(current, previous) {
+  if (!previous) return null
+  const change = ((current - previous) / previous) * 100
+  const rounded = Math.abs(change) < 0.05 ? 0 : change
+  return { value: `${rounded > 0 ? '+' : ''}${rounded.toFixed(1)}%`, direction: rounded > 0 ? 'up' : rounded < 0 ? 'down' : 'flat' }
+}
+
 /**
  * THE IDENTITY CHAIN, which is the whole problem in one place.
  *
@@ -62,51 +118,82 @@ function rate(count, previous) {
 }
 
 /**
- * Funnel totals for the dashboard.
- * Each stage carries its conversion rate from the stage above, which is what
- * makes a funnel readable rather than 5 unrelated numbers.
+ * Funnel totals for the dashboard, over a period, with the previous period of
+ * the same length for comparison.
+ * Each stage carries its conversion rate from the stage above and its change
+ * against the previous period. Without the comparison a bare count tells a
+ * manager nothing about whether it is good.
  */
-export async function getFunnelSummary() {
+export async function getFunnelSummary({ days = 30 } = {}) {
+  const blank = ['Sessions', 'Call clicks', 'Calls connected', 'Leads', 'Conversions']
   if (!usingFixtures()) {
     return {
-      stages: [
-        { key: 'sessions', label: 'Sessions', count: 0, rateFromPrevious: null },
-        { key: 'callClicks', label: 'Call clicks', count: 0, rateFromPrevious: null },
-        { key: 'calls', label: 'Calls connected', count: 0, rateFromPrevious: null },
-        { key: 'leads', label: 'Leads', count: 0, rateFromPrevious: null },
-        { key: 'conversions', label: 'Conversions', count: 0, rateFromPrevious: null },
-      ],
+      days,
+      stages: blank.map((label) => ({ key: label, label, count: 0, rateFromPrevious: null, delta: null })),
       isEmpty: true,
     }
   }
 
   const data = getDataset()
-  const connected = data.calls.filter((call) => call.disposition === 'connected').length
+  const daily = splitByPeriod(data.daily, 'date', days)
+  const leads = splitByPeriod(data.leads, 'createdAt', days)
+  const calls = splitByPeriod(data.calls, 'startedAt', days)
+
+  const sum = (rows, key) => rows.reduce((total, row) => total + row[key], 0)
+  const connected = (rows) => rows.filter((call) => call.disposition === 'connected').length
+  const enrolled = (rows) => rows.filter((lead) => lead.status === 'enrolled').length
+
+  const now = {
+    sessions: sum(daily.current, 'sessions'),
+    callClicks: sum(daily.current, 'callClicks'),
+    calls: connected(calls.current),
+    leads: leads.current.length,
+    conversions: enrolled(leads.current),
+  }
+  const before = {
+    sessions: sum(daily.previous, 'sessions'),
+    callClicks: sum(daily.previous, 'callClicks'),
+    calls: connected(calls.previous),
+    leads: leads.previous.length,
+    conversions: enrolled(leads.previous),
+  }
+
+  const order = [
+    ['sessions', 'Sessions', null],
+    ['callClicks', 'Call clicks', 'sessions'],
+    ['calls', 'Calls connected', 'callClicks'],
+    ['leads', 'Leads', 'calls'],
+    ['conversions', 'Conversions', 'leads'],
+  ]
 
   return {
-    stages: [
-      { key: 'sessions', label: 'Sessions', count: data.sessions, rateFromPrevious: null },
-      { key: 'callClicks', label: 'Call clicks', count: data.callClicks, rateFromPrevious: rate(data.callClicks, data.sessions) },
-      { key: 'calls', label: 'Calls connected', count: connected, rateFromPrevious: rate(connected, data.callClicks) },
-      { key: 'leads', label: 'Leads', count: data.leads.length, rateFromPrevious: rate(data.leads.length, connected) },
-      { key: 'conversions', label: 'Conversions', count: data.conversions, rateFromPrevious: rate(data.conversions, data.leads.length) },
-    ],
+    days,
+    stages: order.map(([key, label, from]) => ({
+      key,
+      label,
+      count: now[key],
+      rateFromPrevious: from ? rate(now[key], now[from]) : null,
+      // Share of the first stage, which is what gives the funnel its shape
+      shareOfTop: now.sessions ? now[key] / now.sessions : 0,
+      dropFromPrevious: from && now[from] ? now[from] - now[key] : null,
+      delta: delta(now[key], before[key]),
+    })),
     isEmpty: false,
   }
 }
 
 /**
- * Daily lead and call counts for the dashboard trend.
- * One row per day so a gap renders as zero rather than disappearing, which is
+ * Daily leads and calls for the trend chart, over the selected period.
+ * One row per day so a gap renders as zero rather than vanishing, which is
  * what makes a drop off visible.
  */
-export async function getFunnelTrend() {
+export async function getFunnelTrend({ days = 30 } = {}) {
   if (!usingFixtures()) return { days: [], isEmpty: true }
 
   const data = getDataset()
   const buckets = new Map()
 
-  for (let day = data.days - 1; day >= 0; day -= 1) {
+  for (let day = days - 1; day >= 0; day -= 1) {
     const date = new Date()
     date.setDate(date.getDate() - day)
     buckets.set(date.toDateString(), { date, leads: 0, calls: 0 })
@@ -121,10 +208,55 @@ export async function getFunnelTrend() {
     if (bucket) bucket.calls += 1
   }
 
-  const days = [...buckets.values()]
-  const peak = Math.max(1, ...days.map((day) => Math.max(day.leads, day.calls)))
+  const rows = [...buckets.values()]
+  return { days: rows, peak: Math.max(1, ...rows.map((d) => Math.max(d.leads, d.calls))), isEmpty: false }
+}
 
-  return { days, peak, isEmpty: false }
+/**
+ * Top traffic sources by leads produced, for the dashboard.
+ * Ranked by leads rather than by sessions on purpose. A source that sends a
+ * lot of traffic and no leads is not a top source, it is a cost.
+ */
+export async function getTopSources({ days = 30, limit = 5 } = {}) {
+  if (!usingFixtures()) return { rows: [], isEmpty: true }
+
+  const { current } = splitByPeriod(getDataset().leads, 'createdAt', days)
+  const groups = new Map()
+
+  for (const lead of current) {
+    if (!groups.has(lead.source)) groups.set(lead.source, { source: lead.source, leads: 0, conversions: 0 })
+    const group = groups.get(lead.source)
+    group.leads += 1
+    if (lead.status === 'enrolled') group.conversions += 1
+  }
+
+  const rows = [...groups.values()].sort((a, b) => b.leads - a.leads).slice(0, limit)
+  const top = Math.max(1, ...rows.map((row) => row.leads))
+
+  return {
+    rows: rows.map((row) => ({
+      ...row,
+      share: row.leads / top,
+      conversionRate: `${((row.conversions / row.leads) * 100).toFixed(1)}%`,
+    })),
+    isEmpty: rows.length === 0,
+  }
+}
+
+/**
+ * The most recent leads, so the dashboard shows activity rather than only
+ * aggregates. Somebody opening this page usually wants to know what happened
+ * today before they want a 90 day total.
+ */
+export async function getRecentLeads({ limit = 6 } = {}) {
+  if (!usingFixtures()) return { rows: [], isEmpty: true }
+
+  const rows = getDataset().leads.slice(0, limit).map((lead) => ({
+    ...lead,
+    createdAtLabel: formatDateTime(lead.createdAt),
+  }))
+
+  return { rows, isEmpty: rows.length === 0 }
 }
 
 /**

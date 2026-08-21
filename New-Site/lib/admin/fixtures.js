@@ -150,16 +150,13 @@ export function formatDateTime(date) {
 function buildDataset() {
   const rng = makeRng(20260820)
 
-  const DAYS = 30
+  const DAYS = 90
   const leads = []
   const calls = []
 
   // Roughly one lead per 90 sessions, which is a plausible shape for this kind
   // of business and keeps the funnel percentages believable
-  const SESSIONS = 24_500
-  const CALL_CLICKS = 1_180
-
-  const leadCount = 268
+  const leadCount = 800
 
   for (let i = 0; i < leadCount; i += 1) {
     const source = weightedPick(rng, SOURCES)
@@ -238,7 +235,7 @@ function buildDataset() {
   // a conversion rate above 100% between calls and leads, which is nonsense.
   // These also carry no leadId, which is what makes the call log's "unmatched"
   // and "no lead" cases realistic to build against.
-  const UNCONVERTED_CALLS = 640
+  const UNCONVERTED_CALLS = 1_920
 
   for (let i = 0; i < UNCONVERTED_CALLS; i += 1) {
     const disposition = weightedPick(rng, DISPOSITIONS)
@@ -264,12 +261,31 @@ function buildDataset() {
     })
   }
 
+  // Sessions and call clicks are volume, not individual records, so they are
+  // generated as a daily series. Two scalars could not be filtered by date,
+  // which is what broke as soon as the dashboard grew a period selector.
+  const daily = []
+  for (let day = DAYS - 1; day >= 0; day -= 1) {
+    const date = daysAgo(day)
+    // Weekends are quieter, which is realistic and makes the trend chart
+    // look like data rather than noise
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6
+    const base = isWeekend ? 460 : 900
+    const sessions = Math.round(base * (0.75 + rng() * 0.5))
+    daily.push({
+      date,
+      sessions,
+      // Around 4.8% of sessions click to call, wobbling a little day to day
+      callClicks: Math.round(sessions * (0.040 + rng() * 0.017)),
+    })
+  }
+
   leads.sort((a, b) => b.createdAt - a.createdAt)
   calls.sort((a, b) => b.startedAt - a.startedAt)
 
   const conversions = leads.filter((lead) => lead.status === 'enrolled').length
 
-  return { leads, calls, sessions: SESSIONS, callClicks: CALL_CLICKS, conversions, days: DAYS }
+  return { leads, calls, daily, conversions, days: DAYS }
 }
 
 // Built once per process. Regenerating per request would be wasteful and, more

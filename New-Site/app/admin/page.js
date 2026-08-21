@@ -1,62 +1,213 @@
 /**
  * Admin dashboard, /admin.
- * The funnel the client asked for, traffic to clicks to calls to leads to
- * conversions, as 5 tiles plus a daily trend.
- * Every other admin page is a drill down from one of these numbers.
+ * The funnel the client asked for, traffic through to conversions, plus where
+ * the leads came from and what has just come in.
+ *
+ * Laid out so the page answers 3 questions in order. Is the business up or
+ * down, where is the funnel leaking, and what happened today. Everything else
+ * in the admin area is a drill down from one of those.
  */
 
+import Link from 'next/link'
 import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
-import { StatTile, DataSourceNotice, EmptyState } from '@/components/admin/AdminUi'
-import { getFunnelSummary, getFunnelTrend, usingFixtures } from '@/lib/admin/data'
+import FunnelChart from '@/components/admin/FunnelChart'
+import { StatTile, DataSourceNotice, EmptyState, StatusPill } from '@/components/admin/AdminUi'
+import {
+  getFunnelSummary,
+  getFunnelTrend,
+  getTopSources,
+  getRecentLeads,
+  usingFixtures,
+  parsePeriod,
+  PERIODS,
+} from '@/lib/admin/data'
 
 /**
- * Daily bars for leads and calls.
- * Plain CSS rather than a charting library. Two series over 30 days does not
- * justify a dependency, and a bar chart built from divs cannot break at build
- * time the way a client only chart can.
+ * Period selector. Plain links rather than a control, so each view has its own
+ * url that can be bookmarked and shared.
+ */
+function PeriodPicker({ days }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {PERIODS.map((period) => {
+        const isActive = Number(period.value) === days
+
+        return (
+          <Link
+            key={period.value}
+            href={`/admin?period=${period.value}`}
+            aria-current={isActive ? 'page' : undefined}
+            className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
+              isActive ? 'bg-ihealthBlue text-white' : 'bg-white border text-[#505258] hover:border-ihealthBlue'
+            }`}
+          >
+            {period.label}
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Daily leads and calls.
+ * Gridlines and a peak label rather than a bare row of bars, so a reader can
+ * tell roughly what a bar is worth without hovering it.
  */
 function TrendChart({ days, peak }) {
+  // A long period would render bars a pixel wide, so past a point only the
+  // gaps between them are dropped rather than the bars themselves
+  const gap = days.length > 45 ? 'gap-px' : 'gap-1'
+
   return (
     <div className="bg-white border rounded-lg p-5">
-      <div className="flex items-end gap-1 h-[180px]" role="img" aria-label="Daily leads and calls over the last 30 days">
-        {days.map((day) => (
-          <div key={day.date.toISOString()} className="flex-1 flex items-end gap-0.5 h-full" title={`${day.date.toDateString()}: ${day.leads} leads, ${day.calls} calls`}>
-            <div className="flex-1 bg-ihealthBlue rounded-t" style={{ height: `${(day.leads / peak) * 100}%` }} />
-            <div className="flex-1 bg-ihealthGreen rounded-t" style={{ height: `${(day.calls / peak) * 100}%` }} />
-          </div>
-        ))}
+      <div className="flex items-baseline justify-between mb-4">
+        <h2 className="text-lg font-bold text-ihealthBlue">Daily trend</h2>
+        <div className="flex items-center gap-4 text-sm text-[#505258]">
+          <span className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-sm bg-ihealthBlue" /> Leads
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-sm bg-ihealthGreen" /> Calls
+          </span>
+        </div>
       </div>
 
-      <div className="flex items-center gap-6 mt-4 text-sm text-[#505258]">
-        <span className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-ihealthBlue" /> Leads
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-ihealthGreen" /> Calls
-        </span>
-        <span className="ml-auto">Last {days.length} days</span>
+      <div className="relative h-[200px]">
+        {/* Gridlines at the quarters, with the peak labelled so the vertical
+            scale is readable */}
+        {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
+          <div
+            key={fraction}
+            className="absolute left-0 right-0 border-t border-dashed border-gray-200 flex items-start"
+            style={{ top: `${fraction * 100}%` }}
+          >
+            <span className="text-xs text-[#878F99] tabular-nums -mt-2 bg-white pr-2">
+              {Math.round(peak * (1 - fraction))}
+            </span>
+          </div>
+        ))}
+
+        <div className={`absolute inset-0 flex items-end ${gap} pl-8`}>
+          {days.map((day) => (
+            <div
+              key={day.date.toISOString()}
+              className="flex-1 flex items-end gap-px h-full"
+              title={`${day.date.toDateString()}: ${day.leads} leads, ${day.calls} calls`}
+            >
+              <div className="flex-1 bg-ihealthBlue rounded-t" style={{ height: `${(day.leads / peak) * 100}%` }} />
+              <div className="flex-1 bg-ihealthGreen rounded-t" style={{ height: `${(day.calls / peak) * 100}%` }} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-between text-xs text-[#878F99] mt-2 pl-8">
+        <span>{days[0]?.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+        <span>{days[days.length - 1]?.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
       </div>
     </div>
   )
 }
 
-export default async function AdminDashboardPage() {
+/**
+ * Sources ranked by leads produced rather than by traffic sent.
+ * A source with high traffic and no leads is a cost, not a top source.
+ */
+function TopSources({ rows }) {
+  return (
+    <div className="bg-white border rounded-lg p-5">
+      <div className="flex items-baseline justify-between mb-4">
+        <h2 className="text-lg font-bold text-ihealthBlue">Top sources</h2>
+        <Link href="/admin/attribution" className="text-sm font-semibold text-[#105fa8] hover:underline">
+          All attribution
+        </Link>
+      </div>
+
+      <ul className="flex flex-col gap-4">
+        {rows.map((row) => (
+          <li key={row.source} className="flex flex-col gap-1.5">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-base font-semibold text-ihealthBlue truncate">{row.source}</span>
+              <span className="text-sm text-[#505258] tabular-nums flex-shrink-0">
+                {row.leads} leads, {row.conversionRate}
+              </span>
+            </div>
+            <div className="w-full h-2 bg-[#eef0f4] rounded-full overflow-hidden">
+              <div className="h-full bg-ihealthGreen rounded-full" style={{ width: `${row.share * 100}%` }} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/**
+ * The most recent arrivals, so the page shows activity and not only totals.
+ */
+function RecentLeads({ rows }) {
+  return (
+    <div className="bg-white border rounded-lg p-5">
+      <div className="flex items-baseline justify-between mb-4">
+        <h2 className="text-lg font-bold text-ihealthBlue">Latest leads</h2>
+        <Link href="/admin/leads" className="text-sm font-semibold text-[#105fa8] hover:underline">
+          All leads
+        </Link>
+      </div>
+
+      <ul className="flex flex-col divide-y">
+        {rows.map((lead) => (
+          <li key={lead.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <Link href={`/admin/leads/${lead.id}`} className="text-[#105fa8] font-semibold hover:underline">
+                {lead.name}
+              </Link>
+              <p className="text-sm text-[#505258] truncate">
+                {lead.source} · {lead.createdAtLabel}
+              </p>
+            </div>
+            <StatusPill status={lead.status} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+export default async function AdminDashboardPage({ searchParams }) {
   const isFixtures = usingFixtures()
   // Re-checked here as well as in middleware. One guard that a routing mistake
   // can bypass is how admin areas leak.
   const session = await getAdminSession()
   if (!session?.user?.isAuthorised) return null
 
-  const summary = await getFunnelSummary()
-  const trend = await getFunnelTrend()
+  const params = await searchParams
+  const days = parsePeriod(params?.period)
+
+  const [summary, trend, sources, recent] = await Promise.all([
+    getFunnelSummary({ days }),
+    getFunnelTrend({ days }),
+    getTopSources({ days }),
+    getRecentLeads(),
+  ])
 
   return (
-    <AdminShell user={session.user} currentPath="/admin" title="Dashboard" description="Traffic through to conversions">
+    <AdminShell
+      user={session.user}
+      currentPath="/admin"
+      title="Dashboard"
+      description="Traffic through to conversions"
+    >
       <DataSourceNotice
         isFixtures={isFixtures}
         needs="a session and page view record for traffic, /api/call/click for call clicks, a phone system webhook for calls, and the lead and conversion tables"
       />
+
+      <div className="mb-6">
+        <PeriodPicker days={days} />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {summary.stages.map((stage) => (
@@ -64,18 +215,29 @@ export default async function AdminDashboardPage() {
             key={stage.key}
             label={stage.label}
             value={stage.count.toLocaleString()}
-            rate={stage.rateFromPrevious}
+            delta={stage.delta}
             isMuted={summary.isEmpty}
           />
         ))}
       </div>
 
-      <h2 className="text-lg font-bold text-ihealthBlue mb-3">Daily trend</h2>
-      {trend.isEmpty ? (
-        <EmptyState message="No days to plot yet. This fills in once sessions are being recorded." />
+      {summary.isEmpty ? (
+        <EmptyState message="No funnel to draw yet. This fills in once sessions and calls are being recorded." />
       ) : (
-        <TrendChart days={trend.days} peak={trend.peak} />
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-6 mb-6">
+          <div>
+            <h2 className="text-lg font-bold text-ihealthBlue mb-3">Where the funnel leaks</h2>
+            <FunnelChart stages={summary.stages} />
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <TopSources rows={sources.rows} />
+            <RecentLeads rows={recent.rows} />
+          </div>
+        </div>
       )}
+
+      {!trend.isEmpty && <TrendChart days={trend.days} peak={trend.peak} />}
     </AdminShell>
   )
 }
