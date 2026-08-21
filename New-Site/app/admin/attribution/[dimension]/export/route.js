@@ -34,9 +34,11 @@ const COLUMNS = [
   ['callsPerLead', 'Calls per lead'],
   ['conversions', 'Enrollments'],
   ['conversionRate', 'Enrollment rate'],
-  // Carried into the file on purpose. The thin marker is the only thing
-  // stopping a 3 lead row reading as the best performing source, and a
-  // spreadsheet strips every visual cue the page had.
+  /*
+   * Carried into the file on purpose. The thin marker is the only thing
+   * stopping a 3 lead row reading as the best performing source, and a
+   * spreadsheet strips every visual cue the page had.
+   */
   ['lowVolume', `Fewer than ${LOW_VOLUME_LEADS} leads`],
 ]
 
@@ -71,8 +73,10 @@ export async function GET(request, { params }) {
 
   const { dimension: slug } = await params
   const dimension = findDimension(slug)
-  // Same rule as the page. An unknown grouping is a url that does not exist,
-  // not a reason to hand somebody the source breakdown under another name.
+  /*
+   * Same rule as the page. An unknown grouping is a url that does not exist,
+   * not a reason to hand somebody the source breakdown under another name.
+   */
   if (!dimension) return new Response('Not found', { status: 404 })
 
   const { searchParams } = new URL(request.url)
@@ -84,9 +88,11 @@ export async function GET(request, { params }) {
     sort: searchParams.get('sort') || 'leads',
   }
 
-  // An explicit selection from the table. These are slugs rather than the group
-  // values themselves, because a campaign name containing a comma would split
-  // into 2 ids and export the wrong rows.
+  /*
+   * An explicit selection from the table. These are slugs rather than the group
+   * values themselves, because a campaign name containing a comma would split
+   * into 2 ids and export the wrong rows.
+   */
   const ids = (searchParams.get('ids') || '').split(',').map((id) => id.trim()).filter(Boolean)
 
   const rows = await getAttributionForExport(filters, ids)

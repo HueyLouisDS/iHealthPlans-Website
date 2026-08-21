@@ -16,9 +16,11 @@
  * proportional to real volume rather than decorative.
  */
 function Stage({ stage, isLast, isSelected, isDimmed }) {
-  // Below about 2% a proportional bar is a sliver nobody can see or click, so
-  // there is a floor. It distorts the taper at the bottom, which is why the
-  // percentage is always printed as well and never inferred from the width.
+  /*
+   * Below about 2% a proportional bar is a sliver nobody can see or click, so
+   * there is a floor. It distorts the taper at the bottom, which is why the
+   * percentage is always printed as well and never inferred from the width.
+   */
   const width = Math.max(stage.shareOfTop * 100, 2)
 
   return (
@@ -76,9 +78,11 @@ export default function FunnelChart({ stages, selectedKey = null }) {
           stage={stage}
           isLast={index === withDrops.length - 1}
           isSelected={stage.key === selectedKey}
-          // The others fade rather than disappear. A funnel with a stage
-          // removed is not a funnel, and the whole point of the shape is what
-          // the selected stage sits between.
+          /*
+           * The others fade rather than disappear. A funnel with a stage
+           * removed is not a funnel, and the whole point of the shape is what
+           * the selected stage sits between.
+           */
           isDimmed={Boolean(selectedKey) && stage.key !== selectedKey}
         />
       ))}

@@ -12,14 +12,18 @@
  * normalised record below is what goes into the leads table.
  */
 
-// Longest sensible value for any free text field. Not a security boundary on
-// its own, the body size cap is, but it stops a name column being filled with
-// a paragraph.
+/*
+ * Longest sensible value for any free text field. Not a security boundary on
+ * its own, the body size cap is, but it stops a name column being filled with
+ * a paragraph.
+ */
 const MAX_TEXT = 120
 
-// A lead older than this is not a lead, it is a list. Vendors sometimes replay
-// aged inventory as if it were fresh, and a consent captured 3 months ago
-// attached to a call today is the kind of thing that ends up in a complaint.
+/*
+ * A lead older than this is not a lead, it is a list. Vendors sometimes replay
+ * aged inventory as if it were fresh, and a consent captured 3 months ago
+ * attached to a call today is the kind of thing that ends up in a complaint.
+ */
 export const MAX_CONSENT_AGE_DAYS = 30
 
 /**
@@ -39,8 +43,10 @@ export function normalisePhone(value) {
   const national = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits
   if (national.length !== 10) return null
 
-  // NANP rules. Area code and exchange both have to start 2 to 9, so 0 and 1
-  // openers are not typos to be fixed, they are impossible numbers.
+  /*
+   * NANP rules. Area code and exchange both have to start 2 to 9, so 0 and 1
+   * openers are not typos to be fixed, they are impossible numbers.
+   */
   if (!/^[2-9][0-9]{2}[2-9][0-9]{6}$/.test(national)) return null
 
   return `+1${national}`
@@ -82,8 +88,10 @@ function validateConsent(consent, { required }) {
     const ageDays = (Date.now() - capturedAt.getTime()) / 86_400_000
 
     if (ageDays < -1) {
-      // More than a day in the future is a clock problem or a fabrication,
-      // and either way it is not evidence of anything
+      /*
+       * More than a day in the future is a clock problem or a fabrication,
+       * and either way it is not evidence of anything
+       */
       errors['consent.capturedAt'] = 'Timestamp is in the future.'
     } else if (ageDays > MAX_CONSENT_AGE_DAYS) {
       errors['consent.capturedAt'] = `Consent is older than ${MAX_CONSENT_AGE_DAYS} days.`
@@ -138,9 +146,11 @@ export function validateLead(body, { origin = 'site' } = {}) {
   }
 
   if (isVendor) {
-    // The vendor's own id for this record. Required so a retry can be
-    // recognised as the same lead rather than becoming a second one, which is
-    // an agent calling the same person twice.
+    /*
+     * The vendor's own id for this record. Required so a retry can be
+     * recognised as the same lead rather than becoming a second one, which is
+     * an agent calling the same person twice.
+     */
     if (!text(body.externalId)) {
       errors.externalId = 'An externalId unique to this lead is required.'
     }
@@ -175,24 +185,30 @@ export function normaliseLead(body, { origin, source, vendorId = null }) {
     onBehalfOf: ['self', 'other'].includes(String(body.onBehalfOf)) ? String(body.onBehalfOf) : null,
     bestTime: text(body.bestTime) || 'anytime',
 
-    // Kept whole. Proving what somebody agreed to on a given day is the entire
-    // reason this exists, so it is stored verbatim rather than summarised.
+    /*
+     * Kept whole. Proving what somebody agreed to on a given day is the entire
+     * reason this exists, so it is stored verbatim rather than summarised.
+     */
     consent: body.consent
       ? {
           text: String(body.consent.text).trim(),
           capturedAt: new Date(body.consent.capturedAt).toISOString(),
           url: text(body.consent.url),
           ipAddress: text(body.consent.ipAddress),
-          // One to one consent names the agent. Optional here because whether
-          // it binds is unsettled, see the note in the inbound route.
+          /*
+           * One to one consent names the agent. Optional here because whether
+           * it binds is unsettled, see the note in the inbound route.
+           */
           agent: text(body.consent.agent) || null,
         }
       : null,
 
-    // Attribution. Present for owned leads once lib/attribution exists, and
-    // null from a vendor, which is itself worth knowing. A source that can
-    // never say which campaign produced a lead is a source you can only
-    // measure in aggregate.
+    /*
+     * Attribution. Present for owned leads once lib/attribution exists, and
+     * null from a vendor, which is itself worth knowing. A source that can
+     * never say which campaign produced a lead is a source you can only
+     * measure in aggregate.
+     */
     visitorId: text(body.visitorId) || null,
     sessionId: text(body.sessionId) || null,
 
@@ -214,8 +230,10 @@ export function redactLead(lead) {
     vendorId: lead.vendorId,
     externalId: lead.externalId,
     zip: lead.zip,
-    // Last 4 only, which is enough to match a record against a complaint
-    // without the log itself being a contact list
+    /*
+     * Last 4 only, which is enough to match a record against a complaint
+     * without the log itself being a contact list
+     */
     phoneLast4: lead.phone ? lead.phone.slice(-4) : null,
     hasEmail: Boolean(lead.email),
     hasName: Boolean(lead.firstName || lead.lastName),

@@ -15,11 +15,13 @@ import Link from 'next/link'
 import { signOut } from '@/auth'
 import AdminFrame from '@/components/admin/AdminFrame'
 
-// `match` is the prefix that lights the item up, for when it differs from the
-// href. Attribution needs both: the link has to skip past /admin/attribution
-// because that path only redirects, and a redirect cannot be a soft
-// navigation, so routing the sidebar through it made the whole page flash on
-// every click. The item still has to stay lit on every dimension under it.
+/*
+ * `match` is the prefix that lights the item up, for when it differs from the
+ * href. Attribution needs both: the link has to skip past /admin/attribution
+ * because that path only redirects, and a redirect cannot be a soft
+ * navigation, so routing the sidebar through it made the whole page flash on
+ * every click. The item still has to stay lit on every dimension under it.
+ */
 const ADMIN_NAV = [
   { label: 'Dashboard', href: '/admin', exact: true },
   { label: 'Leads', href: '/admin/leads' },

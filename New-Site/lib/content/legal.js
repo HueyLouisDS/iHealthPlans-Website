@@ -26,8 +26,10 @@
  * ============================================================================
  */
 
-// Rendered on every notice. A legal page with no date is not much use to
-// anyone trying to work out which version they agreed to.
+/*
+ * Rendered on every notice. A legal page with no date is not much use to
+ * anyone trying to work out which version they agreed to.
+ */
 export const LEGAL_LAST_UPDATED = 'TO CONFIRM: effective date, set when counsel signs off'
 
 export const LEGAL_PAGES = {

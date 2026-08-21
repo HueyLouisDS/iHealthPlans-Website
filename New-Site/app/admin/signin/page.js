@@ -48,8 +48,10 @@ export default async function AdminSignInPage({ searchParams }) {
   const params = await searchParams
   const error = errorMessage(params?.error)
 
-  // Only ever accept a path, never a full url, so this cannot be used to
-  // bounce someone to another origin after a successful sign in
+  /*
+   * Only ever accept a path, never a full url, so this cannot be used to
+   * bounce someone to another origin after a successful sign in
+   */
   const requested = String(params?.next || '')
   const redirectTo = requested.startsWith('/admin') ? requested : '/admin'
 

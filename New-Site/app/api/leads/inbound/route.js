@@ -39,9 +39,11 @@ import { vendorFromAuthHeader, ingestionEnabled } from '@/lib/leads/vendors'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// A lead is a few hundred bytes. Anything approaching this is a mistake or an
-// attempt to make the server do work, and reading it before finding out is the
-// work. Checked from the header before the body is consumed.
+/*
+ * A lead is a few hundred bytes. Anything approaching this is a mistake or an
+ * attempt to make the server do work, and reading it before finding out is the
+ * work. Checked from the header before the body is consumed.
+ */
 const MAX_BODY_BYTES = 16 * 1024
 
 /**
@@ -65,8 +67,10 @@ function respond(status, payload) {
  */
 export async function POST(request) {
   if (!ingestionEnabled()) {
-    // Distinct from a 401 on purpose. Nothing is configured, so no key could
-    // ever work, and an integrator should not spend a day checking theirs.
+    /*
+     * Distinct from a 401 on purpose. Nothing is configured, so no key could
+     * ever work, and an integrator should not spend a day checking theirs.
+     */
     return respond(503, {
       error: 'Lead ingestion is not configured on this environment.',
       code: 'ingestion_disabled',
@@ -100,9 +104,11 @@ export async function POST(request) {
       error: 'Lead rejected.',
       code: 'invalid_lead',
       errors,
-      // Named in the response because a rejected consent is the failure most
-      // likely to be read as a bug in this endpoint rather than a gap in the
-      // sender's own capture
+      /*
+       * Named in the response because a rejected consent is the failure most
+       * likely to be read as a bug in this endpoint rather than a gap in the
+       * sender's own capture
+       */
       help:
         'Every lead must carry consent.text, consent.capturedAt, consent.url, and ' +
         `consent.ipAddress, captured within ${MAX_CONSENT_AGE_DAYS} days.`,
@@ -111,23 +117,29 @@ export async function POST(request) {
 
   const lead = normaliseLead(body, {
     origin: 'vendor',
-    // From the key, never from the payload. A vendor cannot label its leads
-    // as another vendor, which is what keeps the comparison honest.
+    /*
+     * From the key, never from the payload. A vendor cannot label its leads
+     * as another vendor, which is what keeps the comparison honest.
+     */
     source: vendor.id,
     vendorId: vendor.id,
   })
 
-  // Redacted. Server logs are retained, searchable, and visible to everyone
-  // with hosting access, which is a wider group than the people allowed to see
-  // lead data.
+  /*
+   * Redacted. Server logs are retained, searchable, and visible to everyone
+   * with hosting access, which is a wider group than the people allowed to see
+   * lead data.
+   */
   console.warn('[lead:inbound] accepted but NOT delivered anywhere', redactLead(lead))
 
-  // TODO deduplicate on (vendorId, externalId) at the database layer. It is
-  // deliberately not done in memory here, because this runs serverless across
-  // many instances, so an in process cache would catch an immediate retry on a
-  // warm instance and miss everything else. Partial protection that reads as
-  // full protection is worse than none, and the duplicate it lets through is
-  // an agent calling the same person twice.
+  /*
+   * TODO deduplicate on (vendorId, externalId) at the database layer. It is
+   * deliberately not done in memory here, because this runs serverless across
+   * many instances, so an in process cache would catch an immediate retry on a
+   * warm instance and miss everything else. Partial protection that reads as
+   * full protection is worse than none, and the duplicate it lets through is
+   * an agent calling the same person twice.
+   */
   return respond(202, {
     status: 'accepted',
     externalId: lead.externalId,

@@ -26,9 +26,11 @@ export default function CallLink({ location, className, children, number = PHONE
    * fails, so nothing here is awaited and nothing can reject into the anchor.
    */
   function handleClick() {
-    // TODO post to /api/call/click with the sessionId, the page path, and
-    // `location`, then swap the href for the pooled number that route returns.
-    // Until that route exists this is a no op and the anchor behaves normally.
+    /*
+     * TODO post to /api/call/click with the sessionId, the page path, and
+     * `location`, then swap the href for the pooled number that route returns.
+     * Until that route exists this is a no op and the anchor behaves normally.
+     */
   }
 
   return (

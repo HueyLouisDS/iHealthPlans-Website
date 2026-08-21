@@ -10,6 +10,7 @@
 
 import Link from 'next/link'
 import CallLink from '@/components/tracking/CallLink'
+import CallAccessDetails from '@/components/compliance/CallAccessDetails'
 import { PHONE_NUMBER } from '@/lib/siteConfig'
 
 /**
@@ -48,6 +49,9 @@ export default function PageHero({ eyebrow, headline, intro, callLocation, child
             Call Now {PHONE_NUMBER}
           </CallLink>
         </div>
+
+        {/* Required beside the number, not only in the footer */}
+        <CallAccessDetails tone="dark" className="mt-3" />
       </div>
     </div>
   )

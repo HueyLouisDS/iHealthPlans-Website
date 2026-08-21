@@ -39,8 +39,10 @@ export default function ZipCta() {
             type="text"
             inputMode="numeric"
             autoComplete="postal-code"
-            // 5 digits, enforced again on the quote form and in the route
-            // handler. Here it only saves a wasted round trip.
+            /*
+             * 5 digits, enforced again on the quote form and in the route
+             * handler. Here it only saves a wasted round trip.
+             */
             pattern="[0-9]{5}"
             maxLength={5}
             placeholder="Enter your zipcode"

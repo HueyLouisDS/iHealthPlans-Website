@@ -13,10 +13,12 @@ import AnnouncementBar from '@/components/layout/AnnouncementBar'
 import CallLink from '@/components/tracking/CallLink'
 import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS, NAV_LINKS } from '@/lib/siteConfig'
 
-// Shared by the plain nav links and the dropdown trigger, so a hover state or
-// a spacing change never applies to only half the nav.
-// Padding stepped down from the original px-12 when the nav went from 3 items
-// to 5. At px-12 the row overflows into the phone block at the lg breakpoint.
+/*
+ * Shared by the plain nav links and the dropdown trigger, so a hover state or
+ * a spacing change never applies to only half the nav.
+ * Padding stepped down from the original px-12 when the nav went from 3 items
+ * to 5. At px-12 the row overflows into the phone block at the lg breakpoint.
+ */
 const NAV_ITEM_CLASS =
   'flex text-[#111C39] text-base xl:text-lg font-semibold flex-col items-center py-1 relative border-r last:border-r-0 border-[#E5E5E5] hover:opacity-70 transition-opacity duration-300 px-5 xl:px-7 whitespace-nowrap'
 
@@ -95,8 +97,10 @@ function NavDropdown({ link }) {
       className="relative"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
-      // Closing on blur that leaves the whole group is what makes tabbing out
-      // of the last child dismiss the panel
+      /*
+       * Closing on blur that leaves the whole group is what makes tabbing out
+       * of the last child dismiss the panel
+       */
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false)
       }}
@@ -129,12 +133,16 @@ function NavDropdown({ link }) {
               key={child.href}
               href={child.href}
               onClick={() => setIsOpen(false)}
-              // Not focusable while closed, otherwise tabbing lands on links
-              // nobody can see
+              /*
+               * Not focusable while closed, otherwise tabbing lands on links
+               * nobody can see
+               */
               tabIndex={isOpen ? 0 : -1}
-              // An overview entry reads as the parent of the ones below it,
-              // which are indented under it. Same single level of menu, just
-              // grouped, so nothing here needs a second flyout to reach.
+              /*
+               * An overview entry reads as the parent of the ones below it,
+               * which are indented under it. Same single level of menu, just
+               * grouped, so nothing here needs a second flyout to reach.
+               */
               className={`block py-3 text-base transition-colors hover:bg-ihealthBlue/5 hover:text-ihealthBlue ${
                 child.isOverview
                   ? 'px-5 font-bold text-ihealthBlue border-b border-[#E5E5E5] mb-1'
@@ -233,8 +241,10 @@ export default function Header() {
 
           <div className="w-full px-4 pt-20 grid grid-cols-1 gap-5 flex-shrink-0">
             {NAV_LINKS.map((link) =>
-              // A group with children has no page of its own, so it renders as
-              // a heading with its links nested rather than as a dead link
+              /*
+               * A group with children has no page of its own, so it renders as
+               * a heading with its links nested rather than as a dead link
+               */
               link.children ? (
                 <div key={link.label} className="w-full flex flex-col items-start">
                   <span className="w-full flex items-center justify-center text-ihealthBlue/60 font-semibold text-[clamp(16px,3.55vw,32px)]">

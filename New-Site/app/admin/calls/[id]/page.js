@@ -35,8 +35,10 @@ export default async function AdminCallDetailPage({ params }) {
   const { id } = await params
   const call = await getCall(id)
 
-  // An unknown id must 404 rather than render an empty shell, or the page
-  // becomes a way to probe which ids exist
+  /*
+   * An unknown id must 404 rather than render an empty shell, or the page
+   * becomes a way to probe which ids exist
+   */
   if (isFixtures && !call) notFound()
 
   return (

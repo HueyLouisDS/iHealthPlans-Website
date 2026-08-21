@@ -14,8 +14,10 @@
  *    qualify for, since eligibility depends on individual circumstances.
  */
 
-// The 6 windows, in the order a person encounters them rather than calendar
-// order. Rendered on the hub page and, in a shorter form, on product pages.
+/*
+ * The 6 windows, in the order a person encounters them rather than calendar
+ * order. Rendered on the hub page and, in a shorter form, on product pages.
+ */
 export const ENROLLMENT_WINDOWS = [
   {
     slug: 'initial',
@@ -199,8 +201,10 @@ export const ENROLLMENT_PAGES = {
     intro:
       'The Medicare Advantage Open Enrollment Period runs from 1 January to 31 March each year. It exists so that someone who has started the year in a Medicare Advantage plan and finds it is not working for them is not stuck with it until the following January.',
 
-    // This page's whole reason to exist is that people confuse this window
-    // with the Annual Enrollment Period. Who it applies to leads everything.
+    /*
+     * This page's whole reason to exist is that people confuse this window
+     * with the Annual Enrollment Period. Who it applies to leads everything.
+     */
     whoItIsFor: {
       heading: 'Who can use this window',
       items: [

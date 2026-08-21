@@ -64,14 +64,18 @@ export async function POST(request) {
     phone: String(body.phone).trim(),
     email: String(body.email).trim(),
     receivedAt: new Date().toISOString(),
-    // TODO attach visitorId, sessionId, and the attribution captured on first
-    // touch, once lib/attribution exists. Without them an application cannot
-    // be traced to the campaign that produced it.
+    /*
+     * TODO attach visitorId, sessionId, and the attribution captured on first
+     * touch, once lib/attribution exists. Without them an application cannot
+     * be traced to the campaign that produced it.
+     */
   }
 
-  // TODO this is the gap. Applications are written to the server log and go no
-  // further, so nothing reaches a recruiter. Wire this to whatever the client
-  // actually uses, an inbox, an ATS, or the CRM, before this page is live.
+  /*
+   * TODO this is the gap. Applications are written to the server log and go no
+   * further, so nothing reaches a recruiter. Wire this to whatever the client
+   * actually uses, an inbox, an ATS, or the CRM, before this page is live.
+   */
   console.warn('[careers] application received but NOT delivered anywhere', application)
 
   return Response.json({ status: 'received' }, { status: 202 })

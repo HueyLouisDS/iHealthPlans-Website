@@ -7,8 +7,10 @@
 
 import Accordion from '@/components/ui/Accordion'
 
-// Questions and answers are the client's approved copy, recovered from the
-// live bundle. Treat edits here as content changes, not code changes.
+/*
+ * Questions and answers are the client's approved copy, recovered from the
+ * live bundle. Treat edits here as content changes, not code changes.
+ */
 const FAQ_ITEMS = [
   {
     question: 'What Is Medicare Advantage?',

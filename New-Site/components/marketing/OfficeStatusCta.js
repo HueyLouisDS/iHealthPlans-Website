@@ -21,6 +21,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import CallLink from '@/components/tracking/CallLink'
+import CallAccessDetails from '@/components/compliance/CallAccessDetails'
 import { getOfficeStatus } from '@/lib/officeHours'
 import { PHONE_NUMBER } from '@/lib/siteConfig'
 
@@ -39,9 +40,11 @@ export default function OfficeStatusCta({ location, tone = 'dark' }) {
     setStatus(getOfficeStatus())
   }, [])
 
-  // Server render and first client pass. Show the neutral pair rather than
-  // nothing, so the call to action is never missing for a visitor whose
-  // JavaScript is slow or blocked.
+  /*
+   * Server render and first client pass. Show the neutral pair rather than
+   * nothing, so the call to action is never missing for a visitor whose
+   * JavaScript is slow or blocked.
+   */
   if (!status) {
     return (
       <div className="flex flex-wrap flex-col-reverse sm:flex-row items-start gap-4">
@@ -57,6 +60,8 @@ export default function OfficeStatusCta({ location, tone = 'dark' }) {
         >
           Call Now {PHONE_NUMBER}
         </CallLink>
+
+        <CallAccessDetails tone={tone === 'dark' ? 'dark' : 'light'} className="w-full" />
       </div>
     )
   }
@@ -89,6 +94,8 @@ export default function OfficeStatusCta({ location, tone = 'dark' }) {
             Get a Free Quote
           </Link>
         </div>
+
+        <CallAccessDetails tone={tone === 'dark' ? 'dark' : 'light'} />
       </div>
     )
   }
@@ -118,6 +125,8 @@ export default function OfficeStatusCta({ location, tone = 'dark' }) {
           Call {PHONE_NUMBER}
         </CallLink>
       </div>
+
+      <CallAccessDetails tone={tone === 'dark' ? 'dark' : 'light'} />
     </div>
   )
 }

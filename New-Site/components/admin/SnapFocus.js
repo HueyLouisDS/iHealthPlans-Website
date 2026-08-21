@@ -23,15 +23,19 @@ export default function SnapFocus({ targetId, value }) {
   const lastValue = useRef(null)
 
   useEffect(() => {
-    // Only when the url actually asked to be snapped. Loading a bookmarked
-    // ?stage= url with no fragment should leave focus where the browser put
-    // it rather than dropping the reader into the middle of the page.
+    /*
+     * Only when the url actually asked to be snapped. Loading a bookmarked
+     * ?stage= url with no fragment should leave focus where the browser put
+     * it rather than dropping the reader into the middle of the page.
+     */
     if (window.location.hash !== `#${targetId}`) return
     if (lastValue.current === value) return
     lastValue.current = value
 
-    // preventScroll because the fragment has already positioned the page, and
-    // it did so respecting scroll-mt. Letting focus scroll again would undo it.
+    /*
+     * preventScroll because the fragment has already positioned the page, and
+     * it did so respecting scroll-mt. Letting focus scroll again would undo it.
+     */
     document.getElementById(targetId)?.focus({ preventScroll: true })
   }, [targetId, value])
 

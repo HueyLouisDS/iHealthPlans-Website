@@ -6,9 +6,11 @@
 
 import Image from 'next/image'
 
-// Icon filenames are inherited from the live site and do not always match the
-// heading beside them, for example a-trusted-brand sits under Nationwide
-// Support. Left as is so the assets stay traceable to their source.
+/*
+ * Icon filenames are inherited from the live site and do not always match the
+ * heading beside them, for example a-trusted-brand sits under Nationwide
+ * Support. Left as is so the assets stay traceable to their source.
+ */
 const VALUE_PROPS = [
   {
     icon: '/icons/personalized-guidance.svg',

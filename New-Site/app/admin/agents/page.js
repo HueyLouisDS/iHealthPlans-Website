@@ -31,14 +31,18 @@ import {
 const BASE = '/admin/agents'
 const PARAM_KEYS = ['period', 'sort']
 
-// Where the page snaps to when a tile is clicked. The filter panel and the
-// table below it are what the tile changed, so landing here shows the result.
+/*
+ * Where the page snaps to when a tile is clicked. The filter panel and the
+ * table below it are what the tile changed, so landing here shows the result.
+ */
 const FOCUS_ID = 'agent-table'
 
-// The tiles rank the table rather than filter it. Filtering to one agent is
-// what clicking their name already does, and it goes somewhere more useful,
-// their call log. What a tile is good for here is asking to see the table
-// ordered by that column.
+/*
+ * The tiles rank the table rather than filter it. Filtering to one agent is
+ * what clicking their name already does, and it goes somewhere more useful,
+ * their call log. What a tile is good for here is asking to see the table
+ * ordered by that column.
+ */
 const TILE_SORTS = {
   agents: 'name',
   calls: 'calls',
@@ -98,9 +102,11 @@ export default async function AdminAgentsPage({ searchParams }) {
     const isOn = sort === next
     const href = buildHref(BASE, PARAM_KEYS, filters, { sort: isOn ? undefined : next })
 
-    // The fragment snaps to the table. Not when clearing, since scrolling
-    // somebody down the page as they undo a choice is the opposite of what
-    // they asked for.
+    /*
+     * The fragment snaps to the table. Not when clearing, since scrolling
+     * somebody down the page as they undo a choice is the opposite of what
+     * they asked for.
+     */
     return isOn ? href : `${href}#${FOCUS_ID}`
   }
 
@@ -178,8 +184,10 @@ export default async function AdminAgentsPage({ searchParams }) {
 
           <section
             id={FOCUS_ID}
-            // Focusable so the snap moves the keyboard caret here too, not
-            // only the scroll position
+            /*
+             * Focusable so the snap moves the keyboard caret here too, not
+             * only the scroll position
+             */
             tabIndex={-1}
             aria-label="Agent performance"
             className="scroll-mt-6 focus:outline-none"
@@ -215,8 +223,10 @@ export default async function AdminAgentsPage({ searchParams }) {
       <SelectableTable
         rows={result.agents}
         columns={COLUMNS}
-        // The agent name links to that agent's calls for the same period, which
-        // is the question anyone asks next after reading a row
+        /*
+         * The agent name links to that agent's calls for the same period, which
+         * is the question anyone asks next after reading a row
+         */
         rowHrefBase={`/admin/calls?period=${days}&agent=`}
         rowLabelKey="name"
         exportBase={exportHref}

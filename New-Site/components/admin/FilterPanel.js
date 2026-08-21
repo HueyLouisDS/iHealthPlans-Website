@@ -19,9 +19,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { buildHref } from '@/lib/admin/urls'
 
-// Asking for this many rows or more gets a confirmation first. Large pages are
-// slow to render and hard to scan, and the person almost always wants an
-// export rather than a very long table.
+/*
+ * Asking for this many rows or more gets a confirmation first. Large pages are
+ * slow to render and hard to scan, and the person almost always wants an
+ * export rather than a very long table.
+ */
 const LARGE_PAGE_THRESHOLD = 200
 
 /**
@@ -38,8 +40,10 @@ function Chips({ options, activeValue, onHref, onIntercept, paramKey }) {
           <Link
             key={option.label}
             href={href}
-            // Still a real link. The handler intercepts only when it has
-            // something to ask, so this keeps working without JavaScript.
+            /*
+             * Still a real link. The handler intercepts only when it has
+             * something to ask, so this keeps working without JavaScript.
+             */
             onClick={(event) => onIntercept?.(event, option.value, href)}
             aria-current={isActive ? 'page' : undefined}
             className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
@@ -81,8 +85,10 @@ function LargePageDialog({ rows, onConfirm, onCancel, exportHref }) {
   return (
     <div
       className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-      // Only a click that started on the backdrop cancels, so a drag out of
-      // the panel does not dismiss it
+      /*
+       * Only a click that started on the backdrop cancels, so a drag out of
+       * the panel does not dismiss it
+       */
       onClick={(event) => {
         if (event.target === event.currentTarget) onCancel()
       }}
@@ -179,8 +185,10 @@ export default function FilterPanel({
   const [pending, setPending] = useState(null)
   const [isOpen, setIsOpen] = useState(applied.length > 0)
 
-  // Open on whichever tab is already doing something, so the reason the list
-  // is narrowed is the first thing shown
+  /*
+   * Open on whichever tab is already doing something, so the reason the list
+   * is narrowed is the first thing shown
+   */
   const firstApplied = tabs.find((tab) => tab.isApplied)
   const [tab, setTab] = useState(firstApplied?.key || tabs[0]?.key)
 

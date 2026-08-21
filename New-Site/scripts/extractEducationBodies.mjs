@@ -18,13 +18,17 @@ const pagesDir = path.join(appRoot, '..', 'Old-Site', 'Pages')
 const indexFile = path.join(appRoot, 'content', 'education', 'articles.json')
 const outputDir = path.join(appRoot, 'content', 'education', 'bodies')
 
-// The old site is a Next.js app rendering Sanity portable text, and it wraps
-// every article body in this one element. Everything outside it is chrome,
-// breadcrumbs, share buttons, and the related articles rail.
+/*
+ * The old site is a Next.js app rendering Sanity portable text, and it wraps
+ * every article body in this one element. Everything outside it is chrome,
+ * breadcrumbs, share buttons, and the related articles rail.
+ */
 const WRAPPER = '<div id="portable-text-wrapper">'
 
-// Average adult reading speed for this kind of material. Only used to print
-// "4 min read", so being 20 percent out costs nothing.
+/*
+ * Average adult reading speed for this kind of material. Only used to print
+ * "4 min read", so being 20 percent out costs nothing.
+ */
 const WORDS_PER_MINUTE = 200
 
 /**
@@ -57,8 +61,10 @@ function extractWrapper(html) {
   const start = html.indexOf(WRAPPER)
   if (start < 0) return null
 
-  // An unbalanced wrapper means the scrape is truncated. Returning the rest of
-  // the file would quietly publish the footer as article text.
+  /*
+   * An unbalanced wrapper means the scrape is truncated. Returning the rest of
+   * the file would quietly publish the footer as article text.
+   */
   return matchBalanced(html, start + WRAPPER.length, 'div')?.inner ?? null
 }
 
@@ -128,8 +134,10 @@ function parseSpans(html) {
   buffer += html.slice(cursor)
   flush()
 
-  // Strip anything left over, which should be nothing. Logged by the caller if
-  // it is not, since a surprise here means the scrape changed shape.
+  /*
+   * Strip anything left over, which should be nothing. Logged by the caller if
+   * it is not, since a surprise here means the scrape changed shape.
+   */
   return spans.map((span) =>
     span.text ? { ...span, text: span.text.replace(/<[^>]*>/g, '') } : span
   )
@@ -194,8 +202,10 @@ function parseBlocks(html) {
   let match
 
   while ((match = open.exec(html))) {
-    // Anything between blocks is content the old site put outside a paragraph.
-    // Reported rather than dropped, so a shape change is loud.
+    /*
+     * Anything between blocks is content the old site put outside a paragraph.
+     * Reported rather than dropped, so a shape change is loud.
+     */
     const between = html.slice(cursor, match.index).replace(/<[^>]*>/g, '').trim()
     if (between) unknown.push(between.slice(0, 80))
 
@@ -242,10 +252,12 @@ function collectText(blocks) {
     }
   }
 
-  // Braces on every branch. Without them the trailing `else if` binds to the
-  // brace-less `if (span.text)` inside the paragraph loop rather than to this
-  // chain, so list text is never collected and every article with a list
-  // reports a reading time far shorter than it is.
+  /*
+   * Braces on every branch. Without them the trailing `else if` binds to the
+   * brace-less `if (span.text)` inside the paragraph loop rather than to this
+   * chain, so list text is never collected and every article with a list
+   * reports a reading time far shorter than it is.
+   */
   for (const block of blocks) {
     if (block.type === 'heading') {
       out.push(block.text)
@@ -272,8 +284,10 @@ async function run() {
   const articles = JSON.parse(await fs.readFile(indexFile, 'utf8'))
   await fs.mkdir(outputDir, { recursive: true })
 
-  // Anything already there is from a previous run. Removed rather than left,
-  // so a slug that disappears from the index does not linger as a stale page.
+  /*
+   * Anything already there is from a previous run. Removed rather than left,
+   * so a slug that disappears from the index does not linger as a stale page.
+   */
   for (const stale of await fs.readdir(outputDir).catch(() => [])) {
     if (stale.endsWith('.json')) await fs.unlink(path.join(outputDir, stale))
   }

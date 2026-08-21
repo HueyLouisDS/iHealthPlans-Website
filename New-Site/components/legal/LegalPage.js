@@ -13,7 +13,7 @@ import Link from 'next/link'
 import { HeaderSpacer } from '@/components/layout/Header'
 import CallLink from '@/components/tracking/CallLink'
 import { getLegalPage, LEGAL_LAST_UPDATED } from '@/lib/content/legal'
-import { PHONE_NUMBER, PHONE_TTY } from '@/lib/siteConfig'
+import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS } from '@/lib/siteConfig'
 
 const CONFIRM_PREFIX = 'TO CONFIRM:'
 
@@ -65,9 +65,14 @@ function Contacts({ items, slug }) {
           <dt className="font-bold text-lg text-ihealthBlue">{item.label}</dt>
           <dd className="text-lg break-words">
             {item.value === 'PHONE_NUMBER_WITH_TTY' ? (
-              <CallLink location={`legal:${slug}`} className="text-[#105fa8] font-semibold hover:underline">
-                {PHONE_NUMBER} ({PHONE_TTY})
-              </CallLink>
+              <>
+                <CallLink location={`legal:${slug}`} className="text-[#105fa8] font-semibold hover:underline">
+                  {PHONE_NUMBER} ({PHONE_TTY})
+                </CallLink>
+                {/* The rule is TTY *and* days and hours with the number. This
+                    block already carried the TTY and was missing the hours. */}
+                <span className="block text-base text-[#505258] mt-1">{BUSINESS_HOURS}</span>
+              </>
             ) : item.value.startsWith(CONFIRM_PREFIX) ? (
               <ToConfirm text={item.value} />
             ) : (

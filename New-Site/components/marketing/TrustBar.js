@@ -6,8 +6,10 @@
 
 import Image from 'next/image'
 
-// Both items use the same icon on the live site, despite different alt text.
-// TODO get the correct second icon from the client, or drop one of the items.
+/*
+ * Both items use the same icon on the live site, despite different alt text.
+ * TODO get the correct second icon from the client, or drop one of the items.
+ */
 const TRUST_ITEMS = [
   { label: 'Licensed Insurance Agents with Years of Experience', alt: '100 with circle', hideOnMobile: true },
   { label: 'Medicare Advantage Plans', alt: 'People icon', hideOnMobile: false },

@@ -30,12 +30,16 @@ import {
 const BASE = '/admin/calls'
 const PARAM_KEYS = ['period', 'matched', 'disposition', 'agent', 'recording', 'sort', 'perPage', 'page']
 
-// Where the page snaps to when a tile is clicked. The filter panel and the
-// table below it are what the tile changed, so landing here shows the result.
+/*
+ * Where the page snaps to when a tile is clicked. The filter panel and the
+ * table below it are what the tile changed, so landing here shows the result.
+ */
 const FOCUS_ID = 'call-filters'
 
-// Each tile is a filter. Clicking one that is already on clears it, so the way
-// out is the same control as the way in.
+/*
+ * Each tile is a filter. Clicking one that is already on clears it, so the way
+ * out is the same control as the way in.
+ */
 const TILE_FILTERS = {
   all: {},
   connected: { disposition: 'connected' },
@@ -186,14 +190,18 @@ export default async function AdminCallsPage({ searchParams }) {
       ...next,
     })
 
-    // The fragment snaps the page to the results. Not when clearing, since
-    // scrolling somebody down the page as they undo a filter is the opposite
-    // of what they asked for.
+    /*
+     * The fragment snaps the page to the results. Not when clearing, since
+     * scrolling somebody down the page as they undo a filter is the opposite
+     * of what they asked for.
+     */
     return isClearing ? href : `${href}#${FOCUS_ID}`
   }
 
-  // "All" is selected when none of the others are, which is what makes it read
-  // as the neutral position rather than as a 4th filter
+  /*
+   * "All" is selected when none of the others are, which is what makes it read
+   * as the neutral position rather than as a 4th filter
+   */
   const activeTile =
     (params?.disposition === 'connected' && !params?.matched && 'connected') ||
     (params?.matched === 'yes' && !params?.disposition && 'matched') ||
@@ -259,8 +267,10 @@ export default async function AdminCallsPage({ searchParams }) {
 
           <section
             id={FOCUS_ID}
-            // Focusable so the snap moves the keyboard caret here too, not
-            // only the scroll position
+            /*
+             * Focusable so the snap moves the keyboard caret here too, not
+             * only the scroll position
+             */
             tabIndex={-1}
             aria-label="Filtered calls"
             className="scroll-mt-6 focus:outline-none"

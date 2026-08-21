@@ -17,8 +17,10 @@ export function generateMetadata() {
   return {
     title: page.title,
     description: page.metaDescription,
-    // These are utility pages. They should be reachable and readable, but they
-    // should not compete with the marketing pages in search results.
+    /*
+     * These are utility pages. They should be reachable and readable, but they
+     * should not compete with the marketing pages in search results.
+     */
     robots: { index: true, follow: true },
   }
 }

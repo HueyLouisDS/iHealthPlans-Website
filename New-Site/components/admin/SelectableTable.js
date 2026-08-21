@@ -28,17 +28,21 @@ import { StatusPill, MatchPill } from '@/components/admin/AdminUi'
 const FORMATTERS = {
   statusPill: (value) => <StatusPill status={value} />,
   matchPill: (value) => <MatchPill matched={value} />,
-  // A zero here means nothing happened, which is worth saying rather than
-  // printing a quiet 0 that reads as a real measurement
+  /*
+   * A zero here means nothing happened, which is worth saying rather than
+   * printing a quiet 0 that reads as a real measurement
+   */
   zeroNone: (value) => (value === 0 ? <span className="text-[#6C7381]">none</span> : value),
   emptyNone: (value, column) =>
     value ? value : <span className="text-[#6C7381]">{column.emptyLabel || 'none'}</span>,
   boolLabel: (value, column) =>
     value ? column.trueLabel || 'yes' : <span className="text-[#6C7381]">{column.falseLabel || 'none'}</span>,
-  // A rate calculated over a handful of records, shown at the same weight as
-  // one calculated over hundreds, is how somebody moves budget onto 3 lucky
-  // enrollments. The row is still shown, just marked so it cannot be read
-  // straight off the page.
+  /*
+   * A rate calculated over a handful of records, shown at the same weight as
+   * one calculated over hundreds, is how somebody moves budget onto 3 lucky
+   * enrollments. The row is still shown, just marked so it cannot be read
+   * straight off the page.
+   */
   thinRate: (value, column, row) =>
     row.lowVolume ? (
       <span className="text-[#6C7381]">
@@ -86,12 +90,16 @@ function SelectAllBox({ checked, indeterminate, onChange }) {
 export default function SelectableTable({
   rows,
   columns,
-  // A base path rather than a function, for the same reason the columns carry
-  // a format name. Functions cannot be passed from a server component to a
-  // client one, and every page using this table is a server component.
+  /*
+   * A base path rather than a function, for the same reason the columns carry
+   * a format name. Functions cannot be passed from a server component to a
+   * client one, and every page using this table is a server component.
+   */
   rowHrefBase,
-  // Which field names a row in the checkbox label. "Select Marguerite
-  // Ashcombe" is a usable announcement, "Select ld_1036" is not.
+  /*
+   * Which field names a row in the checkbox label. "Select Marguerite
+   * Ashcombe" is a usable announcement, "Select ld_1036" is not.
+   */
   rowLabelKey = 'id',
   exportBase,
   emptyMessage,
@@ -99,9 +107,11 @@ export default function SelectableTable({
 }) {
   const [selected, setSelected] = useState(() => new Set())
 
-  // Any change to the rows underneath, a filter, a page, a sort, clears the
-  // selection. Keeping ids that are no longer on screen is how a bulk action
-  // ends up doing something nobody intended.
+  /*
+   * Any change to the rows underneath, a filter, a page, a sort, clears the
+   * selection. Keeping ids that are no longer on screen is how a bulk action
+   * ends up doing something nobody intended.
+   */
   const rowKey = useMemo(() => rows.map((row) => row.id).join('|'), [rows])
   useEffect(() => {
     setSelected(new Set())
@@ -207,9 +217,11 @@ export default function SelectableTable({
 
                   {columns.map((column, index) => {
                     const formatter = column.format ? FORMATTERS[column.format] : null
-                    // The whole row is passed as well as the cell, because some
-                    // formatters need a sibling field to decide how to render,
-                    // like a rate that has to know its own denominator
+                    /*
+                     * The whole row is passed as well as the cell, because some
+                     * formatters need a sibling field to decide how to render,
+                     * like a rate that has to know its own denominator
+                     */
                     const content = formatter ? formatter(row[column.key], column, row) : row[column.key]
 
                     return (

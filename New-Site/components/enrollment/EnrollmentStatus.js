@@ -14,8 +14,10 @@
 
 import { useEffect, useState } from 'react'
 
-// AEP runs 15 October to 7 December inclusive. Months are 0 indexed in JS
-// Date, so 9 is October and 11 is December.
+/*
+ * AEP runs 15 October to 7 December inclusive. Months are 0 indexed in JS
+ * Date, so 9 is October and 11 is December.
+ */
 const AEP_START_MONTH = 9
 const AEP_START_DAY = 15
 const AEP_END_MONTH = 11

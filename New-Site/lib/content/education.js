@@ -11,22 +11,30 @@ import fs from 'node:fs'
 import path from 'node:path'
 import articles from '@/content/education/articles.json'
 
-// Bodies are read from disk one at a time rather than imported as a bundle.
-// All 170 together are roughly 400KB of JSON, and an article page needs one.
+/*
+ * Bodies are read from disk one at a time rather than imported as a bundle.
+ * All 170 together are roughly 400KB of JSON, and an article page needs one.
+ */
 const BODIES_DIR = path.join(process.cwd(), 'content', 'education', 'bodies')
 
-// Parsed bodies, kept for the life of the process. The files never change at
-// runtime, so re-reading and re-parsing on every request would buy nothing.
+/*
+ * Parsed bodies, kept for the life of the process. The files never change at
+ * runtime, so re-reading and re-parsing on every request would buy nothing.
+ */
 const bodyCache = new Map()
 
-// The live site paginates at 13, confirmed from its own render payload rather
-// than counted off the page. Changing this changes the featured row layout too,
-// the first 4 slots are not interchangeable with the rest.
+/*
+ * The live site paginates at 13, confirmed from its own render payload rather
+ * than counted off the page. Changing this changes the featured row layout too,
+ * the first 4 slots are not interchangeable with the rest.
+ */
 export const ARTICLES_PER_PAGE = 13
 
-// Display order of the category filter, taken from the live site. It is not
-// alphabetical and it is not by article count, so it has to be listed
-// explicitly. Medicare Plans holds 114 of the 170 articles and still sits last.
+/*
+ * Display order of the category filter, taken from the live site. It is not
+ * alphabetical and it is not by article count, so it has to be listed
+ * explicitly. Medicare Plans holds 114 of the 170 articles and still sits last.
+ */
 const CATEGORY_ORDER = [
   'comprehensive-coverage-awareness',
   'long-term-care-planning',
@@ -62,9 +70,11 @@ export function getCategories() {
     else bySlug.set(article.categorySlug, { slug: article.categorySlug, name: article.category, count: 1 })
   }
 
-  // Anything not in CATEGORY_ORDER still appears, appended, rather than
-  // vanishing. A new category added in the CMS should show up without a code
-  // change even though its position will be wrong until it is listed above.
+  /*
+   * Anything not in CATEGORY_ORDER still appears, appended, rather than
+   * vanishing. A new category added in the CMS should show up without a code
+   * change even though its position will be wrong until it is listed above.
+   */
   const ordered = CATEGORY_ORDER.map((slug) => bySlug.get(slug)).filter(Boolean)
   const remainder = [...bySlug.values()].filter((c) => !CATEGORY_ORDER.includes(c.slug))
 
@@ -127,8 +137,10 @@ export function getArticleBody(slug) {
   try {
     body = JSON.parse(fs.readFileSync(path.join(BODIES_DIR, `${slug}.json`), 'utf8'))
   } catch {
-    // A missing body is a content gap, not a crash. The page renders its
-    // heading and image and says the article is unavailable.
+    /*
+     * A missing body is a content gap, not a crash. The page renders its
+     * heading and image and says the article is unavailable.
+     */
     body = null
   }
 

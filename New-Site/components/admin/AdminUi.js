@@ -22,10 +22,12 @@ export function StatTile({ label, value, rate, delta, isMuted = false, href, isS
     isSelected
       ? 'border-ihealthGreen ring-2 ring-ihealthGreen'
       : href
-        ? // Hover is blue, selected is green, so the 2 states are different
-          // colours rather than 2 strengths of one. Focus gets the full green
-          // ring, since a keyboard user never sees hover at all and needs to
-          // know where the selection would land.
+        ? /*
+           * Hover is blue, selected is green, so the 2 states are different
+           * colours rather than 2 strengths of one. Focus gets the full green
+           * ring, since a keyboard user never sees hover at all and needs to
+           * know where the selection would land.
+           */
           'hover:border-ihealthBlue/40 hover:ring-2 hover:ring-ihealthBlue/25 focus-visible:outline-none focus-visible:border-ihealthGreen focus-visible:ring-2 focus-visible:ring-ihealthGreen'
         : ''
   }`
@@ -50,9 +52,11 @@ export function StatTile({ label, value, rate, delta, isMuted = false, href, isS
   return (
     <Link
       href={href}
-      // aria-current says which tile is driving the page, and the ring is not
-      // the only signal. Colour alone is unreadable for anyone with a red
-      // green deficiency, so the state is announced as well as drawn.
+      /*
+       * aria-current says which tile is driving the page, and the ring is not
+       * the only signal. Colour alone is unreadable for anyone with a red
+       * green deficiency, so the state is announced as well as drawn.
+       */
       aria-current={isSelected ? 'true' : undefined}
       className={className}
     >

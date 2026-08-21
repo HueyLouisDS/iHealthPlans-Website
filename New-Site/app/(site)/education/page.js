@@ -53,8 +53,10 @@ export default async function EducationPage({ searchParams }) {
     page: requestedPage,
   })
 
-  // Slot 1 is the featured card, slots 2 to 4 are the compact column, and
-  // everything after that fills the standard grid below.
+  /*
+   * Slot 1 is the featured card, slots 2 to 4 are the compact column, and
+   * everything after that fills the standard grid below.
+   */
   const [featured, ...rest] = articles
   const compact = rest.slice(0, 3)
   const remaining = rest.slice(3)

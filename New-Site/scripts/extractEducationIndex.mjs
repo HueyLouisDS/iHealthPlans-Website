@@ -21,10 +21,12 @@ const sourceImages = path.join(oldSite, 'Images')
 const outputImages = path.join(appRoot, 'public', 'images', 'education')
 const outputData = path.join(appRoot, 'content', 'education', 'articles.json')
 
-// Source photography runs up to 8192px wide at 5MB each. The largest the site
-// ever renders a hero is the article page at 3040px, and even that is a
-// letterboxed crop. 2000px keeps every rendering sharp on a 2x display while
-// cutting the payload by roughly 95 percent.
+/*
+ * Source photography runs up to 8192px wide at 5MB each. The largest the site
+ * ever renders a hero is the article page at 3040px, and even that is a
+ * letterboxed crop. 2000px keeps every rendering sharp on a 2x display while
+ * cutting the payload by roughly 95 percent.
+ */
 const MAX_IMAGE_WIDTH = 2000
 const JPEG_QUALITY = 82
 
@@ -78,8 +80,10 @@ async function parseArticle(fileName) {
   const title = decodeEntities(rawTitle || '').replace('iHealth Plans | ', '').trim()
   const description = decodeEntities(match(source, /<meta name="description" content="([^"]*)"/) || '').trim()
 
-  // The breadcrumb is the only place the category slug appears, and it is the
-  // same slug the live site already accepts as ?category=
+  /*
+   * The breadcrumb is the only place the category slug appears, and it is the
+   * same slug the live site already accepts as ?category=
+   */
   const categorySlug = match(source, /href="\/education\?category=([^"]+)">/)
   const categoryName = decodeEntities(match(source, /href="\/education\?category=[^"]+">([^<]+)<\/a>/) || '')
 
@@ -122,9 +126,11 @@ async function copyImage(fileName) {
   const isPng = fileName.toLowerCase().endsWith('.png')
   const isWebp = fileName.toLowerCase().endsWith('.webp')
 
-  // Keep the source format. Converting everything to one format would be
-  // tidier but next/image already serves modern formats per browser, so
-  // re-encoding here would only lose quality for nothing.
+  /*
+   * Keep the source format. Converting everything to one format would be
+   * tidier but next/image already serves modern formats per browser, so
+   * re-encoding here would only lose quality for nothing.
+   */
   if (isPng) await pipeline.png({ compressionLevel: 9 }).toFile(to)
   else if (isWebp) await pipeline.webp({ quality: JPEG_QUALITY }).toFile(to)
   else await pipeline.jpeg({ quality: JPEG_QUALITY, mozjpeg: true }).toFile(to)
@@ -147,8 +153,10 @@ async function main() {
   const failed = fileNames.length - articles.length
   if (failed > 0) console.warn(`  ${failed} pages could not be parsed and were dropped`)
 
-  // Newest first, which is what "Latest articles" promises. Ties fall back to
-  // title so the order is stable between runs rather than filesystem dependent.
+  /*
+   * Newest first, which is what "Latest articles" promises. Ties fall back to
+   * title so the order is stable between runs rather than filesystem dependent.
+   */
   articles.sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.title.localeCompare(b.title))
 
   await fs.mkdir(outputImages, { recursive: true })

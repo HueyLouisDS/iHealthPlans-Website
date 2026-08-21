@@ -6,13 +6,15 @@
 import Link from 'next/link'
 import ComplianceDisclosures from '@/components/compliance/ComplianceDisclosures'
 
-// The footer is the only route to these pages, they are deliberately not in
-// the main nav. Order runs from the notices people look for most often to the
-// ones they look for least.
-// TODO a "Do Not Sell or Share My Personal Information" link may be legally
-// required here. Whether it is depends on whether the business sells or shares
-// personal information as those terms are defined by state law, which is an
-// open question flagged on the privacy rights page.
+/*
+ * The footer is the only route to these pages, they are deliberately not in
+ * the main nav. Order runs from the notices people look for most often to the
+ * ones they look for least.
+ * TODO a "Do Not Sell or Share My Personal Information" link may be legally
+ * required here. Whether it is depends on whether the business sells or shares
+ * personal information as those terms are defined by state law, which is an
+ * open question flagged on the privacy rights page.
+ */
 const LEGAL_LINKS = [
   { label: 'Privacy Policy', href: '/privacy-policy' },
   { label: 'Terms of Service', href: '/terms-of-service' },

@@ -27,7 +27,7 @@
  * ============================================================================
  */
 
-import { PHONE_NUMBER, SMID } from '@/lib/siteConfig'
+import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS, SMID } from '@/lib/siteConfig'
 
 /**
  * Renders the disclosure.
@@ -48,7 +48,8 @@ export default function TcpaConsent() {
       <p>
         Your consent to connect with a licensed insurance agent does not affect your eligibility to
         enroll or the provision of services, and it is not a condition of purchase. You can
-        withdraw it at any time by calling iHealth Plans at {PHONE_NUMBER}, or through our{' '}
+        withdraw it at any time by calling iHealth Plans at {PHONE_NUMBER} ({PHONE_TTY}),{' '}
+        {BUSINESS_HOURS}, or through our{' '}
         <a href="/do-not-call" className="text-[#105fa8] hover:underline">
           Do Not Call page
         </a>

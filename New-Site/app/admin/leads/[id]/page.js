@@ -15,8 +15,10 @@ import AdminShell from '@/components/admin/AdminShell'
 import { DataSourceNotice, EmptyState, StatusPill, MatchPill } from '@/components/admin/AdminUi'
 import { getLead, usingFixtures } from '@/lib/admin/data'
 
-// Each timeline entry gets a dot colour by kind, so the shape of a journey is
-// readable at a glance before any of the text is read
+/*
+ * Each timeline entry gets a dot colour by kind, so the shape of a journey is
+ * readable at a glance before any of the text is read
+ */
 const EVENT_STYLES = {
   session: { dot: 'bg-[#878F99]', label: 'Session' },
   pageview: { dot: 'bg-[#C4C9D0]', label: 'Page view' },
@@ -45,9 +47,11 @@ export default async function AdminLeadDetailPage({ params }) {
   const { id } = await params
   const lead = await getLead(id)
 
-  // An unknown id must 404 rather than render an empty shell, or the page
-  // becomes a way to probe which ids exist. Only applies once there is real
-  // data to be probed, hence the guard on fixtures mode.
+  /*
+   * An unknown id must 404 rather than render an empty shell, or the page
+   * becomes a way to probe which ids exist. Only applies once there is real
+   * data to be probed, hence the guard on fixtures mode.
+   */
   if (isFixtures && !lead) notFound()
 
   return (

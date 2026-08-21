@@ -37,9 +37,11 @@ export default function FloatingLabelInput({
           onChange={onChange}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? `${name}-error` : undefined}
-          // The single space placeholder is load bearing. Tailwind's
-          // peer-placeholder-shown variant is what holds the label in the
-          // centre of an empty field, and an empty string does not trigger it.
+          /*
+           * The single space placeholder is load bearing. Tailwind's
+           * peer-placeholder-shown variant is what holds the label in the
+           * centre of an empty field, and an empty string does not trigger it.
+           */
           placeholder=" "
           className={`border focus:border-[#214F7A] block rounded-lg px-2.5 pb-2.5 pt-3 w-full bg-white text-[#5C5F69] appearance-none focus:outline-none focus:ring-0 peer ${
             error ? 'border-red-500' : 'border-black border-opacity-5'
