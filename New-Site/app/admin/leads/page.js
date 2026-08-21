@@ -13,6 +13,7 @@
 import Link from 'next/link'
 import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
+import LeadFilters from '@/components/admin/LeadFilters'
 import { DataTable, DataSourceNotice, StatTile, StatusPill } from '@/components/admin/AdminUi'
 import { getLeads, usingFixtures, parsePeriod, PERIODS, LEAD_STATUSES } from '@/lib/admin/data'
 
@@ -42,9 +43,9 @@ const SORTS = [
 ]
 
 /**
- * Builds a url that keeps the current filters and changes only what is passed.
- * Without this, choosing a status would silently drop the search and the
- * period, which is the usual way filter bars end up untrustworthy.
+ * Builds a pagination url that preserves the active filters.
+ * A trimmed copy of the one in LeadFilters. Paging is the only link this page
+ * still builds itself, everything else moved into the filter panel.
  */
 function buildHref(params, overrides) {
   const next = new URLSearchParams()
@@ -57,43 +58,6 @@ function buildHref(params, overrides) {
 
   const query = next.toString()
   return query ? `/admin/leads?${query}` : '/admin/leads'
-}
-
-/**
- * One row of filter chips.
- */
-function ChipRow({ label, options, activeValue, params, paramKey }) {
-  return (
-    <div className="flex items-baseline gap-3 flex-wrap">
-      <span className="text-sm font-semibold uppercase tracking-[1.2px] text-[#6C7381] w-16 flex-shrink-0">
-        {label}
-      </span>
-      <div className="flex flex-wrap gap-2">
-        {options.map((option) => {
-          const isActive = (activeValue || null) === option.value
-          // Changing any filter resets to page 1, otherwise a narrower result
-          // set lands the reader on a page that no longer exists
-          const href = buildHref(params, { [paramKey]: option.value, page: 1 })
-
-          return (
-            <Link
-              key={option.label}
-              href={href}
-              aria-current={isActive ? 'page' : undefined}
-              className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                isActive ? 'bg-ihealthBlue text-white' : 'bg-white border text-[#505258] hover:border-ihealthBlue'
-              }`}
-            >
-              {option.label}
-              {option.count !== undefined && (
-                <span className={isActive ? 'text-white/70' : 'text-[#878F99]'}> {option.count}</span>
-              )}
-            </Link>
-          )
-        })}
-      </div>
-    </div>
-  )
 }
 
 export default async function AdminLeadsPage({ searchParams }) {
@@ -147,82 +111,15 @@ export default async function AdminLeadsPage({ searchParams }) {
             <StatTile label="No call yet" value={result.summary.withoutCall.toLocaleString()} />
           </div>
 
-          <div className="bg-white border rounded-lg p-5 mb-6 flex flex-col gap-4">
-            {/* GET form, so searching needs no JavaScript and the result is a
-                real url. The hidden fields carry the other filters through. */}
-            <form action="/admin/leads" method="get" className="flex flex-wrap gap-3">
-              {['period', 'source', 'status', 'sort'].map((key) =>
-                filters[key] ? <input key={key} type="hidden" name={key} value={filters[key]} /> : null
-              )}
-              <label htmlFor="q" className="sr-only">
-                Search by name, phone, or zip
-              </label>
-              <input
-                id="q"
-                name="q"
-                type="search"
-                defaultValue={params?.q || ''}
-                placeholder="Search name, phone, or zip"
-                className="flex-1 min-w-[220px] h-11 px-4 border rounded-md text-base focus:outline-none focus:border-ihealthBlue"
-              />
-              <button
-                type="submit"
-                className="h-11 px-5 rounded-md bg-ihealthBlue text-white font-semibold hover:brightness-110 transition-[filter]"
-              >
-                Search
-              </button>
-              {hasFilters && (
-                <Link
-                  href="/admin/leads"
-                  className="h-11 px-5 rounded-md border bg-white text-[#505258] font-semibold inline-flex items-center hover:border-ihealthBlue"
-                >
-                  Clear filters
-                </Link>
-              )}
-            </form>
-
-            <ChipRow
-              label="Period"
-              paramKey="period"
-              params={filters}
-              activeValue={String(days)}
-              options={PERIODS.map((period) => ({ value: period.value, label: period.label }))}
-            />
-
-            <ChipRow
-              label="Status"
-              paramKey="status"
-              params={filters}
-              activeValue={params?.status}
-              options={[
-                { value: undefined, label: 'All' },
-                ...LEAD_STATUSES.map((status) => ({
-                  value: status.value,
-                  label: status.label,
-                  count: result.statusCounts[status.value] || 0,
-                })),
-              ]}
-            />
-
-            <ChipRow
-              label="Source"
-              paramKey="source"
-              params={filters}
-              activeValue={params?.source}
-              options={[
-                { value: undefined, label: 'All' },
-                ...result.sources.map((source) => ({ value: source, label: source })),
-              ]}
-            />
-
-            <ChipRow
-              label="Sort"
-              paramKey="sort"
-              params={filters}
-              activeValue={params?.sort || 'newest'}
-              options={SORTS}
-            />
-          </div>
+          <LeadFilters
+            params={filters}
+            days={days}
+            periods={PERIODS}
+            statuses={LEAD_STATUSES}
+            statusCounts={result.statusCounts}
+            sources={result.sources}
+            sorts={SORTS}
+          />
 
           <div className="flex items-center justify-between gap-4 mb-3">
             <p className="text-base text-[#505258]">
