@@ -1,5 +1,11 @@
 /**
- * CSV export of the attribution breakdown, /admin/attribution/export.
+ * CSV export of the attribution breakdown,
+ * /admin/attribution/[dimension]/export.
+ *
+ * It sits under the dimension rather than beside it so the file and the page
+ * cannot disagree about what was grouped. When the grouping was a query
+ * parameter, a link that lost it exported sources under a heading somebody
+ * expected to be campaigns.
  *
  * Unlike the lead and call exports this file holds aggregates, not people, so
  * it carries no personal data and no health information. It is still authorised
@@ -14,9 +20,8 @@ import { getAdminSession } from '@/lib/admin/session'
 import {
   getAttributionForExport,
   parsePeriod,
-  parseDimension,
+  findDimension,
   usingFixtures,
-  ATTRIBUTION_DIMENSIONS,
   LOW_VOLUME_LEADS,
 } from '@/lib/admin/data'
 
@@ -58,18 +63,21 @@ function toCell(value) {
   return `"${guarded.replace(/"/g, '""')}"`
 }
 
-export async function GET(request) {
+export async function GET(request, { params }) {
   const session = await getAdminSession()
   if (!session?.user?.isAuthorised) {
     return new Response('Not authorised', { status: 403 })
   }
 
-  const { searchParams } = new URL(request.url)
-  const groupBy = parseDimension(searchParams.get('groupBy'))
-  const dimension = ATTRIBUTION_DIMENSIONS.find((d) => d.value === groupBy)
+  const { dimension: slug } = await params
+  const dimension = findDimension(slug)
+  // Same rule as the page. An unknown grouping is a url that does not exist,
+  // not a reason to hand somebody the source breakdown under another name.
+  if (!dimension) return new Response('Not found', { status: 404 })
 
+  const { searchParams } = new URL(request.url)
   const filters = {
-    groupBy,
+    groupBy: dimension.value,
     days: parsePeriod(searchParams.get('period')),
     device: searchParams.get('device') || undefined,
     onBehalfOf: searchParams.get('audience') || undefined,
@@ -102,7 +110,7 @@ export async function GET(request) {
   const csv = `﻿${[header, ...body].join('\r\n')}\r\n`
 
   const stamp = new Date().toISOString().slice(0, 10)
-  const name = `attribution-${groupBy}-${stamp}.csv`
+  const name = `attribution-${dimension.slug}-${stamp}.csv`
   const filename = usingFixtures() ? `DEMO-DATA-${name}` : name
 
   return new Response(csv, {

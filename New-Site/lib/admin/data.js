@@ -592,19 +592,29 @@ export async function getCall(callId) {
   }
 }
 
-// The dimensions a lead can be grouped by. `label` is the tab, `column` is the
-// heading of the first table column, which has to change with the grouping or
-// every view reads as an unlabelled list of strings.
+// The dimensions a lead can be grouped by.
+//
+// `value` is the field on the lead, `slug` is the url segment, `label` is the
+// button, and `column` is the heading of the first table column, which has to
+// change with the grouping or every view reads as an unlabelled list of
+// strings.
+//
+// The slug is kebab case and deliberately not the field name. A url is read by
+// people, and /admin/attribution/enquiring-for says what the page shows in a
+// way /admin/attribution/onBehalfOf does not.
 export const ATTRIBUTION_DIMENSIONS = [
-  { value: 'source', label: 'Source', column: 'Source / medium' },
-  { value: 'campaign', label: 'Campaign', column: 'Campaign' },
-  { value: 'landingPage', label: 'Landing page', column: 'Landing page' },
-  { value: 'device', label: 'Device', column: 'Device' },
+  { value: 'source', slug: 'source', label: 'Source', column: 'Source / medium' },
+  { value: 'campaign', slug: 'campaign', label: 'Campaign', column: 'Campaign' },
+  { value: 'landingPage', slug: 'landing-page', label: 'Landing page', column: 'Landing page' },
+  { value: 'device', slug: 'device', label: 'Device', column: 'Device' },
   // What the enquiry form calls "who are you enquiring for". Worth its own
   // dimension because a daughter researching for a parent behaves nothing like
   // a beneficiary shopping for themselves, and the 2 convert differently.
-  { value: 'onBehalfOf', label: 'Enquiring for', column: 'Enquiring for' },
+  { value: 'onBehalfOf', slug: 'enquiring-for', label: 'Enquiring for', column: 'Enquiring for' },
 ]
+
+// The dimension every attribution link lands on when none is named
+export const DEFAULT_DIMENSION = ATTRIBUTION_DIMENSIONS[0]
 
 export const ATTRIBUTION_SORTS = [
   { value: 'leads', label: 'Most leads' },
@@ -620,11 +630,17 @@ export const ATTRIBUTION_SORTS = [
 export const LOW_VOLUME_LEADS = 25
 
 /**
- * Turns a groupBy parameter into a dimension, falling back to source.
- * Comes off a query string, so an unknown value must not reach the lookup.
+ * Looks up a dimension by its url segment.
+ *
+ * Returns null rather than falling back to source, because the caller is a
+ * route segment and not a query parameter. A bad filter in a query string
+ * should degrade to something sensible, but /admin/attribution/banana is a
+ * page that does not exist and has to say so. Quietly serving the source
+ * breakdown under that url would mean somebody bookmarks it, shares it, and
+ * gets a different report than the one they think they are looking at.
  */
-export function parseDimension(value) {
-  return ATTRIBUTION_DIMENSIONS.some((d) => d.value === value) ? value : 'source'
+export function findDimension(slug) {
+  return ATTRIBUTION_DIMENSIONS.find((d) => d.slug === slug) || null
 }
 
 /**
@@ -634,12 +650,43 @@ export function parseDimension(value) {
  * as a comma separated list. A value containing a comma would silently split
  * into 2 ids and export the wrong rows, so the id is a slug rather than the
  * value itself.
+ *
+ * Anything with no usable characters becomes "group" rather than "unknown",
+ * because "(unknown)" is a real group value here and the 2 must not land on
+ * the same slug.
  */
 function slugify(value) {
-  return String(value)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'unknown'
+  return (
+    String(value)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'group'
+  )
+}
+
+/**
+ * Assigns each group a unique id, in place.
+ *
+ * Two different values can slug to the same string, and the landing page "/"
+ * proved it, slugging to nothing at all. Two rows sharing an id means selecting
+ * one and exporting gives you both, silently.
+ *
+ * The suffix is assigned in the order the groups were built, which comes from
+ * the dataset and not from the sort parameter. That matters, because the page
+ * and its export must agree on ids, and the export is free to be sorted
+ * differently.
+ */
+function assignGroupIds(groups) {
+  const used = new Map()
+
+  for (const group of groups) {
+    const base = slugify(group.value)
+    const count = (used.get(base) || 0) + 1
+    used.set(base, count)
+    group.id = count === 1 ? base : `${base}-${count}`
+  }
+
+  return groups
 }
 
 /**
@@ -688,7 +735,9 @@ export async function getAttribution({ groupBy = 'source', days = 30, device, on
   for (const lead of leads) {
     const key = lead[dimension.value] || '(unknown)'
     if (!groups.has(key)) {
-      groups.set(key, { id: slugify(key), value: key, leads: 0, calls: 0, conversions: 0 })
+      // The id is assigned after the loop, once every group is known, so
+      // collisions can be seen and broken
+      groups.set(key, { value: key, leads: 0, calls: 0, conversions: 0 })
     }
     const group = groups.get(key)
     group.leads += 1
@@ -699,7 +748,7 @@ export async function getAttribution({ groupBy = 'source', days = 30, device, on
   const totalLeads = leads.length
   const totalConversions = leads.filter((lead) => lead.status === 'enrolled').length
 
-  const rows = [...groups.values()].map((group) => ({
+  const rows = assignGroupIds([...groups.values()]).map((group) => ({
     ...group,
     // Share of the filtered leads, not of everything, so the column always
     // adds up to 100 against the table it is sitting in
