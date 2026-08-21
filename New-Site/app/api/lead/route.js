@@ -10,34 +10,9 @@
  * silently drops submissions is worse than no form.
  */
 
+import { validateLead, normaliseLead, redactLead } from '@/lib/leads/schema'
+
 export const dynamic = 'force-dynamic'
-
-/**
- * Validates a submitted lead.
- * Repeats the client side rules because those are advisory, anything can post
- * to this endpoint directly.
- */
-function validate(body) {
-  const errors = {}
-
-  if (!body || typeof body !== 'object') return { _form: 'Malformed request body.' }
-
-  const zip = String(body.zip || '').trim()
-  const firstName = String(body.firstName || '').trim()
-  const lastName = String(body.lastName || '').trim()
-  const phone = String(body.phone || '').trim()
-
-  if (!/^[0-9]{5}$/.test(zip)) errors.zip = 'A 5 digit zip code is required.'
-  if (!firstName) errors.firstName = 'First name is required.'
-  if (!lastName) errors.lastName = 'Last name is required.'
-  if (firstName.length > 80 || lastName.length > 80) errors._form = 'Name is too long.'
-  if (phone.replace(/[^0-9]/g, '').length < 10) errors.phone = 'A reachable phone number is required.'
-  if (!['self', 'other'].includes(String(body.onBehalfOf || ''))) {
-    errors.onBehalfOf = 'Please say who this enquiry is for.'
-  }
-
-  return errors
-}
 
 /**
  * Accepts a lead.
@@ -52,37 +27,30 @@ export async function POST(request) {
     return Response.json({ error: 'Expected a JSON body.' }, { status: 400 })
   }
 
-  const errors = validate(body)
+  // Shared with the vendor endpoint, so owned and bought leads cannot drift
+  // apart in what counts as a valid lead
+  const errors = validateLead(body, { origin: 'site' })
   if (Object.keys(errors).length > 0) {
     return Response.json({ errors }, { status: 400 })
   }
 
-  const lead = {
-    zip: String(body.zip).trim(),
-    firstName: String(body.firstName).trim(),
-    lastName: String(body.lastName).trim(),
-    phone: String(body.phone).trim(),
-    bestTime: String(body.bestTime || 'anytime'),
-    onBehalfOf: String(body.onBehalfOf),
-    requestedCallback: Boolean(body.requestedCallback),
-    receivedAt: new Date().toISOString(),
+  const lead = normaliseLead(body, {
+    origin: 'site',
+    // TODO the real first touch source, once lib/attribution exists. Until
+    // then every owned lead collapses into one row in the attribution report,
+    // which is better than being untagged but is not the answer.
+    source: 'website',
+  })
 
-    // TODO the consent record. This is the part that matters most legally and
-    // it is not being captured. It needs the exact consent text shown, a
-    // version identifier for it, the timestamp, and the ip address. Proving
-    // what a person agreed to on a given day is the entire reason to record
-    // consent, and a boolean saying "they ticked it" proves nothing.
+  // TODO the consent record. normaliseLead carries it, the form does not yet
+  // send it. It needs the exact text shown, a version for that text, the
+  // timestamp, and the ip. The vendor endpoint already requires all 4, and it
+  // is indefensible to hold a vendor to a standard the agency's own form does
+  // not meet.
 
-    // TODO attribution. visitorId, sessionId, and the first touch source,
-    // campaign, and landing page, once lib/attribution exists. Without them a
-    // lead cannot be traced to the traffic that produced it, which is the
-    // whole point of the engagement.
-  }
-
-  // TODO this is the gap. Leads are written to the server log and go no
-  // further. Wire to the CRM once it is identified, and write to the leads
-  // table once the database exists.
-  console.warn('[lead] received but NOT delivered anywhere', lead)
+  // Redacted, because server logs are retained and readable by everyone with
+  // hosting access, which is wider than the group allowed to see lead data
+  console.warn('[lead] received but NOT delivered anywhere', redactLead(lead))
 
   return Response.json({ status: 'received' }, { status: 202 })
 }
