@@ -19,11 +19,9 @@
  */
 export const INTEGRATIONS = [
   {
-    name: 'api',
-    label: 'TLD API',
-    hint:
-      'Reads calls, leads, policies, agents and dispositions out of TLD. Created under Settings, ' +
-      'API in TLD, which is a different place from the vendor source below.',
+    name: 'dialer',
+    label: 'Dialer',
+    hint: 'Reads calls, agents and dispositions out of TLD.',
     fields: [
       { key: 'LH_DIALER_BASE_URL', label: 'Base url', placeholder: 'https://ihp.tldcrm.com' },
       { key: 'LH_DIALER_API_ID', label: 'API id' },
@@ -31,11 +29,19 @@ export const INTEGRATIONS = [
     ],
   },
   {
+    name: 'crm',
+    label: 'CRM',
+    hint: 'Reads leads and policies.',
+    fields: [
+      { key: 'LH_CRM_BASE_URL', label: 'Base url', placeholder: 'https://ihp.tldcrm.com' },
+      { key: 'LH_CRM_API_ID', label: 'API id' },
+      { key: 'LH_CRM_API_KEY', label: 'API key', secret: true },
+    ],
+  },
+  {
     name: 'dialer_post',
     label: 'Lead post',
-    hint:
-      'Writes a lead into TLD when the site form is submitted. Uses the vendor source, so these ' +
-      'are not the API credentials above and the two are not interchangeable.',
+    hint: 'Writes a lead into TLD when the site form is submitted.',
     fields: [
       { key: 'LH_DIALER_POST_URL', label: 'Post url', placeholder: 'https://ihp.tldcrm.com/post' },
       { key: 'LH_DIALER_POST_VENDOR_ID', label: 'Vendor id', placeholder: '15781' },

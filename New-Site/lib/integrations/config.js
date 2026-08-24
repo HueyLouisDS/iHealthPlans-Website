@@ -1,7 +1,7 @@
 import 'server-only'
 
 /*
- * Credentials for TLD, the reporting API and the vendor lead post.
+ * Credentials for the outbound integrations, the dialer and the CRM.
  */
 
 /*================================================================================
@@ -188,23 +188,20 @@ export function authHeaders(config) {
 =============================================*/
 
 /**
- * The TLD reporting API, which everything the site reads comes through.
- * Reads LH_DIALER_BASE_URL, LH_DIALER_API_ID, LH_DIALER_API_KEY. The env prefix
- * still says DIALER because renaming it would mean rewriting every .env file
- * for a label change.
+ * The dialer. Reads LH_DIALER_BASE_URL, LH_DIALER_API_ID, LH_DIALER_API_KEY.
  */
 export function dialerConfig() {
-  return integrationConfig('LH_DIALER', { label: 'TLD API' })
+  return integrationConfig('LH_DIALER', { label: 'Dialer' })
 }
 
-/*
- * There is deliberately no separate CRM config. TLD is one tenant behind one
- * host with one API key, so a second set would be the same 3 values typed
- * twice. Two configs that must always match drift eventually, and the failure
- * is a working read on calls next to a 401 on policies with nothing saying why.
+/**
+ * The CRM. Reads LH_CRM_BASE_URL, LH_CRM_API_ID, LH_CRM_API_KEY.
  */
+export function crmConfig() {
+  return integrationConfig('LH_CRM', { label: 'CRM' })
+}
 
-/*
+/**
  * The vendor post endpoint, which is how the site writes a lead into TLD.
  *
  * Separate from integrationConfig above because it authenticates completely
@@ -243,7 +240,7 @@ export function dialerPostConfig() {
   }
 }
 
-/*
+/**
  * A view of the post config safe to render or log.
  *
  * describe() above cannot be reused, because it returns apiId in the clear.
