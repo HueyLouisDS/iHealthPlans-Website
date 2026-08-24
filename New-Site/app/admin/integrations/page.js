@@ -13,7 +13,7 @@
 import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
 import IntegrationCards from '@/components/admin/IntegrationCard'
-import { dialerConfig, crmConfig, dialerPostConfig, describe, describePost } from '@/lib/integrations/config'
+import { dialerConfig, dialerPostConfig, describe, describePost } from '@/lib/integrations/config'
 import { describeWritableKeys, envWritesEnabled } from '@/lib/integrations/envFile'
 
 export const dynamic = 'force-dynamic'
@@ -23,12 +23,15 @@ export default async function AdminIntegrationsPage() {
   if (!session?.user?.isAuthorised) return null
 
   const dialer = describe(dialerConfig())
-  const crm = describe(crmConfig())
   const post = describePost(dialerPostConfig())
 
+  /*
+   * Keyed to match INTEGRATIONS in lib/integrations/fields.js, which is what
+   * the client component iterates. A key here with no card there renders
+   * nothing at all rather than erroring.
+   */
   const statuses = {
-    dialer: { isConfigured: dialer.isConfigured, problems: dialer.problems },
-    crm: { isConfigured: crm.isConfigured, problems: crm.problems },
+    api: { isConfigured: dialer.isConfigured, problems: dialer.problems },
     dialer_post: { isConfigured: post.isConfigured, problems: post.problems },
   }
 
