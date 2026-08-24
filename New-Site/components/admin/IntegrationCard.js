@@ -153,7 +153,7 @@ function Card({ integration, status, present, values, onChange, test, onTest }) 
             {test.message}
           </p>
         ) : (
-          <span className="text-sm text-[#6C7381]">Not tested yet</span>
+          <span className="text-sm text-[#6C7381]">Connection not set</span>
         )}
 
         <button
