@@ -23,21 +23,13 @@ export const INTEGRATIONS = [
     label: 'CRM',
     hint:
       'TLD. The API key created under Settings, API, which is a different place from the vendor ' +
-      'source the Vendor card below uses. Everything the site reads comes through this.',
+      'source the Vendor card below uses. Everything the site reads comes through this, the ' +
+      'dialer side included, since the VICIdial data is a field option on each endpoint rather ' +
+      'than a separate connection.',
     fields: [
       { key: 'LH_CRM_BASE_URL', label: 'Base url', placeholder: 'https://ihp.tldcrm.com' },
       { key: 'LH_CRM_API_ID', label: 'API id' },
       { key: 'LH_CRM_API_KEY', label: 'API key', secret: true },
-    ],
-  },
-  {
-    name: 'dialer',
-    label: 'Dialer',
-    hint: 'The dialer side, if it is ever reached separately from the CRM API above.',
-    fields: [
-      { key: 'LH_DIALER_BASE_URL', label: 'Base url' },
-      { key: 'LH_DIALER_API_ID', label: 'API id' },
-      { key: 'LH_DIALER_API_KEY', label: 'API key', secret: true },
     ],
   },
   {

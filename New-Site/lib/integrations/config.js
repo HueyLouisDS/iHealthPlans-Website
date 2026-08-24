@@ -1,7 +1,8 @@
 import 'server-only'
 
 /*
- * Credentials for the outbound integrations, the dialer and the CRM.
+ * Credentials for TLD, the CRM API the site reads through and the vendor
+ * source it posts leads to.
  */
 
 /*================================================================================
@@ -95,8 +96,8 @@ function normaliseBaseUrl(value, name) {
 /*
  * Reads one integration's settings from the environment.
  *
- * `prefix` is the environment variable prefix, so DIALER reads LH_DIALER_BASE_URL,
- * LH_DIALER_API_ID, and LH_DIALER_API_KEY. One function rather than one per
+ * `prefix` is the environment variable prefix, so CRM reads LH_CRM_BASE_URL,
+ * LH_CRM_API_ID, and LH_CRM_API_KEY. One function rather than one per
  * integration, because 2 copies of this drift and the copy that drifts is the
  * one that stops checking https.
  *
@@ -172,7 +173,7 @@ export function authHeaders(config) {
   }
 }
 
-/*=============================================
+/*============================================================================
     TLD REFERENCE
 
     base url        https://<tenant>.tldcrm.com
@@ -185,23 +186,21 @@ export function authHeaders(config) {
     Narrow the columns on a big pull rather than pacing the calls.
 
     The vendor post endpoint authenticates differently, see vendorConfig.
-=============================================*/
+============================================================================*/
 
-/**
- * The dialer. Reads LH_DIALER_BASE_URL, LH_DIALER_API_ID, LH_DIALER_API_KEY.
- */
-export function dialerConfig() {
-  return integrationConfig('LH_DIALER', { label: 'Dialer' })
-}
-
-/**
- * The CRM. Reads LH_CRM_BASE_URL, LH_CRM_API_ID, LH_CRM_API_KEY.
+/*
+ * TLD. Reads LH_CRM_BASE_URL, LH_CRM_API_ID, LH_CRM_API_KEY.
+ *
+ * One config for everything the site reads, calls and agents included. TLD
+ * exposes the VICIdial data as a field option on each endpoint rather than as
+ * a separate connection, so a second credential set would be the same 3 values
+ * typed twice, and 2 configs that must always match drift eventually.
  */
 export function crmConfig() {
   return integrationConfig('LH_CRM', { label: 'CRM' })
 }
 
-/**
+/*
  * The vendor post endpoint, which is how the site writes a lead into TLD.
  *
  * Separate from integrationConfig above because it authenticates completely
@@ -240,7 +239,7 @@ export function vendorConfig() {
   }
 }
 
-/**
+/*
  * A view of the post config safe to render or log.
  *
  * describe() above cannot be reused, because it returns apiId in the clear.

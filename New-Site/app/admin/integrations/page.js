@@ -13,7 +13,7 @@
 import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'
 import IntegrationCards from '@/components/admin/IntegrationCard'
-import { dialerConfig, crmConfig, vendorConfig, describe, describeVendor } from '@/lib/integrations/config'
+import { crmConfig, vendorConfig, describe, describeVendor } from '@/lib/integrations/config'
 import { describeWritableKeys, envWritesEnabled } from '@/lib/integrations/envFile'
 
 export const dynamic = 'force-dynamic'
@@ -22,12 +22,10 @@ export default async function AdminIntegrationsPage() {
   const session = await getAdminSession()
   if (!session?.user?.isAuthorised) return null
 
-  const dialer = describe(dialerConfig())
   const crm = describe(crmConfig())
   const post = describeVendor(vendorConfig())
 
   const statuses = {
-    dialer: { isConfigured: dialer.isConfigured, problems: dialer.problems },
     crm: { isConfigured: crm.isConfigured, problems: crm.problems },
     vendor: { isConfigured: post.isConfigured, problems: post.problems },
   }

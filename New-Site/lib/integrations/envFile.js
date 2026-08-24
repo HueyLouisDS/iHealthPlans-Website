@@ -93,7 +93,7 @@ export async function writeEnvValues(values) {
 
   /*
    * Replace in place. Matched on the key at the start of a line so a commented
-   * out example like `# LH_DIALER_API_ID=` is left alone rather than being
+   * out example like `# LH_CRM_API_ID=` is left alone rather than being
    * uncommented and overwritten, which would lose the example.
    */
   const rewritten = lines.map((line) => {
