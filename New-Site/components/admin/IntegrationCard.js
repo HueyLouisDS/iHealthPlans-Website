@@ -1,9 +1,9 @@
 'use client'
 
-// The editable integration cards on /admin/integrations, plus the Configure
-// button that saves them. Client side because the fields open on click.
-// Receives the described shape from the server page, never a config object,
-// so no credential crosses the boundary.
+// The editable integration cards on /admin/integrations, their Test Connection
+// buttons, and the Configure button that saves them. Client side because the
+// fields open on click. Receives the described shape from the server page,
+// never a config object, so no credential crosses the boundary.
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -16,20 +16,25 @@ import { INTEGRATIONS } from '@/lib/integrations/fields'
 
 /*
  * The props carry presence booleans and label text. A value typed into one of
- * these inputs goes straight to the route and is dropped from state on save,
- * so it never sits in a component that a React devtools session could read.
+ * these inputs goes to our own route and is dropped from state on save, so it
+ * never sits in a component a devtools session could read afterwards.
  *
  * Inputs use type="password" for secrets and autoComplete="off" throughout, so
- * the browser does not offer to remember an api key in a password manager
- * under the admin site's origin.
+ * the browser does not offer to remember an api key under the admin origin.
  */
+
+/* Per card connection state, and what the badge says for each */
+const UNTESTED = 'untested'
+const TESTING = 'testing'
+const CONNECTED = 'connected'
+const FAILED = 'failed'
 
 /**
  * One environment variable, as a clickable pill that opens an input.
  *
  * The pill is the variable name, which is what somebody scanning the page is
- * looking for anyway. Clicking it is how the field opens, so the thing you
- * read and the thing you click are the same thing.
+ * looking for anyway, so the thing you read and the thing you click are the
+ * same thing.
  */
 function EnvField({ field, isSet, value, onChange }) {
   const [open, setOpen] = useState(false)   // whether the input is showing
@@ -56,7 +61,9 @@ function EnvField({ field, isSet, value, onChange }) {
         ) : isSet ? (
           <span className="text-sm font-semibold text-green-900">set</span>
         ) : (
-          <span className="text-sm text-[#6C7381]">not set</span>
+          <span className={`text-sm ${field.optional ? 'text-[#6C7381]' : 'text-amber-900'}`}>
+            {field.optional ? 'not set, optional' : 'not set'}
+          </span>
         )}
       </div>
 
@@ -73,7 +80,7 @@ function EnvField({ field, isSet, value, onChange }) {
             placeholder={field.placeholder || ''}
             value={value ?? ''}
             onChange={(event) => onChange(field.key, event.target.value)}
-            className="font-mono text-sm border rounded px-2 py-1.5 w-full max-w-full focus:outline-none focus:ring-2 focus:ring-ihealthGreen"
+            className="font-mono text-sm border rounded px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-ihealthGreen"
           />
         </label>
       )}
@@ -82,21 +89,48 @@ function EnvField({ field, isSet, value, onChange }) {
 }
 
 /**
- * One integration card, status on top and the editable fields below.
+ * The status badge, which reports the tested state rather than whether values
+ * are merely present.
+ *
+ * Those are different questions and conflating them is the bug this page
+ * exists to avoid. Three filled in fields prove somebody typed something, and
+ * only a round trip proves the credential works.
  */
-function Card({ integration, status, present, values, onChange }) {
+function StatusBadge({ state, isConfigured }) {
+  if (state === CONNECTED) {
+    return <Badge className="bg-green-100 text-green-900">Connected</Badge>
+  }
+  if (state === TESTING) {
+    return <Badge className="bg-blue-100 text-blue-900">Testing</Badge>
+  }
+  if (state === FAILED) {
+    return <Badge className="bg-red-100 text-red-900">Failed</Badge>
+  }
+  if (isConfigured) {
+    return <Badge className="bg-amber-100 text-amber-900">Set, untested</Badge>
+  }
+  return <Badge className="bg-amber-100 text-amber-900">Not configured</Badge>
+}
+
+function Badge({ className, children }) {
+  return (
+    <span className={`px-3 py-1 rounded text-sm font-bold uppercase tracking-[1.2px] ${className}`}>
+      {children}
+    </span>
+  )
+}
+
+/**
+ * One integration card, status on top, editable fields, then its own test.
+ */
+function Card({ integration, status, present, values, onChange, test, onTest }) {
+  const state = test?.state || UNTESTED
+
   return (
     <div className="bg-white border rounded-lg p-5 flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-lg font-bold text-ihealthBlue">{integration.label}</h2>
-
-        <span
-          className={`px-3 py-1 rounded text-sm font-bold uppercase tracking-[1.2px] ${
-            status.isConfigured ? 'bg-green-100 text-green-900' : 'bg-amber-100 text-amber-900'
-          }`}
-        >
-          {status.isConfigured ? 'Connected' : 'Not configured'}
-        </span>
+        <StatusBadge state={state} isConfigured={status.isConfigured} />
       </div>
 
       <p className="text-sm text-[#6C7381]">{integration.hint}</p>
@@ -113,32 +147,88 @@ function Card({ integration, status, present, values, onChange }) {
         ))}
       </div>
 
-      <p className="text-sm text-[#6C7381] border-t pt-4">
-        All 3 together, since 2 of 3 sends a request to the right host with no key and gets a 401
-        nobody reads.
-      </p>
+      <div className="border-t pt-4 flex items-center justify-between gap-3 flex-wrap">
+        {test?.message ? (
+          <p className={`text-sm ${state === CONNECTED ? 'text-green-900' : 'text-red-900'}`}>
+            {test.message}
+          </p>
+        ) : (
+          <span className="text-sm text-[#6C7381]">Not tested yet</span>
+        )}
+
+        <button
+          type="button"
+          onClick={() => onTest(integration.name)}
+          disabled={state === TESTING}
+          className="border border-ihealthBlue text-ihealthBlue font-bold text-sm px-4 py-2 rounded hover:bg-ihealthBlue hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          {state === TESTING ? 'Testing' : 'Test Connection'}
+        </button>
+      </div>
     </div>
   )
 }
 
 /**
- * The cards and the Configure button, holding the pending edits between them.
+ * The cards, their tests, and the Configure button.
  *
- * One save for the whole page rather than one per field, because a partly
- * configured integration is the state the status badge exists to warn about
- * and there is no reason to pass through it on the way to a complete one.
+ * Configure stays disabled until every integration has come back Connected,
+ * so nothing reaches .env.local until a round trip has proved it works. That
+ * is the whole point of the gate. Saving a wrong key is how you end up
+ * debugging a sync that was never going to run.
  */
 export default function IntegrationCards({ statuses, present, canWrite }) {
   const router = useRouter()
   const [values, setValues] = useState({})  // pending edits, key to typed value
+  const [tests, setTests] = useState({})    // integration name to { state, message }
   const [saving, setSaving] = useState(false)
-  const [result, setResult] = useState(null) // last save outcome, shown beside the button
+  const [result, setResult] = useState(null)
 
   const changedCount = Object.keys(values).length
+  const allConnected = INTEGRATIONS.every((one) => tests[one.name]?.state === CONNECTED)
 
+  /**
+   * Editing a field clears that card's test result.
+   * A green badge next to a value that has since been changed is a lie, and it
+   * is exactly the lie that would let an untested key through the gate.
+   */
   function handleChange(key, value) {
+    const owner = INTEGRATIONS.find((one) => one.fields.some((field) => field.key === key))
+
     setValues((current) => ({ ...current, [key]: value }))
     setResult(null)
+
+    if (owner) {
+      setTests((current) => ({ ...current, [owner.name]: undefined }))
+    }
+  }
+
+  async function handleTest(name) {
+    setTests((current) => ({ ...current, [name]: { state: TESTING, message: null } }))
+
+    try {
+      const response = await fetch('/api/admin/integrations/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, values }),
+      })
+
+      const body = await response.json()
+      const ok = response.ok && body.ok === true
+
+      setTests((current) => ({
+        ...current,
+        [name]: {
+          state: ok ? CONNECTED : FAILED,
+          message: body.message || body.errors?.join(' ') || body.error || 'Test failed.',
+        },
+      }))
+    } catch {
+      setTests((current) => ({
+        ...current,
+        [name]: { state: FAILED, message: 'Could not reach the server.' },
+      }))
+    }
   }
 
   async function handleSave() {
@@ -161,8 +251,8 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
 
       /*
        * Cleared on success so a typed key does not stay in client state after
-       * it has been written. The refresh below re-reads presence from the
-       * server, which is what the page should be showing anyway.
+       * it has been written. The refresh re-reads presence from the server,
+       * which is what the page should be showing anyway.
        */
       setValues({})
       setResult({ ok: true, message: body.note || 'Saved.' })
@@ -173,6 +263,15 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
       setSaving(false)
     }
   }
+
+  /* Why the button is disabled, said plainly rather than left to be guessed */
+  const blockedReason = !canWrite
+    ? 'Read only. Set these on the host in a deployed environment.'
+    : changedCount === 0
+      ? 'Nothing to save.'
+      : !allConnected
+        ? 'Test both connections first.'
+        : null
 
   return (
     <>
@@ -185,6 +284,8 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
             present={present}
             values={values}
             onChange={handleChange}
+            test={tests[integration.name]}
+            onTest={handleTest}
           />
         ))}
       </div>
@@ -196,16 +297,14 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
           </p>
         )}
 
-        {!canWrite && (
-          <p className="text-base text-[#6C7381]">
-            Read only. Set these on the host in a deployed environment.
-          </p>
+        {!result && blockedReason && (
+          <p className="text-base text-[#6C7381]">{blockedReason}</p>
         )}
 
         <button
           type="button"
           onClick={handleSave}
-          disabled={!canWrite || saving || changedCount === 0}
+          disabled={Boolean(blockedReason) || saving}
           className="bg-ihealthGreen text-white font-bold px-6 py-2.5 rounded hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
           {saving ? 'Saving' : changedCount > 0 ? `Configure (${changedCount})` : 'Configure'}
