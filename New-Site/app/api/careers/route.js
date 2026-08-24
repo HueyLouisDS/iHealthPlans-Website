@@ -1,13 +1,10 @@
-// Route handler behind the careers application form.
-// Path matches the live site's own endpoint, /api/careers, so the contract the
-// existing front end expects is preserved.
+// Route handler behind the careers application form. Path matches the live
+// site's own /api/careers so the existing front end contract is preserved.
 //
-// IMPORTANT this route does not yet deliver anywhere. The live site's handler
-// runs on the server and its destination is not visible from the client
-// bundle, so where applications currently land is unknown. Until that is
-// answered, submissions are logged and nothing else.
+// TODO this delivers nowhere. The live site's destination is not visible from
+// the client bundle, so submissions are logged until somebody can say where
+// applications are supposed to land.
 
-// Applications are per request and must never be cached or prerendered
 export const dynamic = 'force-dynamic'
 
 function validate(application) {

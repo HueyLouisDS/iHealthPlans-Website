@@ -1,15 +1,6 @@
 // Careers hero. Autoplaying muted background video with a dark scrim and the
-// recruiting pitch on top.
-// The video is self hosted rather than pulled from the client's S3 bucket, so
-// the page does not break when that bucket's permissions change. They already
-// have, see the note on the poster below.
-
-// Renders the hero.
-// The container is painted brand blue because there is no poster frame. The
-// live site points at a poster on S3 that returns AccessDenied, so it shows
-// nothing at all until the video's first frame decodes.
-// TODO generate a real poster frame from the video, it needs ffmpeg which is
-// not installed on this machine.
+// recruiting pitch on top. The video is self hosted rather than pulled from
+// the client's S3 bucket, whose permissions have already broken once.
 
 export default function CareersHero() {
   return (

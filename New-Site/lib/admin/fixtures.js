@@ -124,8 +124,7 @@ function buildDataset() {
     const lastName = LAST_NAMES[Math.floor(rng() * LAST_NAMES.length)]
 
     const id = `ld_${String(1000 + i)}`
-    // 555-01xx is reserved for fiction, so these cannot dial a real person
-    const phone = `(555) 01${String(10 + (i % 90)).padStart(2, '0')}`
+    const phone = `(555) 01${String(10 + (i % 90)).padStart(2, '0')}`   // reserved fiction range
     const visitorId = `vis_${(rng() * 1e9).toString(36).slice(0, 10)}`
     const sessionId = `ses_${(rng() * 1e9).toString(36).slice(0, 10)}`
     const callCount = rng() < 0.72 ? 1 + Math.floor(rng() * 2) : 0

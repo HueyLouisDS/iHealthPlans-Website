@@ -60,16 +60,16 @@ export async function writeEnvValues(values) {
 
   const filePath = envPath()
 
-  let original = ''                       // current contents, empty if no file
+  let original = ''                     // current contents, empty if no file
   try {
     original = await fs.readFile(filePath, 'utf8')
   } catch (cause) {
     if (cause.code !== 'ENOENT') throw cause
   }
 
-  const lines = original.split(/\r?\n/)   // both, the file may be CRLF
+  const lines = original.split(/\r?\n/) // both, the file may be CRLF
   const pending = new Map(Object.entries(values))
-  const updated = []                      // keys overwritten in place
+  const updated = []                    // keys overwritten in place
 
   // Matched at line start, so a commented out example is left alone
   const rewritten = lines.map((line) => {
@@ -86,7 +86,7 @@ export async function writeEnvValues(values) {
     return `${key}=${serialise(value)}`
   })
 
-  const added = [...pending.keys()]       // keys not already in the file
+  const added = [...pending.keys()]     // keys not already in the file
 
   if (added.length > 0) {
     if (!original.includes(APPEND_HEADING)) {
@@ -99,8 +99,7 @@ export async function writeEnvValues(values) {
     }
   }
 
-  // Trailing newline, or the next append lands on the last value's line
-  let output = rewritten.join('\n')
+  let output = rewritten.join('\n')     // newline added below, or the next append collides
   if (!output.endsWith('\n')) output += '\n'
 
   // 0o600, since the default 0o644 is world readable. Ignored on Windows.
@@ -115,7 +114,7 @@ export async function writeEnvValues(values) {
  */
 
 export function describeWritableKeys() {
-  const present = {}                      // key name to boolean, never a value
+  const present = {}                    // key name to boolean, never a value
 
   for (const key of WRITABLE_KEYS) {
     present[key] = Boolean(String(process.env[key] || '').trim())

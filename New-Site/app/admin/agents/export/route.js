@@ -1,17 +1,7 @@
-// CSV export of agent performance, /admin/agents/export.
-//
-// No health information and no customer data, so this is the least regulated
-// export in the admin area and the most likely to cause a problem anyway. It is
-// named colleagues ranked against each other, which makes it the easiest file
-// here to forward somewhere it should not go.
-//
-// Two things follow from that. The audit line names who took it, same as the
-// others. And the caveat that the rate is not a like for like comparison is a
-// column in the file, not just text on the page, because the page is exactly
-// what gets left behind when a spreadsheet is passed on.
-//
-// TODO the audit currently goes to the server log. It needs a table once the
-// database exists, because a log that rotates is not an audit trail.
+// CSV export of agent performance, /admin/agents/export. No health or
+// customer data, but it is named colleagues ranked against each other, so it
+// audits like the others and carries its caveat as a column rather than as
+// text on a page nobody forwards.
 
 import { getAdminSession } from '@/lib/admin/session'
 import { getAgentPerformance, parsePeriod, usingFixtures, LOW_VOLUME_LEADS } from '@/lib/admin/data'
@@ -76,8 +66,7 @@ export async function GET(request) {
   const note =
     'Enrollment rate is not a like for like comparison. Lead quality varies by source and by hour, and none of that is held constant. Comparing agents fairly means comparing them within a source.'
 
-  // The BOM is what makes Excel read the file as UTF-8
-  const csv = `﻿${[header, ...body, '', toCell(note)].join('\r\n')}\r\n`
+  const csv = `﻿${[header, ...body, '', toCell(note)].join('\r\n')}\r\n`    // BOM for Excel UTF-8
 
   const stamp = new Date().toISOString().slice(0, 10)
   const name = `agents-${days}d-${stamp}.csv`

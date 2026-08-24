@@ -49,8 +49,7 @@ async function readCarrier({ carrier, file }) {
   const errors = []
 
   records.forEach((record, index) => {
-    // Header is row 1, so the first data row is row 2 to a human
-    const result = toEnrollment(record, { carrier, rowNumber: index + 2 })
+    const result = toEnrollment(record, { carrier, rowNumber: index + 2 })  // row 1 is the header
     if (result.error) errors.push(result.error)
     else enrollments.push(result.enrollment)
   })

@@ -2,8 +2,7 @@
 import { PHONE_NUMBER } from '@/lib/siteConfig'
 
 export default function CallLink({ location, className, children, number = PHONE_NUMBER }) {
-  // tel: cannot contain spaces or formatting, strip anything that is not a digit
-  const dialable = number.replace(/[^0-9+]/g, '')
+  const dialable = number.replace(/[^0-9+]/g, '')   // tel: takes digits only, no formatting
 
   function handleClick() {
   }

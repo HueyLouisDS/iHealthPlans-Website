@@ -20,24 +20,15 @@ import {
 
 const SHRINK_TOLERANCE = 0.9            // a full pull may lose up to 10% before it is refused
 
-// How far back an incremental pull reaches when there is no cursor yet
-const INITIAL_LOOKBACK_DAYS = 90
+const INITIAL_LOOKBACK_DAYS = 90        // first pull reach, when there is no cursor
 
-// Overlap on every incremental pull, so a row written during the last run is not missed
-const CURSOR_OVERLAP_MINUTES = 30
+const CURSOR_OVERLAP_MINUTES = 30       // rewind, so a row written mid run is not missed
 
 /*=======================================================
         TLD SENDS EASTERN, THE DATABASE STORES UTC
 ========================================================*/
 
-/*
- From TLD's own posting instructions: "Any and all Date Time formatted fields
- will be converted to the accounts default timezone: US/Eastern."
-
- TODO confirm with --inspect whether TLD sends a zone marker. If it does, the
- explicit branch below already handles it and this constant stops mattering.
-*/
-const TLD_TIMEZONE = 'America/New_York'
+const TLD_TIMEZONE = 'America/New_York' // what a naive TLD datetime means
 
 // A datetime with no trailing Z and no numeric offset
 const NAIVE_DATETIME = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/

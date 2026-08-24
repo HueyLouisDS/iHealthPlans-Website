@@ -291,8 +291,7 @@ export async function getLeads({
     })
   }
 
-  // Everything above this line also feeds the tiles and the status counts
-  const beforeStatus = rows
+  const beforeStatus = rows             // also feeds the tiles and status counts
 
   const statusCounts = {}
   for (const lead of beforeStatus) {

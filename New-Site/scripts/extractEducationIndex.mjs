@@ -119,8 +119,7 @@ async function main() {
     outputBytes += result.bytes
   }
 
-  // sourceImage was only needed to find the file, drop it from the output
-  const index = articles.map(({ sourceImage, ...rest }) => rest)
+  const index = articles.map(({ sourceImage, ...rest }) => rest)    // only used for lookup
   await fs.writeFile(outputData, `${JSON.stringify(index, null, 2)}\n`, 'utf8')
 
   const toMb = (bytes) => (bytes / 1048576).toFixed(1)

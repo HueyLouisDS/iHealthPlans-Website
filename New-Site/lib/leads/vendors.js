@@ -1,17 +1,7 @@
-// Vendor API keys for the lead ingestion endpoint.
-//
-// One key per vendor rather than one shared key, for 2 reasons. A vendor whose
-// key leaks can be revoked without taking every other integration down with
-// it. And the source tag is derived from the key rather than read from the
-// payload, so a vendor cannot post leads labelled as somebody else, whether by
-// mistake or otherwise. That matters because the whole reason this endpoint
-// exists is to compare vendors against each other.
-//
-// Configured as LH_LEAD_VENDOR_KEYS in the environment:
-//   acme-leads:sk_live_xxxx,other-vendor:sk_live_yyyy
-//
-// TODO move to a vendors table once the database exists, with an enabled flag
-// and a rotation date. An env var means rotating a key is a redeploy.
+// Vendor API keys for the lead ingestion endpoint, read from
+// LH_LEAD_VENDOR_KEYS as vendorId:key pairs. One key per vendor, so a leak is
+// revocable alone and the source tag comes from the key rather than the
+// payload, which is what stops a vendor labelling leads as somebody else.
 
 import { createHash, timingSafeEqual } from 'node:crypto'
 

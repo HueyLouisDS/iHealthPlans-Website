@@ -19,8 +19,7 @@
 // them and supporting it would mean a slower character loop for nothing.
 
 export function parseCsv(text) {
-  // Excel writes a BOM and it otherwise becomes part of the first header
-  const clean = text.replace(/^﻿/, '')
+  const clean = text.replace(/^﻿/, '')  // Excel writes a BOM into the first header
 
   const rows = []
   for (const line of clean.split(/\r?\n/)) {

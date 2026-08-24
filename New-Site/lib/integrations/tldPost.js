@@ -24,22 +24,22 @@ import { vendorConfig } from '@/lib/integrations/config'
  full debugging data. Not implemented here on purpose.
 */
 
-const REQUEST_TIMEOUT_MS = 8000          // a form submit cannot wait longer than this
-const MAX_FIELD_LENGTH = 500             // guard against a pathological value, not a TLD limit
+const REQUEST_TIMEOUT_MS = 8000         // a form submit cannot wait longer than this
+const MAX_FIELD_LENGTH = 500            // guard against a pathological value, not a TLD limit
 
 /*=======================================================
         RESPONSE CODES
 ========================================================*/
 
 const OUTCOMES = {
-  accepted: 'accepted',                  // 1-16, created or matched an existing lead
-  duplicate: 'duplicate',                // already present, by phone, email, or criteria
-  suppressed: 'suppressed',              // DNC, litigator, blacklist. Do not call.
-  filtered: 'filtered',                  // vendor rejected the state, zip, or area code
-  throttled: 'throttled',                // hourly, daily, weekly, or monthly cap hit
-  config: 'config',                      // our vendor id, post key, or vendor state is wrong
-  transient: 'transient',                // TLD side problem, safe to try again later
-  unknown: 'unknown',                    // a code not in the documented table
+  accepted: 'accepted',                 // 1-16, created or matched an existing lead
+  duplicate: 'duplicate',               // already present, by phone, email, or criteria
+  suppressed: 'suppressed',             // DNC, litigator, blacklist. Do not call.
+  filtered: 'filtered',                 // vendor rejected the state, zip, or area code
+  throttled: 'throttled',               // hourly, daily, weekly, or monthly cap hit
+  config: 'config',                     // our vendor id, post key, or vendor state is wrong
+  transient: 'transient',               // TLD side problem, safe to try again later
+  unknown: 'unknown',                   // a code not in the documented table
 }
 
 /*
@@ -48,15 +48,15 @@ const OUTCOMES = {
  landing here must not be called, form submission or not.
 */
 const SUPPRESSED_CODES = new Set([
-  200,                                   // TLDialer DNC list
-  201,                                   // configured filter phone groups
-  301,                                   // known litigator
-  303,                                   // known litigator or bad number
-  351,                                   // blacklist
-  352,                                   // suppression list
-  361,                                   // DNC.com database
-  371,                                   // litigator or DNC
-  372,                                   // litigator
+  200,                                  // TLDialer DNC list
+  201,                                  // configured filter phone groups
+  301,                                  // known litigator
+  303,                                  // known litigator or bad number
+  351,                                  // blacklist
+  352,                                  // suppression list
+  361,                                  // DNC.com database
+  371,                                  // litigator or DNC
+  372,                                  // litigator
 ])
 
 const CONFIG_CODES = new Set([91, 92, 93, 94, 96, 97, 98, 99, 100])
@@ -143,7 +143,7 @@ function consentNote(consent) {
 }
 
 export function buildPayload(lead) {
-  const body = new URLSearchParams()      // form encoded, every value a string
+  const body = new URLSearchParams()    // form encoded, every value a string
 
   for (const field of FIELD_MAP) {
     // Skipped until the field exists on the vendor source, see FIELD_MAP
@@ -194,13 +194,6 @@ export async function pushLead(lead) {
       cache: 'no-store',
     })
   } catch (cause) {
-    /*
-     Not retried. A timeout does not say whether the lead landed, and dupe
-     handling is per vendor, so a blind retry either duplicates or is
-     rejected and we cannot tell which. Duplicating means a second dial.
-
-     The read sync reconciles on tracking_id instead.
-    */
     return {
       outcome: OUTCOMES.transient,
       code: null,

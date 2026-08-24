@@ -4,7 +4,7 @@
 
 import 'server-only'
 
-const TIMEOUT_MS = 10000                 // longer than the push, a person is watching this one
+const TIMEOUT_MS = 10000                // longer than the push, a person is watching this one
 
 /*=======================================================
         THE VENDOR TEST MUST NOT CREATE A LEAD
@@ -18,8 +18,7 @@ const VENDOR_AUTH_FAILURES = {
   94: 'That vendor does not exist.',
 }
 
-// The answer that means the credentials passed and validation stopped it
-const VENDOR_EXPECTED_CODE = 104
+const VENDOR_EXPECTED_CODE = 104        // credentials passed, validation stopped it
 const CRM_TEST_PATH = '/api/egress/policies?limit=1'
 
 async function attempt(url, options) {

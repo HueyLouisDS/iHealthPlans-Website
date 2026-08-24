@@ -1,12 +1,6 @@
-// /admin/attribution, which is not a page.
-//
-// The breakdowns live at /admin/attribution/[dimension]. This exists so the
-// bare path, the sidebar link, and every url written before the grouping moved
-// into the route still land somewhere useful instead of a 404.
-//
-// The query string is carried across, so an old link that named a period or a
-// sort keeps them. An old ?groupBy= is honoured too rather than dropped, since
-// that parameter was live long enough to end up in somebody's bookmarks.
+// /admin/attribution, a redirect rather than a page. The breakdowns live at
+// /admin/attribution/[dimension]. Carries the query string across so old links
+// keep their period and sort, and honours the retired ?groupBy= parameter.
 
 import { redirect, permanentRedirect } from 'next/navigation'
 import { ATTRIBUTION_DIMENSIONS, DEFAULT_DIMENSION } from '@/lib/admin/data'

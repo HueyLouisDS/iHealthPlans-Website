@@ -49,8 +49,7 @@ export async function POST(request) {
     return errorResponse(ERRORS.unauthorised, { error: 'Sign in or present the cron secret.' })
   }
 
-  // An empty body is a plain full sync, which is what cron sends
-  let body = {}
+  let body = {}                         // empty body is a full sync, what cron sends
   try {
     body = await request.json()
   } catch {

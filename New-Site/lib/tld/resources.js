@@ -5,7 +5,6 @@
 /*=======================================================
         EVERY PATH AND FIELD NAME BELOW IS UNCONFIRMED
 ========================================================*/
-
 const VICIDIAL_OPTION = { vicidial: 1 }
 
 export const RESOURCES = [

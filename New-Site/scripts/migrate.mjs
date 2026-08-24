@@ -52,8 +52,7 @@ async function connect() {
   const { database, ...server } = config
 
   if (database) {
-    // Connect with no database selected, so this works before it exists
-    const bootstrap = await mysql.createConnection(server)
+    const bootstrap = await mysql.createConnection(server)  // no database selected yet
     try {
       const [before] = await bootstrap.query('SHOW DATABASES LIKE ?', [database])
       if (before.length === 0) {

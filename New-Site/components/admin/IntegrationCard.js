@@ -13,15 +13,14 @@ import { INTEGRATIONS } from '@/lib/integrations/fields'
 /*=======================================================
         NOTHING HERE EVER RECEIVES A CREDENTIAL
 ========================================================*/
-// Per card connection state, and what the badge says for each
-const UNTESTED = 'untested'
+const UNTESTED = 'untested'             // per card connection state
 const TESTING = 'testing'
 const CONNECTED = 'connected'
 const FAILED = 'failed'
 
 function EnvField({ field, isSet, value, onChange }) {
   const [open, setOpen] = useState(false)   // whether the input is showing
-  const hasEdit = value !== undefined       // true once anything is typed this session
+  const hasEdit = value !== undefined   // true once anything is typed this session
 
   return (
     <div className="flex flex-col gap-2">
@@ -221,8 +220,7 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
     }
   }
 
-  // Why the button is disabled, said plainly rather than left to be guessed
-  const blockedReason = !canWrite
+  const blockedReason = !canWrite       // why the button is disabled, shown to the user
     ? 'Read only. Set these on the host in a deployed environment.'
     : changedCount === 0
       ? 'Nothing to save.'

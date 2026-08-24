@@ -13,8 +13,7 @@ function getAepStatus(now) {
   const startOfToday = new Date(year, now.getMonth(), now.getDate())
 
   const openThisYear = new Date(year, AEP_START_MONTH, AEP_START_DAY)
-  // End is exclusive at midnight on the 8th, so the 7th counts as open
-  const closeThisYear = new Date(year, AEP_END_MONTH, AEP_END_DAY + 1)
+  const closeThisYear = new Date(year, AEP_END_MONTH, AEP_END_DAY + 1)  // exclusive, 7th is open
 
   if (startOfToday >= openThisYear && startOfToday < closeThisYear) {
     return { isOpen: true, days: Math.round((closeThisYear - startOfToday) / MS_PER_DAY) }

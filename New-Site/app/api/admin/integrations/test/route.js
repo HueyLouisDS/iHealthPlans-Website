@@ -45,8 +45,7 @@ export async function POST(request) {
     return errorResponse(ERRORS.invalidPayload, { error: 'Rejected.', errors })
   }
 
-  // Ignored outside development, see the banner
-  const typed = envWritesEnabled() ? submitted : {}
+  const typed = envWritesEnabled() ? submitted : {} // ignored outside development
 
   if (name === 'crm') {
     const stored = crmConfig()

@@ -35,8 +35,7 @@ import {
   LOW_VOLUME_LEADS,
 } from '@/lib/admin/data'
 
-// Only the filters live in the query string now. The grouping is in the path.
-const PARAM_KEYS = ['period', 'device', 'audience', 'sort']
+const PARAM_KEYS = ['period', 'device', 'audience', 'sort'] // filters only, grouping is in the path
 
 /*
  Where the page snaps to when a tile is clicked. The filter panel and the

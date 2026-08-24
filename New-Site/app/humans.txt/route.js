@@ -1,9 +1,5 @@
-// /humans.txt
-//
-// The long standing web convention for naming who built a site, sitting
-// alongside robots.txt. Crawlers and curious developers find it, visitors
-// never do, and it is the one channel here that exists for precisely this
-// purpose rather than being repurposed for it.
+// /humans.txt, the convention for naming who built a site. Sits alongside
+// robots.txt, found by crawlers and developers rather than visitors.
 
 import { FULL_NOTICE, SHORT_NOTICE, AUTHOR_URL } from '@/lib/authorship'
 

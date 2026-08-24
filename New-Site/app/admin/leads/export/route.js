@@ -1,20 +1,6 @@
-// CSV export of the lead list, /admin/leads/export.
-//
-// This is a bulk extract of personal information about identifiable people,
-// which makes it the single most sensitive action in the admin area. Three
-// things follow from that and none of them are optional.
-//
-// 1. It is authorised again here. Middleware already guards /admin, but a
-//    route that hands out every lead in one file should not rely on a single
-//    check somewhere else in the stack.
-// 2. Every export is written to an audit log with who took it, when, how many
-//    records, and which filters were applied. After an incident this is the
-//    first question asked, and "we do not know" is not an answer.
-// 3. It exports exactly what the filters select, not the page on screen. An
-//    export that silently returns 25 of 800 rows is worse than no export.
-//
-// TODO the audit currently goes to the server log. It needs to go to a table
-// once the database exists, because a log that rotates is not an audit trail.
+// CSV export of the lead list, /admin/leads/export. A bulk extract of
+// personal information about identifiable people, so it re-authorises here and
+// writes an audit row before it hands anything over.
 
 import { getAdminSession } from '@/lib/admin/session'
 import { getLeadsForExport, parsePeriod, usingFixtures } from '@/lib/admin/data'

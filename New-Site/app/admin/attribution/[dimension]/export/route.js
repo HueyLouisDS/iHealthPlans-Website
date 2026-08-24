@@ -87,8 +87,7 @@ export async function GET(request, { params }) {
     [toCell(row.value), ...COLUMNS.map(([key]) => toCell(row[key]))].join(',')
   )
 
-  // The BOM is what makes Excel read the file as UTF-8
-  const csv = `﻿${[header, ...body].join('\r\n')}\r\n`
+  const csv = `﻿${[header, ...body].join('\r\n')}\r\n`  // BOM, so Excel reads it as UTF-8
 
   const stamp = new Date().toISOString().slice(0, 10)
   const name = `attribution-${dimension.slug}-${stamp}.csv`

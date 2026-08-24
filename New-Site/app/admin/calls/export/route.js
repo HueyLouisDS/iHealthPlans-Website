@@ -80,8 +80,7 @@ export async function GET(request) {
   const header = COLUMNS.map(([, label]) => toCell(label)).join(',')
   const rows = calls.map((call) => COLUMNS.map(([key]) => toCell(call[key])).join(','))
 
-  // The BOM is what makes Excel read the file as UTF-8
-  const csv = `﻿${[header, ...rows].join('\r\n')}\r\n`
+  const csv = `﻿${[header, ...rows].join('\r\n')}\r\n`  // BOM, so Excel reads it as UTF-8
 
   const stamp = new Date().toISOString().slice(0, 10)
   const filename = usingFixtures() ? `DEMO-DATA-calls-${stamp}.csv` : `calls-${stamp}.csv`

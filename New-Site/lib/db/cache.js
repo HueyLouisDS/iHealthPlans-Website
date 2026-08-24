@@ -58,8 +58,7 @@ export function describeFreshness(row, now = new Date()) {
     return { label: 'never synced', minutesAgo: null, band: 'unknown' }
   }
 
-  // Stored UTC with dateStrings on, so the Z is added rather than assumed
-  const at = new Date(`${String(row.last_success_at).replace(' ', 'T')}Z`)
+  const at = new Date(`${String(row.last_success_at).replace(' ', 'T')}Z`)  // stored UTC, Z added
   const minutesAgo = Math.max(0, Math.round((now - at) / 60_000))
 
   const band = minutesAgo <= 15 ? 'fresh' : minutesAgo <= 120 ? 'ageing' : 'stale'

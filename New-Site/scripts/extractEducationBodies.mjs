@@ -105,8 +105,7 @@ function parseItems(html) {
     if (!found) break
     open.lastIndex = found.end
 
-    // The nested list comes out first, so its markup is not read as text
-    let inner = found.inner
+    let inner = found.inner             // nested list first, or its markup reads as text
     let nested = null
 
     const nestedOpen = /<(ul|ol)\b[^>]*>/.exec(inner)
