@@ -1,4 +1,4 @@
-/**
+/*
  * Writes integration credentials into .env.local, POST /api/admin/integrations.
  *
  * Backs the Configure button on /admin/integrations, so the keys can be set
@@ -17,7 +17,7 @@ import { ERRORS, errorResponse } from '@/lib/errorCodes'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/**
+/*
  * Accepts a map of environment variable names to values.
  *
  * 403 outside development or without an authorised session. 400 on any key
@@ -107,7 +107,7 @@ export async function POST(request) {
   })
 }
 
-/**
+/*
  * Everything else, answered explicitly rather than with a bare 405.
  */
 export async function GET() {
