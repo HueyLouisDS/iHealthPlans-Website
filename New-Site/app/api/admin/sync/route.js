@@ -93,10 +93,10 @@ export async function POST(request) {
   const result = await syncAll({ only: body.only || null, dryRun: Boolean(body.dryRun) })
 
   /*
-   * Only tags whose resource actually wrote something. Invalidating everything
-   * on every run would throw away good cached aggregates because an unrelated
-   * endpoint happened to fail.
-   */
+   Only tags whose resource actually wrote something. Invalidating everything
+   on every run would throw away good cached aggregates because an unrelated
+   endpoint happened to fail.
+  */
   if (!body.dryRun) {
     const changed = new Set(
       result.results

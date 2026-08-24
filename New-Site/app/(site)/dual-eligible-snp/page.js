@@ -19,6 +19,9 @@ export function generateMetadata() {
   return { title: product.title, description: product.metaDescription }
 }
 
+/**
+ * Renders the plan type through the shared product layout.
+ */
 export default function Page() {
   return <ProductPage slug={SLUG} />
 }

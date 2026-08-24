@@ -41,17 +41,17 @@ export default function AdminFrame({ sidebar, title, description, showBypassBann
 
   useEffect(() => {
     /*
-     * 720px is the nm breakpoint, the point at which the layout has room for
-     * a persistent sidebar
-     */
+     720px is the nm breakpoint, the point at which the layout has room for
+     a persistent sidebar
+    */
     setIsOpen(window.innerWidth >= 720)
   }, [])
 
   return (
     /*
-     * items-start rather than the default stretch, because a flex child that is
-     * stretched to the container height has nowhere left to stick to
-     */
+     items-start rather than the default stretch, because a flex child that is
+     stretched to the container height has nowhere left to stick to
+    */
     <div className="min-h-screen bg-[#f7f7f7] flex items-start">
       {/*
         Sticky and full viewport height, so the nav and the account block stay
@@ -91,9 +91,9 @@ export default function AdminFrame({ sidebar, title, description, showBypassBann
             aria-expanded={isOpen}
             aria-label={isOpen ? 'Hide navigation' : 'Show navigation'}
             /*
-             * 44px square, which is the smallest target this audience should
-             * ever be asked to hit
-             */
+             44px square, which is the smallest target this audience should
+             ever be asked to hit
+            */
             className="w-11 h-11 flex-shrink-0 rounded-md flex items-center justify-center text-ihealthBlue hover:bg-[#f7f7f7] transition-colors focus:outline-none focus:ring-2 focus:ring-ihealthBlue/40"
           >
             <ToggleIcon isOpen={isOpen} />

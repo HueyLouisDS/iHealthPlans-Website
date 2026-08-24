@@ -74,9 +74,9 @@ export async function GET(request) {
   }
 
   /*
-   * An explicit selection from the table. Still filtered first, so this can
-   * only narrow what the current view already permits.
-   */
+   An explicit selection from the table. Still filtered first, so this can
+   only narrow what the current view already permits.
+  */
   const ids = (searchParams.get('ids') || '').split(',').map((id) => id.trim()).filter(Boolean)
 
   const calls = await getCallsForExport(filters, ids)

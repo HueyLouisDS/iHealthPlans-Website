@@ -32,10 +32,10 @@ import { resolveDbConfig, databaseConfigured as configured } from '@/lib/db/dsn'
 const POOL_SIZE = 2
 
 /*
- * Held on globalThis rather than a module const so a hot reload in development
- * reuses the pool instead of opening a new one on every file save, which
- * exhausts the server's connection limit within a few minutes of editing.
- */
+ Held on globalThis rather than a module const so a hot reload in development
+ reuses the pool instead of opening a new one on every file save, which
+ exhausts the server's connection limit within a few minutes of editing.
+*/
 const globalForDb = globalThis
 
 /**
@@ -67,9 +67,9 @@ export function pool() {
       connectionLimit: POOL_SIZE,
       waitForConnections: true,
       /*
-       * Unbounded queue. A capped queue drops requests under load, and a
-       * dropped admin request looks like a bug rather than like backpressure.
-       */
+       Unbounded queue. A capped queue drops requests under load, and a
+       dropped admin request looks like a bug rather than like backpressure.
+      */
       queueLimit: 0,
       /* Idle connections are closed so a quiet instance stops holding one */
       idleTimeout: 30_000,

@@ -30,16 +30,16 @@ export function usingFixtures() {
 
 
 /*
- * Shortcuts on the Show tab. Any number between the bounds below can also be
- * typed, these are just the sizes people actually pick.
- */
+ Shortcuts on the Show tab. Any number between the bounds below can also be
+ typed, these are just the sizes people actually pick.
+*/
 export const PER_PAGE_OPTIONS = [25, 50, 100, 200]
 
 /*
- * Bounds for a typed value. The ceiling exists because this parameter comes off
- * a query string, so without it anyone could ask for every record in a single
- * request, which is both a slow page and a trivial way to load the server.
- */
+ Bounds for a typed value. The ceiling exists because this parameter comes off
+ a query string, so without it anyone could ask for every record in a single
+ request, which is both a slow page and a trivial way to load the server.
+*/
 export const PER_PAGE_MIN = 5
 export const PER_PAGE_MAX = 500
 export const PER_PAGE_DEFAULT = 25
@@ -57,10 +57,10 @@ export function parsePerPage(value) {
 }
 
 /*
- * Periods the dashboard offers. 90 is the limit because that is how much
- * history the fixtures hold, and because a Medicare business thinks in
- * enrollment seasons rather than in years.
- */
+ Periods the dashboard offers. 90 is the limit because that is how much
+ history the fixtures hold, and because a Medicare business thinks in
+ enrollment seasons rather than in years.
+*/
 export const PERIODS = [
   { value: '7', label: 'Last 7 days' },
   { value: '30', label: 'Last 30 days' },
@@ -291,9 +291,9 @@ export async function getFunnelTrend({ days = 30 } = {}) {
   }
 
   /*
-   * Sessions and call clicks are a daily series in the fixtures rather than
-   * individual records, since neither has a table yet
-   */
+   Sessions and call clicks are a daily series in the fixtures rather than
+   individual records, since neither has a table yet
+  */
   for (const row of data.daily) {
     const bucket = buckets.get(row.date.toDateString())
     if (!bucket) continue
@@ -309,9 +309,9 @@ export async function getFunnelTrend({ days = 30 } = {}) {
   }
 
   /*
-   * Connected only, matching the funnel stage. Counting every call here would
-   * put a bigger number on the chart than the tile it is meant to explain.
-   */
+   Connected only, matching the funnel stage. Counting every call here would
+   put a bigger number on the chart than the tile it is meant to explain.
+  */
   for (const call of data.calls) {
     if (call.disposition !== 'connected') continue
     const bucket = buckets.get(call.startedAt.toDateString())
@@ -362,9 +362,9 @@ export async function getTopSources({ days = 30, limit = 5 } = {}) {
     return rows.map((row) => ({
       ...row,
       /*
-       * Against the leader rather than against the total, so the best row
-       * always fills its bar and the rest are read relative to it
-       */
+       Against the leader rather than against the total, so the best row
+       always fills its bar and the rest are read relative to it
+      */
       share: row[key] / top,
       conversionRate: row.leads ? `${((row.conversions / row.leads) * 100).toFixed(1)}%` : '0.0%',
     }))
@@ -439,11 +439,11 @@ export async function getLeads({
       if (lead.name.toLowerCase().includes(needle)) return true
 
       /*
-       * Only compare against the phone and zip when the term actually contains
-       * digits. Stripping non digits from a text search leaves an empty
-       * string, and "5550110".includes("") is true for every record, so a
-       * search for a name silently matched the entire table.
-       */
+       Only compare against the phone and zip when the term actually contains
+       digits. Stripping non digits from a text search leaves an empty
+       string, and "5550110".includes("") is true for every record, so a
+       search for a name silently matched the entire table.
+      */
       if (!digits) return false
 
       return lead.phone.replace(/[^0-9]/g, '').includes(digits) || lead.zip.includes(digits)
@@ -464,24 +464,24 @@ export async function getLeads({
     enrolled,
     conversionRate: beforeStatus.length ? `${((enrolled / beforeStatus.length) * 100).toFixed(1)}%` : '0.0%',
     /*
-     * How many enquiries come from somebody acting for a relative. Worth its
-     * own tile because those calls need a different opening and the split is
-     * not visible anywhere else.
-     */
+     How many enquiries come from somebody acting for a relative. Worth its
+     own tile because those calls need a different opening and the split is
+     not visible anywhere else.
+    */
     onBehalfOfOther: beforeStatus.filter((lead) => lead.onBehalfOf !== 'Myself').length,
     /*
-     * Leads that never produced a call. Either they are waiting for a callback
-     * or somebody has not picked them up, and both are worth knowing.
-     */
+     Leads that never produced a call. Either they are waiting for a callback
+     or somebody has not picked them up, and both are worth knowing.
+    */
     withoutCall: beforeStatus.filter((lead) => lead.callCount === 0).length,
   }
 
   /*
-   * Applied after the summary on purpose, along with status. The tiles
-   * describe the period so they can be clicked to filter, and a tile whose own
-   * number changes the moment you click it is a control that argues with
-   * itself.
-   */
+   Applied after the summary on purpose, along with status. The tiles
+   describe the period so they can be clicked to filter, and a tile whose own
+   number changes the moment you click it is a control that argues with
+   itself.
+  */
   if (status) rows = rows.filter((lead) => lead.status === status)
   if (audience === 'other') rows = rows.filter((lead) => lead.onBehalfOf !== 'Myself')
   if (audience === 'self') rows = rows.filter((lead) => lead.onBehalfOf === 'Myself')
@@ -528,9 +528,9 @@ export async function getLeadsForExport(filters = {}, ids = null) {
   const all = await getLeads({ ...filters, page: 1, perPage: Math.max(first.total, 1) })
 
   /*
-   * A selection still runs through the filters first, so a stale id from
-   * another view cannot pull back a record the current filters exclude
-   */
+   A selection still runs through the filters first, so a stale id from
+   another view cannot pull back a record the current filters exclude
+  */
   if (!ids || ids.length === 0) return all.leads
   const wanted = new Set(ids)
   return all.leads.filter((lead) => wanted.has(lead.id))
@@ -555,9 +555,9 @@ export async function getLead(leadId) {
   const calls = data.calls.filter((call) => call.leadId === leadId)
 
   /*
-   * A plausible page path for this lead, built from where they landed. The
-   * real version reads the pageView table.
-   */
+   A plausible page path for this lead, built from where they landed. The
+   real version reads the pageView table.
+  */
   const at = (minutes) => new Date(lead.createdAt.getTime() - minutes * 60000)
   const timeline = [
     {
@@ -626,9 +626,9 @@ export async function getCalls({
   const { current } = splitByPeriod(getDataset().calls, 'startedAt', days)
 
   /*
-   * Tiles describe the period, not the filtered subset, so narrowing to
-   * unmatched calls does not make the matched rate read as 0%
-   */
+   Tiles describe the period, not the filtered subset, so narrowing to
+   unmatched calls does not make the matched rate read as 0%
+  */
   const connected = current.filter((call) => call.disposition === 'connected')
   const matchedCalls = current.filter((call) => call.matched)
   const talkSeconds = connected.reduce((total, call) => total + call.durationSeconds, 0)
@@ -725,9 +725,9 @@ export async function getCall(callId) {
     durationLabel: formatDuration(call.durationSeconds),
     lead,
     /*
-     * Deliberately not a real transcript. Enough to lay out the UI, obviously
-     * placeholder so nobody mistakes it for a recorded conversation.
-     */
+     Deliberately not a real transcript. Enough to lay out the UI, obviously
+     placeholder so nobody mistakes it for a recorded conversation.
+    */
     transcript: call.disposition === 'connected'
       ? [
           { at: '0:00', speaker: 'Agent', text: 'Placeholder transcript line. Real transcripts arrive from the phone system.' },
@@ -739,27 +739,27 @@ export async function getCall(callId) {
 }
 
 /*
- * The dimensions a lead can be grouped by.
- *
- * `value` is the field on the lead, `slug` is the url segment, `label` is the
- * button, and `column` is the heading of the first table column, which has to
- * change with the grouping or every view reads as an unlabelled list of
- * strings.
- *
- * The slug is kebab case and deliberately not the field name. A url is read by
- * people, and /admin/attribution/enquiring-for says what the page shows in a
- * way /admin/attribution/onBehalfOf does not.
- */
+ The dimensions a lead can be grouped by.
+
+ `value` is the field on the lead, `slug` is the url segment, `label` is the
+ button, and `column` is the heading of the first table column, which has to
+ change with the grouping or every view reads as an unlabelled list of
+ strings.
+
+ The slug is kebab case and deliberately not the field name. A url is read by
+ people, and /admin/attribution/enquiring-for says what the page shows in a
+ way /admin/attribution/onBehalfOf does not.
+*/
 export const ATTRIBUTION_DIMENSIONS = [
   { value: 'source', slug: 'source', label: 'Source', column: 'Source / medium' },
   { value: 'campaign', slug: 'campaign', label: 'Campaign', column: 'Campaign' },
   { value: 'landingPage', slug: 'landing-page', label: 'Landing page', column: 'Landing page' },
   { value: 'device', slug: 'device', label: 'Device', column: 'Device' },
   /*
-   * What the enquiry form calls "who are you enquiring for". Worth its own
-   * dimension because a daughter researching for a parent behaves nothing like
-   * a beneficiary shopping for themselves, and the 2 convert differently.
-   */
+   What the enquiry form calls "who are you enquiring for". Worth its own
+   dimension because a daughter researching for a parent behaves nothing like
+   a beneficiary shopping for themselves, and the 2 convert differently.
+  */
   { value: 'onBehalfOf', slug: 'enquiring-for', label: 'Enquiring for', column: 'Enquiring for' },
 ]
 
@@ -774,11 +774,11 @@ export const ATTRIBUTION_SORTS = [
 ]
 
 /*
- * Under this many leads, a conversion rate is noise rather than a measurement.
- * 2 enrollments out of 3 leads is 66.7%, which will out rank every real source
- * on the page and send somebody off to move budget onto luck. Rows below the
- * threshold still show their rate, but marked, so it cannot be read straight.
- */
+ Under this many leads, a conversion rate is noise rather than a measurement.
+ 2 enrollments out of 3 leads is 66.7%, which will out rank every real source
+ on the page and send somebody off to move budget onto luck. Rows below the
+ threshold still show their rate, but marked, so it cannot be read straight.
+*/
 export const LOW_VOLUME_LEADS = 25
 
 /**
@@ -888,9 +888,9 @@ export async function getAttribution({ groupBy = 'source', days = 30, device, on
     const key = lead[dimension.value] || '(unknown)'
     if (!groups.has(key)) {
       /*
-       * The id is assigned after the loop, once every group is known, so
-       * collisions can be seen and broken
-       */
+       The id is assigned after the loop, once every group is known, so
+       collisions can be seen and broken
+      */
       groups.set(key, { value: key, leads: 0, calls: 0, conversions: 0 })
     }
     const group = groups.get(key)
@@ -905,9 +905,9 @@ export async function getAttribution({ groupBy = 'source', days = 30, device, on
   const rows = assignGroupIds([...groups.values()]).map((group) => ({
     ...group,
     /*
-     * Share of the filtered leads, not of everything, so the column always
-     * adds up to 100 against the table it is sitting in
-     */
+     Share of the filtered leads, not of everything, so the column always
+     adds up to 100 against the table it is sitting in
+    */
     leadShare: totalLeads ? `${((group.leads / totalLeads) * 100).toFixed(1)}%` : '0.0%',
     callsPerLead: group.leads ? (group.calls / group.leads).toFixed(2) : '0.00',
     conversionRate: group.leads ? `${((group.conversions / group.leads) * 100).toFixed(1)}%` : '0.0%',
@@ -919,9 +919,9 @@ export async function getAttribution({ groupBy = 'source', days = 30, device, on
     conversions: (a, b) => b.conversions - a.conversions,
     calls: (a, b) => b.calls - a.calls,
     /*
-     * Thin rows sink to the bottom of a rate sort rather than winning it,
-     * which is the whole reason the flag exists
-     */
+     Thin rows sink to the bottom of a rate sort rather than winning it,
+     which is the whole reason the flag exists
+    */
     rate: (a, b) =>
       Number(a.lowVolume) - Number(b.lowVolume) ||
       Number.parseFloat(b.conversionRate) - Number.parseFloat(a.conversionRate),
@@ -941,9 +941,9 @@ export async function getAttribution({ groupBy = 'source', days = 30, device, on
       groups: rows.length,
     },
     /*
-     * Calls in the period that never became a lead, so no source can be put
-     * against them yet. Surfaced on the page rather than hidden.
-     */
+     Calls in the period that never became a lead, so no source can be put
+     against them yet. Surfaced on the page rather than hidden.
+    */
     unattributedCalls: periodCalls.filter((call) => !call.leadId).length,
     totalCalls: periodCalls.length,
     devices: [...new Set(data.leads.map((lead) => lead.device))].sort(),
@@ -980,9 +980,9 @@ export const AGENT_SORTS = [
  */
 function formatTalkTime(seconds) {
   /*
-   * Rounded to whole minutes first, then split. Rounding the remainder instead
-   * produces "14h 60m", which is what this did until 53,999 seconds turned up.
-   */
+   Rounded to whole minutes first, then split. Rounding the remainder instead
+   produces "14h 60m", which is what this did until 53,999 seconds turned up.
+  */
   const totalMinutes = Math.round(seconds / 60)
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
@@ -1037,9 +1037,9 @@ export async function getAgentPerformance({ days = 30, sort = 'conversions' } = 
       talkSeconds,
       talkTime: formatTalkTime(talkSeconds),
       /*
-       * Averaged over connected calls only. Including the ones nobody picked
-       * up drags every agent towards zero and measures the dialler, not them.
-       */
+       Averaged over connected calls only. Including the ones nobody picked
+       up drags every agent towards zero and measures the dialler, not them.
+      */
       averageCall: connected ? formatDuration(Math.round(talkSeconds / connected)) : '-',
       leads: leads.length,
       conversions,
@@ -1054,9 +1054,9 @@ export async function getAgentPerformance({ days = 30, sort = 'conversions' } = 
     talk: (a, b) => b.talkSeconds - a.talkSeconds,
     name: (a, b) => a.name.localeCompare(b.name),
     /*
-     * Thin rows sink rather than win, same as attribution. An agent handed 8
-     * leads who closed 3 is not outperforming one handed 60 who closed 14.
-     */
+     Thin rows sink rather than win, same as attribution. An agent handed 8
+     leads who closed 3 is not outperforming one handed 60 who closed 14.
+    */
     rate: (a, b) =>
       Number(a.lowVolume) - Number(b.lowVolume) ||
       Number.parseFloat(b.conversionRate) - Number.parseFloat(a.conversionRate),

@@ -53,10 +53,10 @@ export function StatTile({ label, value, rate, delta, isMuted = false, href, isS
     <Link
       href={href}
       /*
-       * aria-current says which tile is driving the page, and the ring is not
-       * the only signal. Colour alone is unreadable for anyone with a red
-       * green deficiency, so the state is announced as well as drawn.
-       */
+       aria-current says which tile is driving the page, and the ring is not
+       the only signal. Colour alone is unreadable for anyone with a red
+       green deficiency, so the state is announced as well as drawn.
+      */
       aria-current={isSelected ? 'true' : undefined}
       className={className}
     >

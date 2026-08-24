@@ -96,7 +96,7 @@ const ALIASES = {
   status: ['status', 'enrollmentstatus', 'memberstatus', 'policystatus'],
 }
 
-/*
+/**
  * Reduces a heading to its comparable form.
  */
 function headerKey(heading) {

@@ -7,10 +7,10 @@ import 'server-only'
 import { query, queryOne, transaction, databaseConfigured } from '@/lib/db/client'
 
 /*
- * Rows per INSERT. High enough that a 200k row pull is a few hundred
- * statements, low enough to stay under max_allowed_packet on a default MySQL,
- * which is 64MB and which a single giant insert will exceed without warning.
- */
+ Rows per INSERT. High enough that a 200k row pull is a few hundred
+ statements, low enough to stay under max_allowed_packet on a default MySQL,
+ which is 64MB and which a single giant insert will exceed without warning.
+*/
 const BATCH_SIZE = 500
 
 /**
@@ -30,10 +30,10 @@ export async function upsertRows(table, columns, rows) {
   const placeholders = `(${columns.map(() => '?').join(', ')})`
 
   /*
-   * Every column except the key is updated on conflict. The key is excluded
-   * because setting a primary key to itself is noise, and because listing it
-   * makes the statement look like it might change identity.
-   */
+   Every column except the key is updated on conflict. The key is excluded
+   because setting a primary key to itself is noise, and because listing it
+   makes the statement look like it might change identity.
+  */
   const updates = columns
     .slice(1)
     .map((column) => `${column} = VALUES(${column})`)

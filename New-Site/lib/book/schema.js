@@ -13,10 +13,10 @@
  */
 
 /*
- * Relative rather than the @/ alias, and with the extension, because
- * scripts/importBook.mjs runs under plain node where the alias does not
- * resolve. Next handles a relative import identically, so this works in both.
- */
+ Relative rather than the @/ alias, and with the extension, because
+ scripts/importBook.mjs runs under plain node where the alias does not
+ resolve. Next handles a relative import identically, so this works in both.
+*/
 import { normalisePhone } from '../leads/schema.js'
 
 /**
@@ -50,11 +50,11 @@ export function normaliseDate(value) {
   }
 
   /*
-   * US ordering, which is what every carrier portal exports. Parsed by hand
-   * rather than handed to Date, because Date reads 03/04/2026 as March in some
-   * runtimes and April in others depending on locale, and a 1 month error here
-   * moves people across the callable boundary.
-   */
+   US ordering, which is what every carrier portal exports. Parsed by hand
+   rather than handed to Date, because Date reads 03/04/2026 as March in some
+   runtimes and April in others depending on locale, and a 1 month error here
+   moves people across the callable boundary.
+  */
   const parts = /^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/.exec(raw)
   if (!parts) return null
 
@@ -208,9 +208,9 @@ export function collapseToPeople(enrollments, now = new Date()) {
     const person = byPhone.get(enrollment.phone)
 
     /*
-     * First non empty value wins for the person level fields. A later export
-     * missing a zip should not blank one an earlier export supplied.
-     */
+     First non empty value wins for the person level fields. A later export
+     missing a zip should not blank one an earlier export supplied.
+    */
     person.firstName ||= enrollment.firstName
     person.lastName ||= enrollment.lastName
     person.email ||= enrollment.email

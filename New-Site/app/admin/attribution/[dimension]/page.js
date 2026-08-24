@@ -39,20 +39,20 @@ import {
 const PARAM_KEYS = ['period', 'device', 'audience', 'sort']
 
 /*
- * Where the page snaps to when a tile is clicked. The filter panel and the
- * table below it are what the tile changed, so landing here shows the result.
- */
+ Where the page snaps to when a tile is clicked. The filter panel and the
+ table below it are what the tile changed, so landing here shows the result.
+*/
 const FOCUS_ID = 'attribution-table'
 
 /*
- * This page's tiles rank the table rather than filter it, because that is what
- * attribution offers. There is no "leads only" view of a leads breakdown, but
- * there is very much a question of which column you want it ordered by.
- *
- * "Calls with no lead" has no entry on purpose. Those calls carry no source at
- * all, so there is no column to sort by and no rows to filter to. It is the
- * gap in the data, not a slice of it, which is why it stays muted and inert.
- */
+ This page's tiles rank the table rather than filter it, because that is what
+ attribution offers. There is no "leads only" view of a leads breakdown, but
+ there is very much a question of which column you want it ordered by.
+
+ "Calls with no lead" has no entry on purpose. Those calls carry no source at
+ all, so there is no column to sort by and no rows to filter to. It is the
+ gap in the data, not a slice of it, which is why it stays muted and inert.
+*/
 const TILE_SORTS = {
   leads: 'leads',
   calls: 'calls',
@@ -99,9 +99,9 @@ export default async function AdminAttributionPage({ params, searchParams }) {
   })
 
   /*
-   * The first column has to be labelled with whatever is being grouped, or
-   * every view reads as an unnamed list of strings
-   */
+   The first column has to be labelled with whatever is being grouped, or
+   every view reads as an unnamed list of strings
+  */
   const columns = [
     { key: 'value', label: dimension.column },
     { key: 'leads', label: 'Leads', align: 'right' },
@@ -118,10 +118,10 @@ export default async function AdminAttributionPage({ params, searchParams }) {
   ].filter(Boolean)
 
   /*
-   * The cross filter matching the current grouping is dropped. Grouping by
-   * device and then filtering to mobile leaves a single row, which is a
-   * control that only ever makes the page less useful.
-   */
+   The cross filter matching the current grouping is dropped. Grouping by
+   device and then filtering to mobile leaves a single row, which is a
+   control that only ever makes the page less useful.
+  */
   const tabs = [
     {
       key: 'period',
@@ -176,17 +176,17 @@ export default async function AdminAttributionPage({ params, searchParams }) {
     const href = buildHref(base, PARAM_KEYS, filters, { sort: isOn ? undefined : sort })
 
     /*
-     * The fragment snaps to the table. Not when clearing, since scrolling
-     * somebody down the page as they undo a choice is the opposite of what
-     * they asked for.
-     */
+     The fragment snaps to the table. Not when clearing, since scrolling
+     somebody down the page as they undo a choice is the opposite of what
+     they asked for.
+    */
     return isOn ? href : `${href}#${FOCUS_ID}`
   }
 
   /*
-   * The export sits under this dimension's path too, so the file and the page
-   * can never disagree about what was grouped
-   */
+   The export sits under this dimension's path too, so the file and the page
+   can never disagree about what was grouped
+  */
   const exportQuery = new URLSearchParams(
     Object.entries(filters).filter(([, value]) => Boolean(value))
   ).toString()
@@ -259,10 +259,10 @@ export default async function AdminAttributionPage({ params, searchParams }) {
                   <Link
                     key={entry.slug}
                     /*
-                     * Period and sort carry across, the cross filters do not.
-                     * A device filter carried into the device breakdown leaves
-                     * a one row table that looks like the whole answer.
-                     */
+                     Period and sort carry across, the cross filters do not.
+                     A device filter carried into the device breakdown leaves
+                     a one row table that looks like the whole answer.
+                    */
                     href={buildHref(`/admin/attribution/${entry.slug}`, PARAM_KEYS, filters, {
                       device: undefined,
                       audience: undefined,
@@ -288,9 +288,9 @@ export default async function AdminAttributionPage({ params, searchParams }) {
           <section
             id={FOCUS_ID}
             /*
-             * Focusable so the snap moves the keyboard caret here too, not
-             * only the scroll position
-             */
+             Focusable so the snap moves the keyboard caret here too, not
+             only the scroll position
+            */
             tabIndex={-1}
             aria-label={`${dimension.label} breakdown`}
             className="scroll-mt-6 focus:outline-none"
@@ -326,9 +326,9 @@ export default async function AdminAttributionPage({ params, searchParams }) {
         rows={result.rows}
         columns={columns}
         /*
-         * No rowHrefBase. There is no per group detail page, and a link that
-         * goes nowhere is worse than no link.
-         */
+         No rowHrefBase. There is no per group detail page, and a link that
+         goes nowhere is worse than no link.
+        */
         rowLabelKey="value"
         exportBase={exportHref}
         selectionNoun="groups"

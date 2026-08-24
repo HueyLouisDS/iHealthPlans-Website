@@ -15,13 +15,13 @@ import { INTEGRATIONS } from '@/lib/integrations/fields'
 ========================================================*/
 
 /*
- * The props carry presence booleans and label text. A value typed into one of
- * these inputs goes to our own route and is dropped from state on save, so it
- * never sits in a component a devtools session could read afterwards.
- *
- * Inputs use type="password" for secrets and autoComplete="off" throughout, so
- * the browser does not offer to remember an api key under the admin origin.
- */
+ The props carry presence booleans and label text. A value typed into one of
+ these inputs goes to our own route and is dropped from state on save, so it
+ never sits in a component a devtools session could read afterwards.
+
+ Inputs use type="password" for secrets and autoComplete="off" throughout, so
+ the browser does not offer to remember an api key under the admin origin.
+*/
 
 /* Per card connection state, and what the badge says for each */
 const UNTESTED = 'untested'
@@ -250,10 +250,10 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
       }
 
       /*
-       * Cleared on success so a typed key does not stay in client state after
-       * it has been written. The refresh re-reads presence from the server,
-       * which is what the page should be showing anyway.
-       */
+       Cleared on success so a typed key does not stay in client state after
+       it has been written. The refresh re-reads presence from the server,
+       which is what the page should be showing anyway.
+      */
       setValues({})
       setResult({ ok: true, message: body.note || 'Saved.' })
       router.refresh()

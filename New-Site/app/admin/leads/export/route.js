@@ -24,9 +24,9 @@ import { getLeadsForExport, parsePeriod, usingFixtures } from '@/lib/admin/data'
 export const dynamic = 'force-dynamic'
 
 /*
- * Columns in the order a person reading the file would expect. The internal
- * ids come last, since they matter to us and not to whoever opens the sheet.
- */
+ Columns in the order a person reading the file would expect. The internal
+ ids come last, since they matter to us and not to whoever opens the sheet.
+*/
 const COLUMNS = [
   ['name', 'Name'],
   ['phone', 'Phone'],
@@ -76,17 +76,17 @@ export async function GET(request) {
   }
 
   /*
-   * An explicit selection from the table. Still filtered first, so this can
-   * only ever narrow what the current view already permits.
-   */
+   An explicit selection from the table. Still filtered first, so this can
+   only ever narrow what the current view already permits.
+  */
   const ids = (searchParams.get('ids') || '').split(',').map((id) => id.trim()).filter(Boolean)
 
   const leads = await getLeadsForExport(filters, ids)
 
   /*
-   * Written before the response is returned, so an export that is interrupted
-   * mid download is still recorded as having been taken
-   */
+   Written before the response is returned, so an export that is interrupted
+   mid download is still recorded as having been taken
+  */
   console.warn('[audit] lead export', {
     by: session.user.email,
     at: new Date().toISOString(),
@@ -102,9 +102,9 @@ export async function GET(request) {
   const rows = leads.map((lead) => COLUMNS.map(([key]) => toCell(lead[key])).join(','))
 
   /*
-   * The BOM is what makes Excel read the file as UTF-8. Without it, any
-   * accented name in the export is mangled on open.
-   */
+   The BOM is what makes Excel read the file as UTF-8. Without it, any
+   accented name in the export is mangled on open.
+  */
   const csv = `﻿${[header, ...rows].join('\r\n')}\r\n`
 
   const stamp = new Date().toISOString().slice(0, 10)

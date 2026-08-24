@@ -29,13 +29,13 @@ import {
 } from '@/lib/admin/data'
 
 /*
- * The id the page snaps to when a stage is selected. Everything the selection
- * changes sits below it, so landing here puts the whole focused view on screen
- * in one movement.
- */
+ The id the page snaps to when a stage is selected. Everything the selection
+ changes sits below it, so landing here puts the whole focused view on screen
+ in one movement.
+*/
 const FOCUS_ID = 'stage-focus'
 
-/*
+/**
  * Builds a dashboard url, keeping the period and setting the stage.
  *
  * Period has to survive selecting a stage, or every click would silently throw
@@ -72,10 +72,10 @@ function StageContext({ stage, summary, days }) {
     <section
       id={FOCUS_ID}
       /*
-       * Focusable so the snap moves the keyboard caret here too, not only the
-       * scroll position. Without this a keyboard user is jumped visually and
-       * then tabs from wherever they were, which is the tile they just left.
-       */
+       Focusable so the snap moves the keyboard caret here too, not only the
+       scroll position. Without this a keyboard user is jumped visually and
+       then tabs from wherever they were, which is the tile they just left.
+      */
       tabIndex={-1}
       aria-label={`${stage.label} selected`}
       className="scroll-mt-6 mb-6 bg-white border-2 border-ihealthGreen rounded-lg px-5 py-4 flex flex-wrap items-center gap-x-6 gap-y-2 focus:outline-none"
@@ -128,11 +128,11 @@ function PeriodPicker({ days, stageSlug = null }) {
           <Link
             key={period.value}
             /*
-             * The selected stage rides along, so changing the period does not
-             * silently drop the thing the reader is looking at. No snap
-             * though, since asking for a different period is not asking to be
-             * moved down the page away from the control you just used.
-             */
+             The selected stage rides along, so changing the period does not
+             silently drop the thing the reader is looking at. No snap
+             though, since asking for a different period is not asking to be
+             moved down the page away from the control you just used.
+            */
             href={dashboardHref(Number(period.value), stageSlug, { snap: false })}
             aria-current={isActive ? 'page' : undefined}
             className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
@@ -182,9 +182,9 @@ function RecentLeads({ rows }) {
 export default async function AdminDashboardPage({ searchParams }) {
   const isFixtures = usingFixtures()
   /*
-   * Re-checked here as well as in middleware. One guard that a routing mistake
-   * can bypass is how admin areas leak.
-   */
+   Re-checked here as well as in middleware. One guard that a routing mistake
+   can bypass is how admin areas leak.
+  */
   const session = await getAdminSession()
   if (!session?.user?.isAuthorised) return null
 
@@ -228,9 +228,9 @@ export default async function AdminDashboardPage({ searchParams }) {
               delta={entry.delta}
               isMuted={summary.isEmpty}
               /*
-               * Nothing to select while the funnel is empty, and a tile that
-               * filters to zero of nothing is a control that only frustrates
-               */
+               Nothing to select while the funnel is empty, and a tile that
+               filters to zero of nothing is a control that only frustrates
+              */
               href={
                 summary.isEmpty || !definition
                   ? undefined

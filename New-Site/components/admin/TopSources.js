@@ -15,12 +15,12 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 /*
- * Counts only. A conversion rate belongs here in principle, but a source with
- * 3 leads and 1 enrollment ranks first at 33 percent and the card has no room
- * for the thin volume marking that makes such a number safe to read. The
- * attribution page does that properly, and the link at the top right goes
- * straight to it.
- */
+ Counts only. A conversion rate belongs here in principle, but a source with
+ 3 leads and 1 enrollment ranks first at 33 percent and the card has no room
+ for the thin volume marking that makes such a number safe to read. The
+ attribution page does that properly, and the link at the top right goes
+ straight to it.
+*/
 const MEASURES = [
   { key: 'leads', label: 'Leads', noun: 'leads' },
   { key: 'conversions', label: 'Enrollments', noun: 'enrollments' },
@@ -104,10 +104,10 @@ export default function TopSources({ measures }) {
                     active.key === 'leads' ? 'bg-ihealthGreen' : 'bg-ihealthBlue'
                   }`}
                   /*
-                   * Scaled against the leader in the selected measure, so the
-                   * top row always fills its bar and the rest read relative
-                   * to it. Refitting is the point of switching.
-                   */
+                   Scaled against the leader in the selected measure, so the
+                   top row always fills its bar and the rest read relative
+                   to it. Refitting is the point of switching.
+                  */
                   style={{ width: `${row.share * 100}%` }}
                 />
               </div>

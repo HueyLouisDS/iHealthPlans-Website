@@ -11,9 +11,9 @@ import './globals.css'
 import { authorshipMetadata, authorshipJsonLd, BUNDLER_BANNER } from '@/lib/authorship'
 
 /*
- * Matches the live site, a variable weight face across the full 200 to 900
- * range. Exposed as a CSS variable so tailwind.config.js can reference it.
- */
+ Matches the live site, a variable weight face across the full 200 to 900
+ range. Exposed as a CSS variable so tailwind.config.js can reference it.
+*/
 const sourceSans = Source_Sans_3({
   subsets: ['latin'],
   weight: ['200', '300', '400', '600', '700', '900'],

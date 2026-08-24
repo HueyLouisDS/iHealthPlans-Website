@@ -19,15 +19,15 @@ import {
 ========================================================*/
 
 /*
- * A full pull that comes back materially smaller than the last one is refused
- * rather than written. A truncated response, a silently expired key, or a
- * changed default page size all produce the same thing, fewer rows, and
- * writing them looks exactly like a quiet week rather than a broken sync.
- *
- * Only applies to full pulls with an established baseline. An incremental pull
- * is expected to be small, and the first run of anything has nothing to
- * compare against.
- */
+ A full pull that comes back materially smaller than the last one is refused
+ rather than written. A truncated response, a silently expired key, or a
+ changed default page size all produce the same thing, fewer rows, and
+ writing them looks exactly like a quiet week rather than a broken sync.
+
+ Only applies to full pulls with an established baseline. An incremental pull
+ is expected to be small, and the first run of anything has nothing to
+ compare against.
+*/
 const SHRINK_TOLERANCE = 0.9            // a full pull may lose up to 10% before it is refused
 
 /* How far back an incremental pull reaches when there is no cursor yet */
@@ -41,23 +41,23 @@ const CURSOR_OVERLAP_MINUTES = 30
 ========================================================*/
 
 /*
- * From TLD's own posting instructions: "Any and all Date Time formatted fields
- * will be converted to the accounts default timezone: US/Eastern."
- *
- * So a datetime arriving with no zone marker is Eastern, not UTC and not
- * whatever the server happens to be set to. Handing that string straight to
- * `new Date()` parses it as local time, which shifts every timestamp by the
- * server's offset and makes the same pull produce different rows on a
- * developer laptop and on the host.
- *
- * That would not throw and would not look wrong. It would just move every call
- * a few hours, so no call would ever fall inside the window a click is matched
- * against, and the attribution rate would sit at zero with nothing to explain
- * it.
- *
- * TODO confirm with --inspect whether TLD sends a zone marker. If it does, the
- * explicit branch below already handles it and this constant stops mattering.
- */
+ From TLD's own posting instructions: "Any and all Date Time formatted fields
+ will be converted to the accounts default timezone: US/Eastern."
+
+ So a datetime arriving with no zone marker is Eastern, not UTC and not
+ whatever the server happens to be set to. Handing that string straight to
+ `new Date()` parses it as local time, which shifts every timestamp by the
+ server's offset and makes the same pull produce different rows on a
+ developer laptop and on the host.
+
+ That would not throw and would not look wrong. It would just move every call
+ a few hours, so no call would ever fall inside the window a click is matched
+ against, and the attribution rate would sit at zero with nothing to explain
+ it.
+
+ TODO confirm with --inspect whether TLD sends a zone marker. If it does, the
+ explicit branch below already handles it and this constant stops mattering.
+*/
 const TLD_TIMEZONE = 'America/New_York'
 
 /* A datetime with no trailing Z and no numeric offset */
@@ -121,11 +121,11 @@ function toMysqlDateTime(value) {
   const [, year, month, day, hour, minute, second = '00'] = match
 
   /*
-   * Read as if the wall clock reading were UTC, then shifted by the offset
-   * that zone was actually at. Two passes because the offset itself depends on
-   * the instant, and the first guess is close enough to land on the right side
-   * of any daylight saving boundary.
-   */
+   Read as if the wall clock reading were UTC, then shifted by the offset
+   that zone was actually at. Two passes because the offset itself depends on
+   the instant, and the first guess is close enough to land on the right side
+   of any daylight saving boundary.
+  */
   const naive = Date.UTC(+year, +month - 1, +day, +hour, +minute, +second)
   const firstGuess = new Date(naive - zoneOffsetMinutes(new Date(naive), TLD_TIMEZONE) * 60000)
   const corrected = new Date(naive - zoneOffsetMinutes(firstGuess, TLD_TIMEZONE) * 60000)
@@ -140,26 +140,26 @@ function toMysqlDateTime(value) {
 ========================================================*/
 
 /*
- * TLD sends these as 1/0, Y/N, or true/false depending on the field, so all 3
- * are recognised. The question is what to do with a 4th spelling nobody
- * anticipated.
- *
- * For is_dnc the answer is suppress. Reading an unrecognised value as "not on
- * the list" means somebody who asked not to be called gets called, and that is
- * a complaint and a fine. Reading it as "on the list" costs one lead that a
- * person can put back by hand.
- *
- * The other flags go the other way. counts_as_conversion defaulting to true on
- * a value nobody understood would inflate every conversion number on the
- * dashboard, which is the opposite of useful.
- */
+ TLD sends these as 1/0, Y/N, or true/false depending on the field, so all 3
+ are recognised. The question is what to do with a 4th spelling nobody
+ anticipated.
+
+ For is_dnc the answer is suppress. Reading an unrecognised value as "not on
+ the list" means somebody who asked not to be called gets called, and that is
+ a complaint and a fine. Reading it as "on the list" costs one lead that a
+ person can put back by hand.
+
+ The other flags go the other way. counts_as_conversion defaulting to true on
+ a value nobody understood would inflate every conversion number on the
+ dashboard, which is the opposite of useful.
+*/
 const TRUE_VALUES = new Set(['1', 'y', 'yes', 'true', 't'])
 const FALSE_VALUES = new Set(['0', 'n', 'no', 'false', 'f'])
 
 /* Columns where an unrecognised value is resolved to 1 rather than 0 */
 const FAIL_SUPPRESSED = new Set(['is_dnc'])
 
-/*
+/**
  * Reads a TLD flag, resolving anything unrecognised in the safe direction for
  * that particular column.
  */
@@ -172,7 +172,7 @@ function toBoolean(raw, column) {
   return FAIL_SUPPRESSED.has(column) ? 1 : 0
 }
 
-/*
+/**
  * Turns one TLD row into one row for our table.
  *
  * Missing fields become null rather than being skipped, so every row in a
@@ -205,7 +205,7 @@ function mapRow(row, map) {
   return mapped
 }
 
-/*
+/**
  * Works out where an incremental pull should resume from.
  *
  * Rewound by CURSOR_OVERLAP_MINUTES because a row created during the previous
@@ -224,7 +224,7 @@ function resumeFrom(state) {
   return toMysqlDateTime(rewound)
 }
 
-/*
+/**
  * Finds the newest value of the cursor column across a batch, which becomes
  * the next run's starting point. Taken from the data rather than from the
  * clock, so a slow run does not skip rows written while it was going.
@@ -255,10 +255,10 @@ export async function syncResource(resource, { dryRun = false } = {}) {
   const params = { ...(resource.params || {}) }
 
   /*
-   * An incremental resource asks for everything since its cursor. A full one
-   * asks for everything, except that the leads endpoint refuses a request with
-   * no date range at all, so it gets one whether or not it is incremental.
-   */
+   An incremental resource asks for everything since its cursor. A full one
+   asks for everything, except that the leads endpoint refuses a request with
+   no date range at all, so it gets one whether or not it is incremental.
+  */
   if (resource.incremental || resource.requiresRange) {
     params[resource.cursorParam] = resumeFrom(state)
   }
@@ -275,9 +275,9 @@ export async function syncResource(resource, { dryRun = false } = {}) {
   }
 
   /*
-   * The shrink guard, before anything is written. Full pulls only, and only
-   * once there is a baseline to compare against.
-   */
+   The shrink guard, before anything is written. Full pulls only, and only
+   once there is a baseline to compare against.
+  */
   if (!resource.incremental && state?.rows_total > 0) {
     const floor = Math.floor(state.rows_total * SHRINK_TOLERANCE)
 
@@ -307,10 +307,10 @@ export async function syncResource(resource, { dryRun = false } = {}) {
   }
 
   /*
-   * Rows that stopped coming back, stamped rather than deleted. Full pulls
-   * only. On an incremental one everything outside the window is legitimately
-   * absent and would all be marked at once.
-   */
+   Rows that stopped coming back, stamped rather than deleted. Full pulls
+   only. On an incremental one everything outside the window is legitimately
+   absent and would all be marked at once.
+  */
   let missing = 0
   if (resource.tracksMissing && !resource.incremental) {
     missing = await markMissing(resource.table, syncStartedAt)

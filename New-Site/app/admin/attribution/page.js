@@ -29,10 +29,10 @@ export default async function AdminAttributionIndex({ searchParams }) {
   const target = `/admin/attribution/${dimension.slug}${search ? `?${search}` : ''}`
 
   /*
-   * 308 only for the old parameter form, which is genuinely gone. The bare
-   * path stays a temporary redirect, because it is the sidebar's href and
-   * teaching a browser to permanently rewrite it would be hard to undo.
-   */
+   308 only for the old parameter form, which is genuinely gone. The bare
+   path stays a temporary redirect, because it is the sidebar's href and
+   teaching a browser to permanently rewrite it would be hard to undo.
+  */
   if (legacy) permanentRedirect(target)
   redirect(target)
 }

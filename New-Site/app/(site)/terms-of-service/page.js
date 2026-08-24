@@ -12,6 +12,10 @@ import { getLegalPage } from '@/lib/content/legal'
 
 const SLUG = 'terms-of-service'
 
+/**
+ * Title and description, read from the notice itself so they cannot
+ * drift from the wording counsel reviewed.
+ */
 export function generateMetadata() {
   const page = getLegalPage(SLUG)
   return {
@@ -21,6 +25,10 @@ export function generateMetadata() {
   }
 }
 
+/**
+ * Renders the notice through the shared legal layout, so all 6 stay
+ * identical in structure.
+ */
 export default function Page() {
   return <LegalPage slug={SLUG} />
 }

@@ -19,9 +19,9 @@ import { unstable_cache } from 'next/cache'
 import { query, queryOne, databaseConfigured } from '@/lib/db/client'
 
 /*
- * Cache tags, one per synced resource. Invalidated by the sync when it writes,
- * so a page depending on calls refreshes when calls land and not when leads do.
- */
+ Cache tags, one per synced resource. Invalidated by the sync when it writes,
+ so a page depending on calls refreshes when calls land and not when leads do.
+*/
 export const TAGS = {
   calls: 'db:calls',
   leads: 'db:leads',
@@ -32,11 +32,11 @@ export const TAGS = {
 }
 
 /*
- * A ceiling rather than a schedule. Anything cached is invalidated by the sync
- * the moment new data arrives, so this only matters if a sync silently stops.
- * An hour old number is recoverable, a number cached since Tuesday is how
- * somebody makes a decision on last week's data without knowing it.
- */
+ A ceiling rather than a schedule. Anything cached is invalidated by the sync
+ the moment new data arrives, so this only matters if a sync silently stops.
+ An hour old number is recoverable, a number cached since Tuesday is how
+ somebody makes a decision on last week's data without knowing it.
+*/
 const MAX_AGE_SECONDS = 3600
 
 /**

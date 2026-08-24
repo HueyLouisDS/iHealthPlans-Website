@@ -12,7 +12,7 @@ import { WRITABLE_KEYS } from '@/lib/integrations/fields'
         DEVELOPMENT ONLY, AND THE GUARD IS NOT OPTIONAL
 ========================================================*/
 
-/*
+/**
  * A deployed app must never write this file. Three reasons, any one of which
  * is enough:
  *
@@ -92,10 +92,10 @@ export async function writeEnvValues(values) {
   const updated = []
 
   /*
-   * Replace in place. Matched on the key at the start of a line so a commented
-   * out example like `# LH_CRM_API_ID=` is left alone rather than being
-   * uncommented and overwritten, which would lose the example.
-   */
+   Replace in place. Matched on the key at the start of a line so a commented
+   out example like `# LH_CRM_API_ID=` is left alone rather than being
+   uncommented and overwritten, which would lose the example.
+  */
   const rewritten = lines.map((line) => {
     const match = line.match(/^([A-Z0-9_]+)=/)
     if (!match) return line
@@ -125,17 +125,17 @@ export async function writeEnvValues(values) {
   }
 
   /*
-   * Written with a trailing newline. A file ending mid line parses fine but
-   * makes the next append land on the same line as the last value.
-   */
+   Written with a trailing newline. A file ending mid line parses fine but
+   makes the next append land on the same line as the last value.
+  */
   let output = rewritten.join('\n')
   if (!output.endsWith('\n')) output += '\n'
 
   /*
-   * 0o600, owner read and write only. The default would be 0o644 on a unix
-   * machine, which puts live credentials in a world readable file. Ignored on
-   * Windows, where the parent directory's ACL governs instead.
-   */
+   0o600, owner read and write only. The default would be 0o644 on a unix
+   machine, which puts live credentials in a world readable file. Ignored on
+   Windows, where the parent directory's ACL governs instead.
+  */
   await fs.writeFile(filePath, output, { encoding: 'utf8', mode: 0o600 })
 
   return { updated, added }

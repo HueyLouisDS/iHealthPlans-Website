@@ -14,18 +14,18 @@ import { query, transaction, databaseConfigured } from '@/lib/db/client'
 ========================================================*/
 
 /*
- * The foreign key runs from lead_consents to leads, not the other way, so the
- * database does not require a lead to have consent. Only the route does, and
- * only /api/leads/inbound currently enforces it.
- *
- * The site's own form does not capture consent yet, so leads written here can
- * land without a row in lead_consents. Until the form sends it, do not read
- * "row in leads" as "consent on file".
- *
- * TODO capture consent on the site form and make it mandatory here too. Until
- * that lands the agency is holding a vendor to a standard its own form does
- * not meet.
- */
+ The foreign key runs from lead_consents to leads, not the other way, so the
+ database does not require a lead to have consent. Only the route does, and
+ only /api/leads/inbound currently enforces it.
+
+ The site's own form does not capture consent yet, so leads written here can
+ land without a row in lead_consents. Until the form sends it, do not read
+ "row in leads" as "consent on file".
+
+ TODO capture consent on the site form and make it mandatory here too. Until
+ that lands the agency is holding a vendor to a standard its own form does
+ not meet.
+*/
 
 /**
  * Stores a lead and its consent record, if there is one.
@@ -82,10 +82,10 @@ export async function insertLead(lead, leadId) {
           toMysqlDateTime(lead.consent.capturedAt),
           lead.consent.text,
           /*
-           * Hashed so a disclosure can be proved unchanged without diffing
-           * prose. Two leads showing the same wording share a hash, and a
-           * reworded disclosure is visible as a new one immediately.
-           */
+           Hashed so a disclosure can be proved unchanged without diffing
+           prose. Two leads showing the same wording share a hash, and a
+           reworded disclosure is visible as a new one immediately.
+          */
           createHash('sha256').update(lead.consent.text).digest('hex'),
           lead.consent.version || null,
           lead.consent.url,

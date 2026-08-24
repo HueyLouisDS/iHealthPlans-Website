@@ -12,19 +12,27 @@ import { getLegalPage } from '@/lib/content/legal'
 
 const SLUG = 'accessibility'
 
+/**
+ * Title and description, read from the notice itself so they cannot
+ * drift from the wording counsel reviewed.
+ */
 export function generateMetadata() {
   const page = getLegalPage(SLUG)
   return {
     title: page.title,
     description: page.metaDescription,
     /*
-     * These are utility pages. They should be reachable and readable, but they
-     * should not compete with the marketing pages in search results.
-     */
+     These are utility pages. They should be reachable and readable, but they
+     should not compete with the marketing pages in search results.
+    */
     robots: { index: true, follow: true },
   }
 }
 
+/**
+ * Renders the notice through the shared legal layout, so all 6 stay
+ * identical in structure.
+ */
 export default function Page() {
   return <LegalPage slug={SLUG} />
 }

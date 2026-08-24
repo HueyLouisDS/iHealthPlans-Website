@@ -11,17 +11,17 @@ const TIMEOUT_MS = 10000                 // longer than the push, a person is wa
 ========================================================*/
 
 /*
- * The vendor endpoint's only job is creating leads, so an ordinary test post
- * would put a fake person into the client's CRM every time somebody clicked
- * the button, and an agent would eventually call one.
- *
- * So the test posts nothing. TLD answers an empty payload with code 104, you
- * must provide at least one valid phone number or one valid email address,
- * and that answer is only reachable once the vendor id and post key have
- * already been accepted. The credential failures are 97, 98, 99 and 100.
- *
- * 104 back therefore means authenticated, vendor active, nothing written.
- */
+ The vendor endpoint's only job is creating leads, so an ordinary test post
+ would put a fake person into the client's CRM every time somebody clicked
+ the button, and an agent would eventually call one.
+
+ So the test posts nothing. TLD answers an empty payload with code 104, you
+ must provide at least one valid phone number or one valid email address,
+ and that answer is only reachable once the vendor id and post key have
+ already been accepted. The credential failures are 97, 98, 99 and 100.
+
+ 104 back therefore means authenticated, vendor active, nothing written.
+*/
 const VENDOR_AUTH_FAILURES = {
   97: 'No post key was provided.',
   98: 'The post key is not valid for this vendor.',
@@ -34,16 +34,16 @@ const VENDOR_AUTH_FAILURES = {
 const VENDOR_EXPECTED_CODE = 104
 
 /*
- * The path used to prove the CRM key works. Any authenticated read would do,
- * this one is small and takes no date range, unlike leads.
- *
- * TODO confirm against the live tenant. If the test comes back 404 rather than
- * 200 or 401 this is the line to change, and a 404 still tells you the host is
- * right and the request was not rejected as unauthorised.
- */
+ The path used to prove the CRM key works. Any authenticated read would do,
+ this one is small and takes no date range, unlike leads.
+
+ TODO confirm against the live tenant. If the test comes back 404 rather than
+ 200 or 401 this is the line to change, and a 404 still tells you the host is
+ right and the request was not rejected as unauthorised.
+*/
 const CRM_TEST_PATH = '/api/egress/policies?limit=1'
 
-/*
+/**
  * Wraps fetch with a timeout and turns network failures into a result rather
  * than a throw, so a caller never has to distinguish the two.
  */
@@ -101,7 +101,7 @@ export async function testCrm({ baseUrl, apiId, apiKey }) {
   }
 }
 
-/*
+/**
  * Checks the vendor source without writing a lead.
  *
  * See the banner above. An empty payload is refused by validation, and getting
@@ -142,10 +142,10 @@ export async function testVendor({ postUrl, vendorId, postKey }) {
   }
 
   /*
-   * Any other code still means TLD read the request and answered as itself, so
-   * the credentials worked. Reported rather than treated as a pass, because an
-   * unexpected code here is worth a human looking at before leads depend on it.
-   */
+   Any other code still means TLD read the request and answered as itself, so
+   the credentials worked. Reported rather than treated as a pass, because an
+   unexpected code here is worth a human looking at before leads depend on it.
+  */
   return {
     ok: false,
     message: `Unexpected response, code ${raw}. Credentials look accepted but this needs checking.`,

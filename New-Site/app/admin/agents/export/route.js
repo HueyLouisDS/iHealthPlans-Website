@@ -78,10 +78,10 @@ export async function GET(request) {
     records: rows.length,
     filters: { days, sort },
     /*
-     * Named rather than counted. Exporting one person's numbers is a different
-     * act from exporting the team's, and the log should be able to tell them
-     * apart later without the file itself.
-     */
+     Named rather than counted. Exporting one person's numbers is a different
+     act from exporting the team's, and the log should be able to tell them
+     apart later without the file itself.
+    */
     selection: ids.length ? ids : 'all agents',
     fixtures: usingFixtures(),
   })
@@ -90,9 +90,9 @@ export async function GET(request) {
   const body = rows.map((agent) => COLUMNS.map(([key]) => toCell(agent[key])).join(','))
 
   /*
-   * Travels with the file so the caveat survives being forwarded. A ranking
-   * that looks objective and is not is worse than no ranking.
-   */
+   Travels with the file so the caveat survives being forwarded. A ranking
+   that looks objective and is not is worse than no ranking.
+  */
   const note =
     'Enrollment rate is not a like for like comparison. Lead quality varies by source and by hour, and none of that is held constant. Comparing agents fairly means comparing them within a source.'
 

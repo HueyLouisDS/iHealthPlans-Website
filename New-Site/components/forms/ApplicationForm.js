@@ -24,9 +24,9 @@ function validate(application) {
   if (!application.fullName.trim()) errors.fullName = 'Please enter your full name.'
 
   /*
-   * Deliberately loose. Real numbers arrive with brackets, dashes, and country
-   * codes, and rejecting those loses applicants for no benefit.
-   */
+   Deliberately loose. Real numbers arrive with brackets, dashes, and country
+   codes, and rejecting those loses applicants for no benefit.
+  */
   const digits = application.phone.replace(/[^0-9]/g, '')
   if (digits.length < 10) errors.phone = 'Please enter a phone number we can reach you on.'
 
@@ -84,9 +84,9 @@ export default function ApplicationForm() {
       setStatus('submitted')
     } catch (error) {
       /*
-       * Never leave the visitor on a spinner. They have typed their details in
-       * and the only recoverable action is to let them try again.
-       */
+       Never leave the visitor on a spinner. They have typed their details in
+       and the only recoverable action is to let them try again.
+      */
       console.error('Careers application failed to send', error)
       setStatus('failed')
     }

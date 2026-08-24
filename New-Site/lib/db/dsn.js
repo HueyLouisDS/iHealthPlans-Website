@@ -21,18 +21,18 @@
 ==================================================================================*/
 
 /*
- * How every connection behaves, regardless of which form configured it.
- *
- * Here rather than on the pool, because a script opening its own connection
- * gets the same semantics as the app. Without that, the same row read from a
- * migration script and from a page parses to 2 different types.
- */
+ How every connection behaves, regardless of which form configured it.
+
+ Here rather than on the pool, because a script opening its own connection
+ gets the same semantics as the app. Without that, the same row read from a
+ migration script and from a page parses to 2 different types.
+*/
 const BEHAVIOUR = {
   /*
-   * Dates as strings, timezone pinned to UTC. The driver otherwise builds Date
-   * objects in the server's local timezone, which is UTC on Vercel and
-   * something else on a laptop, so identical rows parse to different instants.
-   */
+   Dates as strings, timezone pinned to UTC. The driver otherwise builds Date
+   objects in the server's local timezone, which is UTC on Vercel and
+   something else on a laptop, so identical rows parse to different instants.
+  */
   dateStrings: true,
   timezone: 'Z',
   /* TLD ids can exceed the safe integer range, so big ints stay strings */
@@ -66,54 +66,54 @@ export function resolveDbConfig(env = process.env) {
             host: env.LH_DB_HOST,
             port,
             user: env.LH_DB_USER,
-            /* Empty string is a valid MySQL password, so undefined rather
-               than a falsy check, or a blank password becomes "not set" */
-            password: env.LH_DB_PASSWORD ?? '',
-            database: env.LH_DB_NAME,
-            ...BEHAVIOUR,
-          },
-    }
-  }
+            /*
+             than a falsy check, or a blank password becomes "not set" */
+             password: env.LH_DB_PASSWORD ?? '',
+             database: env.LH_DB_NAME,
+             ...BEHAVIOUR,
+             },
+             }
+             }
 
-  if (env.DATABASE_URL) {
-    let url
-    try {
-      url = new URL(env.DATABASE_URL)
-    } catch {
-      return { source: 'url', problems: ['DATABASE_URL is not a valid url.'], config: null }
-    }
+             if (env.DATABASE_URL) {
+             let url
+             try {
+             url = new URL(env.DATABASE_URL)
+             } catch {
+             return { source: 'url', problems: ['DATABASE_URL is not a valid url.'], config: null }
+             }
 
-    const database = decodeURIComponent(url.pathname.replace(/^\//, ''))
-    if (!database) problems.push('DATABASE_URL has no database name after the host.')
-    if (!url.username) problems.push('DATABASE_URL has no username.')
+             const database = decodeURIComponent(url.pathname.replace(/^\//, ''))
+             if (!database) problems.push('DATABASE_URL has no database name after the host.')
+             if (!url.username) problems.push('DATABASE_URL has no username.')
 
-    return {
-      source: 'url',
-      problems,
-      config: problems.length
-        ? null
-        : {
-            host: url.hostname,
-            port: Number.parseInt(url.port || '3306', 10),
-            /* decodeURIComponent, since a url carries these encoded */
-            user: decodeURIComponent(url.username),
-            password: decodeURIComponent(url.password),
-            database,
-            ...BEHAVIOUR,
-          },
-    }
-  }
+             return {
+             source: 'url',
+             problems,
+             config: problems.length
+             ? null
+             : {
+             host: url.hostname,
+             port: Number.parseInt(url.port || '3306', 10),
+             /* decodeURIComponent, since a url carries these encoded */
+             user: decodeURIComponent(url.username),
+             password: decodeURIComponent(url.password),
+             database,
+             ...BEHAVIOUR,
+             },
+             }
+             }
 
-  return {
-    source: 'none',
-    problems: ['No database configured. Set LH_DB_HOST, LH_DB_USER, LH_DB_PASSWORD, and LH_DB_NAME.'],
-    config: null,
-  }
-}
+             return {
+             source: 'none',
+             problems: ['No database configured. Set LH_DB_HOST, LH_DB_USER, LH_DB_PASSWORD, and LH_DB_NAME.'],
+             config: null,
+             }
+             }
 
-/**
- * Whether a database is configured at all.
- */
+             /**
+             Whether a database is configured at all.
+            */
 export function databaseConfigured(env = process.env) {
   return resolveDbConfig(env).config !== null
 }

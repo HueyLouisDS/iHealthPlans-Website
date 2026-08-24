@@ -126,10 +126,10 @@ async function run() {
 
     if (result.unmapped.length) {
       /*
-       * Loud on purpose. An unmapped column is not cosmetic. If nobody mapped
-       * the termination date then the segment of clients whose plan is ending
-       * comes back empty, and an empty segment reads as good news.
-       */
+       Loud on purpose. An unmapped column is not cosmetic. If nobody mapped
+       the termination date then the segment of clients whose plan is ending
+       comes back empty, and an empty segment reads as good news.
+      */
       console.warn(`  UNMAPPED COLUMNS, add these to ALIASES in lib/book/csv.js:`)
       for (const heading of result.unmapped) console.warn(`    "${heading}"`)
     }

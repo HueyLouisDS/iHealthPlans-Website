@@ -12,17 +12,17 @@ import { vendorConfig } from '@/lib/integrations/config'
 ========================================================*/
 
 /*
- * TLD requires vendor_id and post_key as URL parameters even on a POST, so the
- * credential cannot live in a header. Query strings reach access logs, proxy
- * logs, referrer headers and error reports.
- *
- *   Server only, enforced by the import above.
- *   Never log the url. Built at the call site, never held.
- *   Never log the payload. Beneficiary PII and consent text.
- *
- * The Results Log url carries the same key and returns the last 100 leads with
- * full debugging data. Not implemented here on purpose.
- */
+ TLD requires vendor_id and post_key as URL parameters even on a POST, so the
+ credential cannot live in a header. Query strings reach access logs, proxy
+ logs, referrer headers and error reports.
+
+   Server only, enforced by the import above.
+   Never log the url. Built at the call site, never held.
+   Never log the payload. Beneficiary PII and consent text.
+
+ The Results Log url carries the same key and returns the last 100 leads with
+ full debugging data. Not implemented here on purpose.
+*/
 
 const REQUEST_TIMEOUT_MS = 8000          // a form submit cannot wait longer than this
 const MAX_FIELD_LENGTH = 500             // guard against a pathological value, not a TLD limit
@@ -32,10 +32,10 @@ const MAX_FIELD_LENGTH = 500             // guard against a pathological value, 
 ========================================================*/
 
 /*
- * TLD answers with a bare integer as text, not JSON. 1 to 16 are success, the
- * rest are failures with unrelated causes, so they are bucketed by what the
- * caller should do about them rather than kept flat.
- */
+ TLD answers with a bare integer as text, not JSON. 1 to 16 are success, the
+ rest are failures with unrelated causes, so they are bucketed by what the
+ caller should do about them rather than kept flat.
+*/
 const OUTCOMES = {
   accepted: 'accepted',                  // 1-16, created or matched an existing lead
   duplicate: 'duplicate',                // already present, by phone, email, or criteria
@@ -48,10 +48,10 @@ const OUTCOMES = {
 }
 
 /*
- * Listed explicitly rather than as a range. This is the bucket with a legal
- * consequence, so the exact set has to be readable at a glance. Anything
- * landing here must not be called, form submission or not.
- */
+ Listed explicitly rather than as a range. This is the bucket with a legal
+ consequence, so the exact set has to be readable at a glance. Anything
+ landing here must not be called, form submission or not.
+*/
 const SUPPRESSED_CODES = new Set([
   200,                                   // TLDialer DNC list
   201,                                   // configured filter phone groups
@@ -89,11 +89,11 @@ export function classifyCode(code) {
   if (THROTTLED_CODES.has(code)) return OUTCOMES.throttled
 
   /*
-   * The duplicate codes are a wide scattered range, 102 to 108 for phone, 114
-   * to 125 for email and general criteria, plus 126, 127 and 142. Matched last
-   * and by range, because the specific sets above have already claimed
-   * everything inside those bounds that is not actually a duplicate.
-   */
+   The duplicate codes are a wide scattered range, 102 to 108 for phone, 114
+   to 125 for email and general criteria, plus 126, 127 and 142. Matched last
+   and by range, because the specific sets above have already claimed
+   everything inside those bounds that is not actually a duplicate.
+  */
   if ((code >= 102 && code <= 108) || (code >= 114 && code <= 127) || code === 142) {
     return OUTCOMES.duplicate
   }
@@ -108,13 +108,13 @@ export { OUTCOMES }
 ========================================================*/
 
 /*
- * Our field on the left, the TLD post field on the right. A table so adding a
- * field is one row here and no change to the push logic.
- *
- * `custom: true` means the field does not exist on the account yet, so it is
- * withheld. TLD drops unrecognised keys without erroring, which would look
- * identical to the field working. Flip to false as each one is created.
- */
+ Our field on the left, the TLD post field on the right. A table so adding a
+ field is one row here and no change to the push logic.
+
+ `custom: true` means the field does not exist on the account yet, so it is
+ withheld. TLD drops unrecognised keys without erroring, which would look
+ identical to the field working. Flip to false as each one is created.
+*/
 const FIELD_MAP = [
   /* Person. The only genuinely required part, TLD needs a phone or an email. */
   { from: 'firstName', to: 'first_name' },
@@ -126,9 +126,9 @@ const FIELD_MAP = [
   { from: 'bestTime', to: 'contact_time' },
 
   /*
-   * The post response carries no TLD lead id, so tracking_id is how our record
-   * and theirs are tied together during the read sync. The join key.
-   */
+   The post response carries no TLD lead id, so tracking_id is how our record
+   and theirs are tied together during the read sync. The join key.
+  */
   { from: 'leadId', to: 'tracking_id' },
   { from: 'visitorId', to: 'reference_id' },
 
@@ -141,9 +141,9 @@ const FIELD_MAP = [
   { from: 'consent.ipAddress', to: 'ip_address' },
 
   /*
-   * Awaiting custom fields on the live vendor source. Names chosen to match
-   * what they are, so the mapping stays obvious to whoever creates them.
-   */
+   Awaiting custom fields on the live vendor source. Names chosen to match
+   what they are, so the mapping stays obvious to whoever creates them.
+  */
   { from: 'sessionId', to: 'session_id', custom: true },
   { from: 'onBehalfOf', to: 'on_behalf_of', custom: true },
   { from: 'attribution.source', to: 'utm_source', custom: true },
@@ -223,10 +223,10 @@ export function buildPayload(lead) {
   }
 
   /*
-   * Outside the map because it is assembled from 5 fields, and because it is
-   * not truncated. A partial quote of a disclosure proves nothing, so an
-   * oversized one has to fail rather than be quietly shortened.
-   */
+   Outside the map because it is assembled from 5 fields, and because it is
+   not truncated. A partial quote of a disclosure proves nothing, so an
+   oversized one has to fail rather than be quietly shortened.
+  */
   const note = consentNote(lead.consent)
   if (note) body.set('note1_note', note)
 
@@ -260,9 +260,9 @@ export async function pushLead(lead) {
   }
 
   /*
-   * Built here and never held, so the post key does not sit in a variable that
-   * could end up in a stack trace or a logged config object.
-   */
+   Built here and never held, so the post key does not sit in a variable that
+   could end up in a stack trace or a logged config object.
+  */
   const url = new URL(config.postUrl)
   url.searchParams.set('vendor_id', config.vendorId)
   url.searchParams.set('post_key', config.postKey)
@@ -278,12 +278,12 @@ export async function pushLead(lead) {
     })
   } catch (cause) {
     /*
-     * Not retried. A timeout does not say whether the lead landed, and dupe
-     * handling is per vendor, so a blind retry either duplicates or is
-     * rejected and we cannot tell which. Duplicating means a second dial.
-     *
-     * The read sync reconciles on tracking_id instead.
-     */
+     Not retried. A timeout does not say whether the lead landed, and dupe
+     handling is per vendor, so a blind retry either duplicates or is
+     rejected and we cannot tell which. Duplicating means a second dial.
+
+     The read sync reconciles on tracking_id instead.
+    */
     return {
       outcome: OUTCOMES.transient,
       code: null,
@@ -303,9 +303,9 @@ export async function pushLead(lead) {
   }
 
   /*
-   * Documented as TEXT, a bare integer. Parsed leniently because a proxy could
-   * wrap it in whitespace, and misreading a success sends a duplicate next run.
-   */
+   Documented as TEXT, a bare integer. Parsed leniently because a proxy could
+   wrap it in whitespace, and misreading a success sends a duplicate next run.
+  */
   const raw = (await response.text()).trim()
   const code = Number.parseInt(raw, 10)
   const outcome = classifyCode(code)
@@ -319,16 +319,16 @@ export async function pushLead(lead) {
 }
 
 /*
- * TODO state. TLD codes 112 and 113 reject a lead when a vendor filters by
- * state and none was supplied, and the site currently collects a zip and no
- * state. Derive it from the zip before this goes live against the real vendor,
- * or every lead is refused the moment state routing is switched on.
- */
+ TODO state. TLD codes 112 and 113 reject a lead when a vendor filters by
+ state and none was supplied, and the site currently collects a zip and no
+ state. Derive it from the zip before this goes live against the real vendor,
+ or every lead is refused the moment state routing is switched on.
+*/
 
 /*
- * TODO the System Field ID mappings. sep, enrollment_eligibility and
- * insured_intent all take a numeric TLD id rather than text, and the mapping
- * has to be requested from TLD separately. Until then SEP and product interest
- * do not cross, which loses the distinction between an AEP and an SEP lead on
- * their side.
- */
+ TODO the System Field ID mappings. sep, enrollment_eligibility and
+ insured_intent all take a numeric TLD id rather than text, and the mapping
+ has to be requested from TLD separately. Until then SEP and product interest
+ do not cross, which loses the distinction between an AEP and an SEP lead on
+ their side.
+*/

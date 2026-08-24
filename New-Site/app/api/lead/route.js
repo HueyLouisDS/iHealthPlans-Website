@@ -46,9 +46,9 @@ export async function POST(request) {
   }
 
   /*
-   * Shared with the vendor endpoint, so owned and bought leads cannot drift
-   * apart in what counts as a valid lead
-   */
+   Shared with the vendor endpoint, so owned and bought leads cannot drift
+   apart in what counts as a valid lead
+  */
   const errors = validateLead(body, { origin: 'site' })
   if (Object.keys(errors).length > 0) {
     return errorResponse(ERRORS.invalidPayload, { errors })
@@ -57,30 +57,30 @@ export async function POST(request) {
   const lead = normaliseLead(body, {
     origin: 'site',
     /*
-     * TODO the real first touch source, once lib/attribution exists. Until
-     * then every owned lead collapses into one row in the attribution report,
-     * which is better than being untagged but is not the answer.
-     */
+     TODO the real first touch source, once lib/attribution exists. Until
+     then every owned lead collapses into one row in the attribution report,
+     which is better than being untagged but is not the answer.
+    */
     source: 'website',
   })
 
   /*
-   * TODO the consent record. normaliseLead carries it, the form does not yet
-   * send it, so nothing reaches note1_note on the TLD side either. It needs
-   * the exact text shown, a version for that text, the timestamp, and the ip.
-   * The vendor endpoint already requires all 4.
-   */
+   TODO the consent record. normaliseLead carries it, the form does not yet
+   send it, so nothing reaches note1_note on the TLD side either. It needs
+   the exact text shown, a version for that text, the timestamp, and the ip.
+   The vendor endpoint already requires all 4.
+  */
 
   /*
-   * Stored before the push and independently of it, so an unreachable TLD
-   * cannot lose a submission. The reverse order would drop a lead whenever the
-   * database write failed after a successful push.
-   *
-   * The id is minted here rather than by the insert, so the push carries a
-   * tracking_id even when storage fails. A lead reaching TLD with no id on it
-   * can never be tied back, and that is exactly the case where something has
-   * already gone wrong and the trail matters most.
-   */
+   Stored before the push and independently of it, so an unreachable TLD
+   cannot lose a submission. The reverse order would drop a lead whenever the
+   database write failed after a successful push.
+
+   The id is minted here rather than by the insert, so the push carries a
+   tracking_id even when storage fails. A lead reaching TLD with no id on it
+   can never be tied back, and that is exactly the case where something has
+   already gone wrong and the trail matters most.
+  */
   const leadId = randomUUID()
 
   let stored = false
@@ -88,10 +88,10 @@ export async function POST(request) {
     stored = await insertLead(lead, leadId)
   } catch (cause) {
     /*
-     * Logged with the id, not swallowed silently. If the push then succeeds,
-     * this line is the only record tying that TLD lead back to anything, so it
-     * has to carry the id somebody would search for.
-     */
+     Logged with the id, not swallowed silently. If the push then succeeds,
+     this line is the only record tying that TLD lead back to anything, so it
+     has to carry the id somebody would search for.
+    */
     console.error('[lead] could not store lead %s: %s', leadId, cause.message)
   }
 
@@ -112,11 +112,11 @@ async function deliver(lead, leadId, stored) {
 
   if (result.outcome === OUTCOMES.suppressed) {
     /*
-     * The lead is on a DNC list, a suppression list, or a litigator database.
-     * It is stored, because they did submit the form and that record matters,
-     * and it must not be called. Logged at error level so it is not read as
-     * ordinary delivery noise.
-     */
+     The lead is on a DNC list, a suppression list, or a litigator database.
+     It is stored, because they did submit the form and that record matters,
+     and it must not be called. Logged at error level so it is not read as
+     ordinary delivery noise.
+    */
     console.error('[lead] SUPPRESSED, do not call. code %s', result.code, redactLead(lead))
   } else if (result.outcome !== OUTCOMES.accepted) {
     console.warn('[lead] not delivered, %s code %s', result.outcome, result.code)

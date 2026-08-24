@@ -19,6 +19,10 @@ import { getEnrollmentPage } from '@/lib/content/enrollment'
 
 const SLUG = 'medicare-advantage-open-enrollment'
 
+/**
+ * Title and description, read from the enrollment period data so they
+ * cannot drift from the copy on the page.
+ */
 export function generateMetadata() {
   const page = getEnrollmentPage(SLUG)
   return { title: page.title, description: page.metaDescription }

@@ -16,12 +16,12 @@ import { signOut } from '@/auth'
 import AdminFrame from '@/components/admin/AdminFrame'
 
 /*
- * `match` is the prefix that lights the item up, for when it differs from the
- * href. Attribution needs both: the link has to skip past /admin/attribution
- * because that path only redirects, and a redirect cannot be a soft
- * navigation, so routing the sidebar through it made the whole page flash on
- * every click. The item still has to stay lit on every dimension under it.
- */
+ `match` is the prefix that lights the item up, for when it differs from the
+ href. Attribution needs both: the link has to skip past /admin/attribution
+ because that path only redirects, and a redirect cannot be a soft
+ navigation, so routing the sidebar through it made the whole page flash on
+ every click. The item still has to stay lit on every dimension under it.
+*/
 const ADMIN_NAV = [
   { label: 'Dashboard', href: '/admin', exact: true },
   { label: 'Leads', href: '/admin/leads' },
@@ -136,36 +136,36 @@ function Sidebar({ user, currentPath }) {
         {user?.isDevBypass ? (
           <p className="mt-3 text-sm text-white/60">No session to sign out of.</p>
         ) : (
-          /* Server action rather than a client handler, so signing out needs
-             no JavaScript and cannot be left half done by a failed fetch */
-          <form
-            action={async () => {
-              'use server'
-              await signOut({ redirectTo: '/admin/signin' })
-            }}
-          >
-            <button
-              type="submit"
-              className="mt-3 text-sm font-semibold text-white/80 hover:text-white underline underline-offset-4"
-            >
-              Sign out
-            </button>
-          </form>
-        )}
+          /*
+           no JavaScript and cannot be left half done by a failed fetch */
+           <form
+           action={async () => {
+           'use server'
+           await signOut({ redirectTo: '/admin/signin' })
+           }}
+           >
+           <button
+           type="submit"
+           className="mt-3 text-sm font-semibold text-white/80 hover:text-white underline underline-offset-4"
+           >
+           Sign out
+           </button>
+           </form>
+           )}
 
-        <Link href="/" className="mt-3 block text-sm text-white/60 hover:text-white">
-          Back to the website
-        </Link>
-      </div>
-    </>
-  )
-}
+           <Link href="/" className="mt-3 block text-sm text-white/60 hover:text-white">
+           Back to the website
+           </Link>
+           </div>
+           </>
+           )
+           }
 
-/**
- * Wraps a page in the admin chrome.
- * `currentPath` drives the active nav state, passed in rather than read from a
- * hook so this stays a server component.
- */
+           /**
+           Wraps a page in the admin chrome.
+           `currentPath` drives the active nav state, passed in rather than read from a
+           hook so this stays a server component.
+          */
 export default function AdminShell({ user, currentPath = '/admin', title, description, children }) {
   return (
     <AdminFrame

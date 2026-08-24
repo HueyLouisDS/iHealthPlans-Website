@@ -8,10 +8,10 @@
 import Link from 'next/link'
 
 /*
- * How many numbered links to show around the current page before collapsing
- * the rest into an ellipsis. 14 pages would fit, but a category filter can
- * change the count and this keeps the row a fixed width.
- */
+ How many numbered links to show around the current page before collapsing
+ the rest into an ellipsis. 14 pages would fit, but a category filter can
+ change the count and this keeps the row a fixed width.
+*/
 const WINDOW_SIZE = 2
 
 /**

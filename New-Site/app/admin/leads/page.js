@@ -40,15 +40,15 @@ const BASE = '/admin/leads'
 const PARAM_KEYS = ['period', 'source', 'status', 'audience', 'hasCall', 'q', 'sort', 'perPage', 'page']
 
 /*
- * Where the page snaps to when a tile is clicked. The filter panel and the
- * table below it are what the tile changed, so landing here shows the result.
- */
+ Where the page snaps to when a tile is clicked. The filter panel and the
+ table below it are what the tile changed, so landing here shows the result.
+*/
 const FOCUS_ID = 'lead-filters'
 
 /*
- * Each tile is a filter. `params` is what it sets, and clicking a tile that is
- * already on clears it, so the way out is the same control as the way in.
- */
+ Each tile is a filter. `params` is what it sets, and clicking a tile that is
+ already on clears it, so the way out is the same control as the way in.
+*/
 const TILE_FILTERS = {
   all: {},
   enrolled: { status: 'enrolled' },
@@ -66,9 +66,9 @@ const COLUMNS = [
   { key: 'status', label: 'Status', format: 'statusPill' },
   { key: 'createdAtLabel', label: 'Received', nowrap: true },
   /*
-   * A lead with no call is either waiting on a callback or has been missed,
-   * so it is worth marking rather than printing a quiet zero
-   */
+   A lead with no call is either waiting on a callback or has been missed,
+   so it is worth marking rather than printing a quiet zero
+  */
   { key: 'callCount', label: 'Calls', align: 'right', format: 'zeroNone' },
 ]
 
@@ -209,17 +209,17 @@ export default async function AdminLeadsPage({ searchParams }) {
     })
 
     /*
-     * The fragment snaps the page to the results. Not when clearing, since
-     * scrolling somebody down the page as they undo a filter is the opposite
-     * of what they asked for.
-     */
+     The fragment snaps the page to the results. Not when clearing, since
+     scrolling somebody down the page as they undo a filter is the opposite
+     of what they asked for.
+    */
     return isClearing ? href : `${href}#${FOCUS_ID}`
   }
 
   /*
-   * "All" is selected when none of the others are, which is what makes it read
-   * as the neutral position rather than as a 4th filter
-   */
+   "All" is selected when none of the others are, which is what makes it read
+   as the neutral position rather than as a 4th filter
+  */
   const activeTile =
     (params?.status === 'enrolled' && !params?.audience && !params?.hasCall && 'enrolled') ||
     (params?.audience === 'other' && !params?.status && !params?.hasCall && 'family') ||
@@ -279,9 +279,9 @@ export default async function AdminLeadsPage({ searchParams }) {
           <section
             id={FOCUS_ID}
             /*
-             * Focusable so the snap moves the keyboard caret here too, not
-             * only the scroll position
-             */
+             Focusable so the snap moves the keyboard caret here too, not
+             only the scroll position
+            */
             tabIndex={-1}
             aria-label="Filtered leads"
             className="scroll-mt-6 focus:outline-none"

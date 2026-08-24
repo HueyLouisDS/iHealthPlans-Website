@@ -1,9 +1,9 @@
 import 'server-only'
 
 /*
- * Credentials for TLD, the CRM API the site reads through and the vendor
- * source it posts leads to.
- */
+ Credentials for TLD, the CRM API the site reads through and the vendor
+ source it posts leads to.
+*/
 
 /*================================================================================
     SERVER ONLY, DO NOT REMOVE LINE 1
@@ -19,13 +19,13 @@ import 'server-only'
 ==================================================================================*/
 
 /*
- * Variable names that must never carry the NEXT_PUBLIC_ prefix. Checked as a
- * substring, so NEXT_PUBLIC_DIALER_API_KEY_V2 is caught along with the exact
- * name.
- */
+ Variable names that must never carry the NEXT_PUBLIC_ prefix. Checked as a
+ substring, so NEXT_PUBLIC_DIALER_API_KEY_V2 is caught along with the exact
+ name.
+*/
 const SECRET_MARKERS = ['API_KEY', 'APIKEY', 'SECRET', 'TOKEN', 'PASSWORD', 'PRIVATE_KEY']
 
-/*
+/**
  * Refuses to run if a secret has been given a publicly exposed name.
  *
  * This is the mistake worth catching automatically, because it is silent. The
@@ -48,7 +48,7 @@ export function assertNoPublicSecrets() {
   }
 }
 
-/*
+/**
  * Checks a base url is safe to send beneficiary data to.
  *
  * https is required, because the payloads carry names, phone numbers, and plan
@@ -79,21 +79,21 @@ function normaliseBaseUrl(value, name) {
   parsed.password = ''
 
   /*
-   * The query string goes too. TLD's vendor post endpoint takes its post key
-   * as a url parameter, so a base url pasted straight from their instructions
-   * arrives here carrying a live credential. Left on, it would be stored, and
-   * describe() below would print it to any health check or screenshot.
-   *
-   * Parameters are added at the call site instead, where they are used once
-   * and never held.
-   */
+   The query string goes too. TLD's vendor post endpoint takes its post key
+   as a url parameter, so a base url pasted straight from their instructions
+   arrives here carrying a live credential. Left on, it would be stored, and
+   describe() below would print it to any health check or screenshot.
+
+   Parameters are added at the call site instead, where they are used once
+   and never held.
+  */
   parsed.search = ''
 
   /* Trailing slash removed so callers can join paths without doubling it */
   return { url: parsed.toString().replace(/\/$/, ''), error: null }
 }
 
-/*
+/**
  * Reads one integration's settings from the environment.
  *
  * `prefix` is the environment variable prefix, so CRM reads LH_CRM_BASE_URL,
@@ -133,7 +133,7 @@ export function integrationConfig(prefix, { label } = {}) {
   }
 }
 
-/*
+/**
  * A view of a config that is safe to render, log, or screenshot.
  *
  * The key is reported as present or absent and never shown, not even
@@ -152,7 +152,7 @@ export function describe(config) {
   }
 }
 
-/*
+/**
  * Authorization headers for an outbound request.
  *
  * Here rather than at each call site so there is one place that knows how the
@@ -188,7 +188,7 @@ export function authHeaders(config) {
     The vendor post endpoint authenticates differently, see vendorConfig.
 ============================================================================*/
 
-/*
+/**
  * TLD. Reads LH_CRM_BASE_URL, LH_CRM_API_ID, LH_CRM_API_KEY.
  *
  * One config for everything the site reads, calls and agents included. TLD
@@ -200,7 +200,7 @@ export function crmConfig() {
   return integrationConfig('LH_CRM', { label: 'CRM' })
 }
 
-/*
+/**
  * The vendor post endpoint, which is how the site writes a lead into TLD.
  *
  * Separate from integrationConfig above because it authenticates completely
@@ -220,13 +220,13 @@ export function vendorConfig() {
   )
 
   /*
-   * The results log, which reads the last 100 posts back. Same vendor id and
-   * same post key as the write, only the path differs, so it is a url and not
-   * a second credential.
-   *
-   * Not counted in problems. The post works without it, and marking the whole
-   * vendor unconfigured over a debug url would stop leads going out.
-   */
+   The results log, which reads the last 100 posts back. Same vendor id and
+   same post key as the write, only the path differs, so it is a url and not
+   a second credential.
+
+   Not counted in problems. The post works without it, and marking the whole
+   vendor unconfigured over a debug url would stop leads going out.
+  */
   const { url: resultsUrl } = normaliseBaseUrl(
     process.env.LH_VENDOR_RESULTS_URL,
     'LH_VENDOR_RESULTS_URL'
@@ -253,7 +253,7 @@ export function vendorConfig() {
   }
 }
 
-/*
+/**
  * A view of the post config safe to render or log.
  *
  * describe() above cannot be reused, because it returns apiId in the clear.

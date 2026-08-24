@@ -51,9 +51,9 @@ function validate(values) {
   if (!values.lastName.trim()) errors.lastName = 'Please enter your last name.'
 
   /*
-   * Deliberately loose. Real numbers arrive with brackets, dashes, and country
-   * codes, and rejecting those loses leads for no benefit.
-   */
+   Deliberately loose. Real numbers arrive with brackets, dashes, and country
+   codes, and rejecting those loses leads for no benefit.
+  */
   if (values.phone.replace(/[^0-9]/g, '').length < 10) {
     errors.phone = 'Please enter a phone number we can reach you on.'
   }
@@ -109,10 +109,10 @@ function ChoiceGroup({ legend, name, options, value, onChange, error }) {
  */
 export default function QuoteForm({ isCallback = false, initialZip = '' }) {
   /*
-   * Prefilled from the zip a visitor typed into the closing call to action.
-   * Sanitised here as well as on the way in, since it arrives from a query
-   * string and anything can put anything in one.
-   */
+   Prefilled from the zip a visitor typed into the closing call to action.
+   Sanitised here as well as on the way in, since it arrives from a query
+   string and anything can put anything in one.
+  */
   const [values, setValues] = useState({
     ...EMPTY,
     zip: /^[0-9]{5}$/.test(initialZip) ? initialZip : '',
@@ -146,9 +146,9 @@ export default function QuoteForm({ isCallback = false, initialZip = '' }) {
     setErrors(found)
     if (Object.keys(found).length > 0) {
       /*
-       * Move focus to the problem rather than leaving a screen reader user to
-       * hunt for what went wrong
-       */
+       Move focus to the problem rather than leaving a screen reader user to
+       hunt for what went wrong
+      */
       document.getElementById(Object.keys(found)[0])?.focus()
       return
     }

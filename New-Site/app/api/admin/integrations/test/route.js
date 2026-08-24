@@ -52,9 +52,9 @@ export async function POST(request) {
   const submitted = body?.values && typeof body.values === 'object' ? body.values : {}
 
   /*
-   * Checked against the same whitelist the write route uses, so this endpoint
-   * cannot be handed an arbitrary key name either.
-   */
+   Checked against the same whitelist the write route uses, so this endpoint
+   cannot be handed an arbitrary key name either.
+  */
   const errors = []
   for (const [key, value] of Object.entries(submitted)) {
     const problem = validateValue(key, value)

@@ -12,6 +12,9 @@ import { HeaderSpacer } from '@/components/layout/Header'
 import QuoteForm from '@/components/forms/QuoteForm'
 import { BUSINESS_HOURS, PHONE_NUMBER, PHONE_TTY } from '@/lib/siteConfig'
 
+/**
+ * Title and description for this route.
+ */
 export async function generateMetadata({ searchParams }) {
   const params = await searchParams
   const isCallback = params?.callback === '1'

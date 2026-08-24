@@ -22,51 +22,51 @@ const appRoot = path.join(scriptDir, '..')
 const migrationsDir = path.join(appRoot, 'db', 'migrations')
 
 /*
- * Next loads .env.local automatically, plain node does not, so a script run
- * from a terminal would see no DATABASE_URL and report it as unset when it is
- * sitting right there in the file.
- *
- * Resolved against the app root rather than the working directory, so this
- * works whether it is run from New-Site or from the repository root.
- */
+ Next loads .env.local automatically, plain node does not, so a script run
+ from a terminal would see no DATABASE_URL and report it as unset when it is
+ sitting right there in the file.
+
+ Resolved against the app root rather than the working directory, so this
+ works whether it is run from New-Site or from the repository root.
+*/
 try {
   process.loadEnvFile(path.join(appRoot, '.env.local'))
 } catch {
-  /* No .env.local is normal in CI, where the variable comes from the
-     environment directly. The missing DATABASE_URL check below reports it. */
-}
+  /*
+   environment directly. The missing DATABASE_URL check below reports it. */
+   }
 
-/*================================================================================
-    MIGRATIONS ARE APPLIED, NEVER EDITED
+   /*================================================================================
+   MIGRATIONS ARE APPLIED, NEVER EDITED
 
-    Each file's contents are hashed and the hash is stored. Editing a file that
-    has already run makes the hash disagree and this refuses to continue.
+   Each file's contents are hashed and the hash is stored. Editing a file that
+   has already run makes the hash disagree and this refuses to continue.
 
-    That is not pedantry. An edited migration produces 2 databases with the
-    same version number and different schemas, and the one that is wrong is
-    always production. Fix a mistake with a new migration.
-==================================================================================*/
+   That is not pedantry. An edited migration produces 2 databases with the
+   same version number and different schemas, and the one that is wrong is
+   always production. Fix a mistake with a new migration.
+   ==================================================================================*/
 
-const LEDGER = `
-CREATE TABLE IF NOT EXISTS schema_migrations (
-  filename    VARCHAR(255) NOT NULL,
-  checksum    CHAR(64)     NOT NULL,
-  applied_at  DATETIME(3)  NOT NULL,
-  duration_ms INT          NOT NULL,
-  PRIMARY KEY (filename)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-`
+   const LEDGER = `
+   CREATE TABLE IF NOT EXISTS schema_migrations (
+   filename    VARCHAR(255) NOT NULL,
+   checksum    CHAR(64)     NOT NULL,
+   applied_at  DATETIME(3)  NOT NULL,
+   duration_ms INT          NOT NULL,
+   PRIMARY KEY (filename)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+   `
 
-/*
- * Splits a migration file into statements.
- *
- * MySQL's protocol runs one statement per call unless multipleStatements is
- * enabled, and enabling that turns every query in the process into a possible
- * injection point. Splitting here keeps that flag off.
- *
- * Comment lines are stripped first so a semicolon inside a comment does not
- * split a statement in half.
- */
+   /**
+   Splits a migration file into statements.
+
+   MySQL's protocol runs one statement per call unless multipleStatements is
+   enabled, and enabling that turns every query in the process into a possible
+   injection point. Splitting here keeps that flag off.
+
+   Comment lines are stripped first so a semicolon inside a comment does not
+   split a statement in half.
+  */
 function statements(sql) {
   return sql
     .split('\n')
@@ -97,28 +97,28 @@ async function connect() {
     try {
       const [before] = await bootstrap.query('SHOW DATABASES LIKE ?', [database])
       if (before.length === 0) {
-        /* Backtick quoted rather than parameterised, because an identifier
-           cannot be a placeholder. The backticks inside the name are stripped
-           so the quoting cannot be escaped out of. */
-        await bootstrap.query(`CREATE DATABASE \`${database.replace(/`/g, '')}\`
-          CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`)
-        console.log(`  created  database ${database}`)
-      }
-    } finally {
-      await bootstrap.end()
-    }
-  }
+        /*
+         cannot be a placeholder. The backticks inside the name are stripped
+         so the quoting cannot be escaped out of. */
+         await bootstrap.query(`CREATE DATABASE \`${database.replace(/`/g, '')}\`
+         CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`)
+         console.log(`  created  database ${database}`)
+         }
+         } finally {
+         await bootstrap.end()
+         }
+         }
 
-  return mysql.createConnection(config)
-}
+         return mysql.createConnection(config)
+         }
 
-async function run() {
-  /*
-   * --check reports what the settings resolved to without connecting. The
-   * password length is the useful part, since a 15 character password
-   * reported as 4 means a url truncated it at a special character, which is a
-   * different problem from a wrong password.
-   */
+         async function run() {
+         /*
+         --check reports what the settings resolved to without connecting. The
+         password length is the useful part, since a 15 character password
+         reported as 4 means a url truncated it at a special character, which is a
+         different problem from a wrong password.
+        */
   if (process.argv.includes('--check')) {
     console.log(describeDbConfig())
     return
@@ -179,11 +179,11 @@ async function run() {
       const started = Date.now()
 
       /*
-       * No transaction around this. MySQL commits DDL implicitly, so wrapping
-       * it would give the false impression that a half applied migration
-       * rolls back. It does not, which is why each file should do one
-       * coherent thing.
-       */
+       No transaction around this. MySQL commits DDL implicitly, so wrapping
+       it would give the false impression that a half applied migration
+       rolls back. It does not, which is why each file should do one
+       coherent thing.
+      */
       for (const statement of statements(sql)) {
         await connection.query(statement)
       }

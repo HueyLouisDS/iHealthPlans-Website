@@ -41,10 +41,10 @@ export default function OfficeStatusCta({ location, tone = 'dark' }) {
   }, [])
 
   /*
-   * Server render and first client pass. Show the neutral pair rather than
-   * nothing, so the call to action is never missing for a visitor whose
-   * JavaScript is slow or blocked.
-   */
+   Server render and first client pass. Show the neutral pair rather than
+   nothing, so the call to action is never missing for a visitor whose
+   JavaScript is slow or blocked.
+  */
   if (!status) {
     return (
       <div className="flex flex-wrap flex-col-reverse sm:flex-row items-start gap-4">
