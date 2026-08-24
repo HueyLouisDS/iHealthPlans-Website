@@ -6,22 +6,14 @@
  */
 
 /*
- Articles removed in content triage. Permanent, so search engines drop the old
- url and pass its ranking to the target rather than treating both as live.
+ Spun duplicates, the same article reworded under 2 slugs. Permanent, so
+ search engines drop the old url and pass its ranking to the survivor rather
+ than treating both as live and discounting each.
 
- The 7 Medigap pieces went because the agency sells MA, PDP and D-SNP only, so
- they pulled search traffic no agent could serve. The 3 pairs were spun
- duplicates, the same article reworded under 2 slugs.
+ The Medigap articles are NOT removed. The site goes to Spark for compliance
+ review as it stands, and the reviewer rules on what comes out.
 */
 const REMOVED_ARTICLES = [
-  ['navigating-medicare-supplement-plans', '/medicare-advantage'],
-  ['demystifying-medigap-costs-budgeting-for-comprehensive-coverage', '/medicare-advantage'],
-  ['a-deep-dive-into-medigap-plans-unraveling-the-options-for-comprehensive-coverage', '/medicare-advantage'],
-  ['understanding-medigap-a-comprehensive-guide-to-supplemental-insurance', '/medicare-advantage'],
-  ['navigating-changes-in-medigap-plans-adapting-to-your-health-needs', '/medicare-advantage'],
-  ['beyond-the-basics-additional-benefits-of-medigap-plans', '/medicare-advantage'],
-  ['navigating-medigap-options-an-in-depth-overview-of-medicare-supplement-insurance', '/medicare-advantage'],
-
   [
     'advantages-of-united-health-medicare-advantage',
     '/education/advantages-of-united-health-medicare-advantage-plans',

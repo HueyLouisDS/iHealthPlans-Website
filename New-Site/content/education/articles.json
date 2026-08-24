@@ -140,6 +140,16 @@
     "image": "/images/education/dc0462cb0254f05d336c9dd89d54c547e9a2eee1-6720x4480.jpg"
   },
   {
+    "slug": "navigating-medicare-supplement-plans",
+    "title": "Navigating Medicare Supplement Plans",
+    "description": "Medicare Supplement plans help cover healthcare costs not included in Original Medicare. Learn how to choose the right plan for your needs.",
+    "category": "Medicare Plans",
+    "categorySlug": "medicare-plans",
+    "displayDate": "27 Jun 2024",
+    "date": "2024-06-27",
+    "image": "/images/education/1dc58375d4bb401c2a8106805a82a16e974fd389-5358x3572.jpg"
+  },
+  {
     "slug": "the-benefits-of-medicare-annual-enrollment-period",
     "title": "The Benefits of Medicare Annual Enrollment Period",
     "description": "The Medicare Annual Enrollment Period allows beneficiaries to review and make changes to their coverage. Learn how to make the best decisions for your healthcare needs.",
@@ -1280,6 +1290,16 @@
     "image": "/images/education/2fdad5ec89cd0238044dce8b7481882a6098cf8b-6240x4160.jpg"
   },
   {
+    "slug": "demystifying-medigap-costs-budgeting-for-comprehensive-coverage",
+    "title": "Demystifying Medigap Costs: Budgeting for Comprehensive Coverage",
+    "description": "The article explores financial aspects of Medigap plans, discussing premiums, out-of-pocket costs, factors affecting costs, and budgeting strategies.",
+    "category": "Medigap (Medicare Supplement Insurance) Options",
+    "categorySlug": "medigap-medicare-supplement-insurance-options",
+    "displayDate": "11 Dec 2023",
+    "date": "2023-12-11",
+    "image": "/images/education/6c926469d3bd94a9daab372a52955ce7e8d460b9-6995x4997.jpg"
+  },
+  {
     "slug": "the-role-of-insurance-in-long-term-care-planning",
     "title": "The Role of Insurance in Long-Term Care Planning",
     "description": "Insurance is vital in long-term care planning, providing financial stability, peace of mind, and access to care options.",
@@ -1338,6 +1358,16 @@
     "displayDate": "28 Nov 2023",
     "date": "2023-11-28",
     "image": "/images/education/3e605b8d000427ce158ecd4b7f88912b87dd81ba-5641x3753.jpg"
+  },
+  {
+    "slug": "a-deep-dive-into-medigap-plans-unraveling-the-options-for-comprehensive-coverage",
+    "title": "A Deep Dive into Medigap Plans: Unraveling the Options for Comprehensive Coverage",
+    "description": "Explore Medigap plans' diversity, understand each plan's coverage, compare them, consider future health needs, and additional benefits.",
+    "category": "Medigap (Medicare Supplement Insurance) Options",
+    "categorySlug": "medigap-medicare-supplement-insurance-options",
+    "displayDate": "23 Nov 2023",
+    "date": "2023-11-23",
+    "image": "/images/education/5fa1b9249156c719f89ac14e345cd2b9a6bcceee-4272x2856.jpg"
   },
   {
     "slug": "adaptive-medication-management-navigating-formulary-adjustments-and-preferred-pharmacies",
@@ -1470,6 +1500,16 @@
     "image": "/images/education/0876b0f2005cdc061be5d465f33343c235958166-8192x5464.jpg"
   },
   {
+    "slug": "understanding-medigap-a-comprehensive-guide-to-supplemental-insurance",
+    "title": "Understanding Medigap: A Comprehensive Guide to Supplemental Insurance",
+    "description": "Medigap is a private insurance supplementing Medicare, covering out-of-pocket expenses and specific healthcare costs.",
+    "category": "Medicare Insurance",
+    "categorySlug": "medicare-insurance",
+    "displayDate": "06 Nov 2023",
+    "date": "2023-11-06",
+    "image": "/images/education/218feb89f63876eda18d5a5ac0d25faf0747fae6-5660x3763.jpg"
+  },
+  {
     "slug": "efficient-medication-management-tips-for-prescription-drug-coverage",
     "title": "Efficient Medication Management: Tips for Prescription Drug Coverage",
     "description": "Efficient medication management involves organization, collaboration, informed decisions, proactive engagement, and use of MTM programs.",
@@ -1498,6 +1538,26 @@
     "displayDate": "24 Oct 2023",
     "date": "2023-10-24",
     "image": "/images/education/695199f8326436c202db8979a79d469322772815-4800x2700.jpg"
+  },
+  {
+    "slug": "navigating-changes-in-medigap-plans-adapting-to-your-health-needs",
+    "title": "Navigating Changes in Medigap Plans: Adapting to Your Health Needs",
+    "description": "The article discusses the dynamic nature of health needs, Medigap plans, enrollment periods, life events, and the importance of proactive planning.",
+    "category": "Medigap (Medicare Supplement Insurance) Options",
+    "categorySlug": "medigap-medicare-supplement-insurance-options",
+    "displayDate": "23 Oct 2023",
+    "date": "2023-10-23",
+    "image": "/images/education/712591df420962f858e2eba20fe719af65486a59-8192x5464.jpg"
+  },
+  {
+    "slug": "beyond-the-basics-additional-benefits-of-medigap-plans",
+    "title": "Beyond the Basics - Additional Benefits of Medigap Plans",
+    "description": "Medigap plans offer additional benefits like wellness programs and vision care, enhancing overall healthcare experience for beneficiaries.",
+    "category": "Medigap (Medicare Supplement Insurance) Options",
+    "categorySlug": "medigap-medicare-supplement-insurance-options",
+    "displayDate": "21 Oct 2023",
+    "date": "2023-10-21",
+    "image": "/images/education/ded779f25e2492b1cdd5092da75d074bb936a6e6-6016x3384.jpg"
   },
   {
     "slug": "the-impact-of-telehealth-on-medicare-advantages-and-coverage-considerations",
@@ -1588,6 +1648,16 @@
     "displayDate": "09 Oct 2023",
     "date": "2023-10-09",
     "image": "/images/education/69cb76b9bba934ac6d994e00af56b1782d9f3203-5976x3281.jpg"
+  },
+  {
+    "slug": "navigating-medigap-options-an-in-depth-overview-of-medicare-supplement-insurance",
+    "title": "Navigating Medigap Options: An In-Depth Overview of Medicare Supplement Insurance",
+    "description": "This article explores Medigap, its importance, how to tailor it to individual needs, understanding plan types, comparing costs, and choosing providers.",
+    "category": "Medigap (Medicare Supplement Insurance) Options",
+    "categorySlug": "medigap-medicare-supplement-insurance-options",
+    "displayDate": "08 Oct 2023",
+    "date": "2023-10-08",
+    "image": "/images/education/7e374694d1e729ade7c946b67ad24d1f02e8eb02-5692x3747.jpg"
   },
   {
     "slug": "telehealth-and-mental-health-bridging-gaps-in-access-to-care",
