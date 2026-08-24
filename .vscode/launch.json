@@ -1,0 +1,80 @@
+{
+  // Every config sets cwd to New-Site. VS Code opens the repository root but
+  // the app lives one level down, which is what makes the stock Next.js
+  // debugging recipes fail in this repo.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Breakpoints in server components, route handlers, lib/, middleware,
+      // and auth.js. Anything without 'use client' at the top.
+      "name": "Next: server side",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/New-Site"
+    },
+    {
+      // Breakpoints in the interactive pieces, TrendChart, TopSources,
+      // FilterPanel, SelectableTable, SnapFocus, QuoteForm. Start the server
+      // config first, this one only attaches a browser to it.
+      "name": "Next: client side",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/New-Site"
+    },
+    {
+      // Both at once. Use this if you are not sure which side a bug is on,
+      // which is most of the time with a server component rendering a client
+      // one.
+      "name": "Next: full stack",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/New-Site/node_modules/next/dist/bin/next",
+      "args": ["dev"],
+      "cwd": "${workspaceFolder}/New-Site",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
+    },
+    {
+      // Reads New-Site/.env.local itself, so no envFile needed here. Change
+      // args to [] to actually apply migrations rather than list them.
+      "name": "Script: migrate --status",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/New-Site/scripts/migrate.mjs",
+      "cwd": "${workspaceFolder}/New-Site",
+      "args": ["--status"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      // Stepping through the CSV parser and the header mapping beats
+      // console.log when a carrier export does something unexpected. Point
+      // args at real files when you have them.
+      "name": "Script: importBook",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/New-Site/scripts/importBook.mjs",
+      "cwd": "${workspaceFolder}/New-Site",
+      "args": ["aetna=./sample.csv"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      // Attaches to a dev server already running in a terminal, rather than
+      // starting a second one. Start it with:
+      //   node --inspect node_modules/next/dist/bin/next dev
+      "name": "Next: attach to running dev server",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
