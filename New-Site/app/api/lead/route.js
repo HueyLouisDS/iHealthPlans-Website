@@ -21,6 +21,8 @@
     lead row, where the agency can see it and the public cannot.
 =============================================*/
 
+import { randomUUID } from 'node:crypto'
+
 import { validateLead, normaliseLead, redactLead } from '@/lib/leads/schema'
 import { insertLead, recordPushOutcome } from '@/lib/db/queries/leads'
 import { pushLead, OUTCOMES } from '@/lib/integrations/tldPost'
@@ -70,16 +72,14 @@ export async function POST(request) {
    */
 
   /*
-   * Stored before the push and independently of it. If TLD is unreachable the
-   * lead is still ours, still queryable, and still recoverable by the
-   * reconciliation sweep. The reverse order would lose a submission whenever
-   * the database write failed after a successful push.
-   */
-  /*
-   * Minted here rather than by the insert, so the push carries a tracking_id
-   * even when storage fails. A lead that reached TLD with no id on it can
-   * never be tied back to a session, and that is precisely the case where
-   * something has already gone wrong and the trail matters most.
+   * Stored before the push and independently of it, so an unreachable TLD
+   * cannot lose a submission. The reverse order would drop a lead whenever the
+   * database write failed after a successful push.
+   *
+   * The id is minted here rather than by the insert, so the push carries a
+   * tracking_id even when storage fails. A lead reaching TLD with no id on it
+   * can never be tied back, and that is exactly the case where something has
+   * already gone wrong and the trail matters most.
    */
   const leadId = randomUUID()
 
@@ -95,7 +95,7 @@ export async function POST(request) {
     console.error('[lead] could not store lead %s: %s', leadId, cause.message)
   }
 
-  await deliver(lead, leadId)
+  await deliver(lead, leadId, stored)
 
   return Response.json({ status: 'received' }, { status: 202 })
 }
@@ -107,7 +107,7 @@ export async function POST(request) {
  * seconds and never throws, so the worst case is a slow form rather than a
  * lost push, and a floating promise would not survive the process restarting.
  */
-async function deliver(lead, leadId) {
+async function deliver(lead, leadId, stored) {
   const result = await pushLead({ ...lead, leadId })
 
   if (result.outcome === OUTCOMES.suppressed) {
@@ -123,7 +123,7 @@ async function deliver(lead, leadId) {
   }
 
   try {
-    await recordPushOutcome(leadId, result)
+    if (stored) await recordPushOutcome(leadId, result)
   } catch (cause) {
     console.error('[lead] could not record push outcome:', cause.message)
   }
