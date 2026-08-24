@@ -13,41 +13,28 @@ import { dialerPostConfig } from '@/lib/integrations/config'
 
 /*
  * TLD requires vendor_id and post_key as URL parameters even on a POST, so the
- * credential cannot be moved into a header where it belongs.
+ * credential cannot live in a header. Query strings reach access logs, proxy
+ * logs, referrer headers and error reports.
  *
- * Query strings end up in access logs, proxy logs, referrer headers, and error
- * reports, none of which are places a credential should be. Three rules hold
- * it in:
+ *   Server only, enforced by the import above.
+ *   Never log the url. Built at the call site, never held.
+ *   Never log the payload. Beneficiary PII and consent text.
  *
- *   1. Server only. The `import 'server-only'` above makes the build fail if a
- *      client component reaches this module through any chain of imports.
- *   2. Never log the url. postUrl() builds it fresh at the call site and it is
- *      never stored, returned, or included in an error.
- *   3. Never log the payload. It carries beneficiary PII and consent text.
- *
- * The Results Log url documented alongside this endpoint carries the same key
- * and returns the last 100 leads with full debugging data. It is deliberately
- * not implemented here. Anything that fetched it would be pulling real
- * beneficiary records into this process for no reason the site has.
+ * The Results Log url carries the same key and returns the last 100 leads with
+ * full debugging data. Not implemented here on purpose.
  */
 
 const REQUEST_TIMEOUT_MS = 8000          // a form submit cannot wait longer than this
 const MAX_FIELD_LENGTH = 500             // guard against a pathological value, not a TLD limit
 
 /*=======================================================
-        RESPONSE CODES, AND WHY THE BUCKET MATTERS
+        RESPONSE CODES
 ========================================================*/
 
 /*
- * TLD answers with a bare integer as text, not JSON. 1 through 16 are all
- * success, and the rest are failures spread across very different causes.
- *
- * They are bucketed rather than kept as a flat list because the code alone
- * does not tell you what to do. A duplicate means the person is already in the
- * system and somebody may already be working them. A suppression means never
- * call this person. A config failure means our own credentials are wrong and
- * every lead is being dropped. Treating those three the same is how a broken
- * integration looks like a quiet week.
+ * TLD answers with a bare integer as text, not JSON. 1 to 16 are success, the
+ * rest are failures with unrelated causes, so they are bucketed by what the
+ * caller should do about them rather than kept flat.
  */
 const OUTCOMES = {
   accepted: 'accepted',                  // 1-16, created or matched an existing lead
@@ -61,12 +48,9 @@ const OUTCOMES = {
 }
 
 /*
- * The suppression codes, listed explicitly rather than as a range.
- *
- * This is the one bucket with a legal consequence attached, so it is worth
- * being able to read the exact set at a glance rather than trusting that a
- * range still means what it meant when it was written. Anything landing here
- * must not be called, regardless of the fact that they filled in our form.
+ * Listed explicitly rather than as a range. This is the bucket with a legal
+ * consequence, so the exact set has to be readable at a glance. Anything
+ * landing here must not be called, form submission or not.
  */
 const SUPPRESSED_CODES = new Set([
   200,                                   // TLDialer DNC list
@@ -124,16 +108,12 @@ export { OUTCOMES }
 ========================================================*/
 
 /*
- * Our field on the left, the TLD post field on the right.
+ * Our field on the left, the TLD post field on the right. A table so adding a
+ * field is one row here and no change to the push logic.
  *
- * A table rather than an inline object literal so that adding a field once the
- * live vendor exists is one row here and no change to the push logic.
- *
- * `custom: true` marks a field that does not exist on the account yet. Those
- * are skipped silently rather than posted, because TLD filters unrecognised
- * keys without error, and a field that is silently dropped looks identical to
- * a field that worked. Flip custom to false as each one is created on the
- * vendor source.
+ * `custom: true` means the field does not exist on the account yet, so it is
+ * withheld. TLD drops unrecognised keys without erroring, which would look
+ * identical to the field working. Flip to false as each one is created.
  */
 const FIELD_MAP = [
   /* Person. The only genuinely required part, TLD needs a phone or an email. */
@@ -146,9 +126,8 @@ const FIELD_MAP = [
   { from: 'bestTime', to: 'contact_time' },
 
   /*
-   * Identity. tracking_id is the join key and the single most important field
-   * in this map. The post response does not return a TLD lead id, so this is
-   * how our record and theirs are tied back together during the read sync.
+   * The post response carries no TLD lead id, so tracking_id is how our record
+   * and theirs are tied together during the read sync. The join key.
    */
   { from: 'leadId', to: 'tracking_id' },
   { from: 'visitorId', to: 'reference_id' },
@@ -179,10 +158,8 @@ const FIELD_MAP = [
 /**
  * Converts our stored E.164 number to the 10 digits TLD expects.
  *
- * TLD strips non numeric characters and truncates to 10 from the right, so
- * +15551234567 would survive being sent as is. It is converted here anyway
- * rather than relying on that, because their truncation is right to left and a
- * number that ever arrived with an extension or a stray digit would silently
+ * TLD would strip and truncate this itself, but its truncation runs right to
+ * left, so a number carrying an extension or a stray digit would silently
  * become a different phone number.
  */
 function toTenDigits(value) {
@@ -202,12 +179,9 @@ function readPath(source, path) {
 /**
  * Formats the consent record as a note an agent can read on screen.
  *
- * Consent goes in a note rather than a field because TLD has no consent field
- * and notes are visible in the agent interface. A consent record the person
- * placing the call cannot see is not doing the job it exists for.
- *
- * The authoritative copy stays in our lead_consents table with its hash. This
- * is the readable duplicate, not the evidence.
+ * A note rather than a field because TLD has none, and notes render in the
+ * agent interface where the person placing the call can see them. The
+ * authoritative hashed copy stays in lead_consents. This is the readable one.
  */
 function consentNote(consent) {
   if (!consent) return null
@@ -227,13 +201,10 @@ function consentNote(consent) {
 /**
  * Builds the form encoded body from a lead.
  *
- * Form encoded rather than JSON, although TLD accepts both. Every value TLD
- * takes is a string or a 0/1, and form encoding makes that literal. A JSON body
- * invites a number or a boolean to be sent where their parser wants text.
+ * Form encoded rather than JSON, though TLD takes both. Every value it accepts
+ * is a string or a 0/1, and form encoding makes that literal.
  *
- * Exported so the mapping can be checked without posting anything, which
- * matters while the field names are still being confirmed against a real
- * vendor source.
+ * Exported so the mapping can be checked without posting anything.
  */
 export function buildPayload(lead) {
   const body = new URLSearchParams()      // form encoded, every value a string
@@ -252,11 +223,9 @@ export function buildPayload(lead) {
   }
 
   /*
-   * The consent note is set outside the map because it is assembled from 5
-   * fields rather than read from one, and because it is deliberately not
-   * truncated. A partial quote of a disclosure proves nothing, so if it is
-   * ever too long to send that has to surface as a failure rather than as a
-   * quietly shortened record.
+   * Outside the map because it is assembled from 5 fields, and because it is
+   * not truncated. A partial quote of a disclosure proves nothing, so an
+   * oversized one has to fail rather than be quietly shortened.
    */
   const note = consentNote(lead.consent)
   if (note) body.set('note1_note', note)
@@ -271,10 +240,9 @@ export function buildPayload(lead) {
 /**
  * Sends one lead to TLD.
  *
- * Never throws. The lead is already stored on our side by the time this runs,
- * so a TLD failure is a delivery problem to be recorded and retried, not a
- * reason to fail the form and tell somebody their submission did not go
- * through when it did.
+ * Never throws. The lead is stored on our side before this runs, so a TLD
+ * failure is a delivery problem to record, not a reason to tell somebody their
+ * submission failed when it did not.
  *
  * Returns { outcome, code, raw, error } for the caller to write to
  * leads.pushed_at and leads.push_error.
@@ -310,16 +278,11 @@ export async function pushLead(lead) {
     })
   } catch (cause) {
     /*
-     * Deliberately not retried here.
+     * Not retried. A timeout does not say whether the lead landed, and dupe
+     * handling is per vendor, so a blind retry either duplicates or is
+     * rejected and we cannot tell which. Duplicating means a second dial.
      *
-     * A timeout does not tell you whether the lead landed. TLD's duplicate
-     * handling is configured per vendor, so a blind retry either creates a
-     * second record or is rejected as a dupe, and we cannot tell which without
-     * knowing that vendor's settings. The wrong outcome gets somebody called
-     * twice about their Medicare plan.
-     *
-     * So the failure is recorded and the read sync reconciles it, matching on
-     * tracking_id. Slower, and it cannot double dial.
+     * The read sync reconciles on tracking_id instead.
      */
     return {
       outcome: OUTCOMES.transient,
@@ -340,9 +303,8 @@ export async function pushLead(lead) {
   }
 
   /*
-   * The documented response format is TEXT, a bare integer. Parsed leniently
-   * because a proxy or a future change could wrap it in whitespace, and
-   * failing to read a success as a success would push a duplicate next run.
+   * Documented as TEXT, a bare integer. Parsed leniently because a proxy could
+   * wrap it in whitespace, and misreading a success sends a duplicate next run.
    */
   const raw = (await response.text()).trim()
   const code = Number.parseInt(raw, 10)

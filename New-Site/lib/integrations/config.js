@@ -5,26 +5,16 @@ import 'server-only'
  */
 
 /*================================================================================
-    WHY THE FIRST LINE OF THIS FILE IS `import 'server-only'`
+    SERVER ONLY, DO NOT REMOVE LINE 1
 
-    It makes the build fail if any client component imports this module, even
-    indirectly through a chain of imports. That is a compile time guarantee
-    rather than a convention somebody has to remember, and it is the only thing
-    standing between an api key and a browser bundle.
+    `import 'server-only'` fails the build if a client component imports this
+    module through any chain of imports. It is the only compile time guard
+    between an api key and a browser bundle. Do not re-export anything from
+    here through a file a client component can reach.
 
-    Do not remove it, and do not re-export anything from here through a file
-    that a client component can reach.
-
-    Three further rules hold these secrets in:
-
-      1. Never NEXT_PUBLIC_. Anything with that prefix is substituted into the
-         JavaScript sent to the browser, where it is readable by anyone with
-         developer tools. assertNoPublicSecrets below refuses to let the app
-         start if one is set.
-      2. Never logged. describe() exists so a health check can say whether a
-         key is present without ever saying what it is.
-      3. Never in an error. A thrown request error can carry the config that
-         produced it, so nothing here puts the key in a message.
+    Never NEXT_PUBLIC_, assertNoPublicSecrets below enforces it.
+    Never logged, describe() reports presence without the value.
+    Never in an error message.
 ==================================================================================*/
 
 /*
@@ -142,7 +132,7 @@ export function integrationConfig(prefix, { label } = {}) {
   }
 }
 
-/**
+/*
  * A view of a config that is safe to render, log, or screenshot.
  *
  * The key is reported as present or absent and never shown, not even
@@ -161,7 +151,7 @@ export function describe(config) {
   }
 }
 
-/**
+/*
  * Authorization headers for an outbound request.
  *
  * Here rather than at each call site so there is one place that knows how the
@@ -183,39 +173,18 @@ export function authHeaders(config) {
 }
 
 /*=============================================
-    THE DIALER IS TLDIALER, AND LIONSHEAD ALREADY SPEAKS IT
+    TLD REFERENCE
 
-    Everything this file needs to know about TLD came from the LionsHead
-    interpreter rather than from guesswork:
+    base url        https://<tenant>.tldcrm.com
+    auth            tld-api-id and tld-api-key headers
+    response shape  results live at response.results
+    leads endpoint  requires a date range, unlike the others
+    rate limit      none
 
-      base url        https://<tenant>.tldcrm.com
-      auth            tld-api-id and tld-api-key headers
-      response shape  results live at response.results
-      leads endpoint  requires a date range, unlike the others
+    No rate limit means the cost is payload size, not requests per second.
+    Narrow the columns on a big pull rather than pacing the calls.
 
-    TLD imposes no rate limit. The token bucket and the 100000 query limit in
-    the LionsHead interpreter are its own settings, picked for throughput
-    rather than to satisfy anything on TLD's side, so do not read them here as
-    platform constraints.
-
-    That moves the cost from requests per second to payload size. A 100000 row
-    response is a large body to hold in memory and move across the wire, so the
-    lever on a big pull is narrowing the columns rather than pacing the calls.
-
-    Before writing a TLD client in this repo, settle whether the website
-    should be talking to TLD at all. LionsHead is a python library with a
-    working interpreter, rate limiter, pagination, and payload mapping. A
-    second client here would duplicate all of it and drift the moment TLD
-    changes anything.
-
-    The 3 options, in the order I would rank them:
-
-      1. LionsHead syncs TLD into a shared database and this app reads it.
-         No duplicate client, and the admin pages stay fast because they are
-         not waiting on somebody else's api.
-      2. LionsHead grows a small http surface and this app calls that.
-      3. This app talks to TLD directly. Only worth it if the website needs
-         something LionsHead will never carry.
+    The vendor post endpoint authenticates differently, see dialerPostConfig.
 =============================================*/
 
 /**
