@@ -40,6 +40,17 @@ export const INTEGRATIONS = [
       'Write only, and not interchangeable with the CRM API key above.',
     fields: [
       { key: 'LH_VENDOR_POST_URL', label: 'Post url', placeholder: 'https://ihp.tldcrm.com/post' },
+      /*
+       * Optional. The post works without it, so a missing results url does not
+       * mark the vendor unconfigured. It is the debug view of the last 100
+       * posts, which is how you confirm a field mapping actually landed.
+       */
+      {
+        key: 'LH_VENDOR_RESULTS_URL',
+        label: 'Results log url',
+        placeholder: 'https://ihp.tldcrm.com/public/vendors',
+        optional: true,
+      },
       { key: 'LH_VENDOR_ID', label: 'Vendor id', placeholder: '15781' },
       { key: 'LH_VENDOR_POST_KEY', label: 'Post key', secret: true },
     ],
@@ -51,7 +62,7 @@ export const WRITABLE_KEYS = new Set(
   INTEGRATIONS.flatMap((integration) => integration.fields.map((field) => field.key))
 )
 
-/**
+/*
  * Checks one submitted value.
  *
  * The newline rule is the important one. A value carrying a line break would

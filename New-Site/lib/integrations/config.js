@@ -219,6 +219,19 @@ export function vendorConfig() {
     'LH_VENDOR_POST_URL'
   )
 
+  /*
+   * The results log, which reads the last 100 posts back. Same vendor id and
+   * same post key as the write, only the path differs, so it is a url and not
+   * a second credential.
+   *
+   * Not counted in problems. The post works without it, and marking the whole
+   * vendor unconfigured over a debug url would stop leads going out.
+   */
+  const { url: resultsUrl } = normaliseBaseUrl(
+    process.env.LH_VENDOR_RESULTS_URL,
+    'LH_VENDOR_RESULTS_URL'
+  )
+
   const vendorId = String(process.env.LH_VENDOR_ID || '').trim()
   const postKey = String(process.env.LH_VENDOR_POST_KEY || '').trim()
 
@@ -232,6 +245,7 @@ export function vendorConfig() {
     name: 'vendor',
     label: 'Vendor',
     postUrl,
+    resultsUrl,
     vendorId,
     postKey,
     isConfigured: problems.length === 0,
@@ -252,6 +266,7 @@ export function describeVendor(config) {
     label: config.label,
     isConfigured: config.isConfigured,
     postUrl: config.postUrl,
+    resultsUrl: config.resultsUrl,
     vendorId: config.vendorId || null,
     hasPostKey: Boolean(config.postKey),
     problems: config.problems,
