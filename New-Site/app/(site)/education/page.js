@@ -1,9 +1,7 @@
-/**
- * Education index, /education. Lists the 170 articles 13 at a time, filtered by
- * an optional ?category= and paged by an optional ?page=.
- * Both are read on the server, so every filtered and paged view is a real url
- * with its own crawlable, shareable, reportable page.
- */
+// Education index, /education. Lists the 170 articles 13 at a time, filtered by
+// an optional ?category= and paged by an optional ?page=.
+// Both are read on the server, so every filtered and paged view is a real url
+// with its own crawlable, shareable, reportable page.
 
 import { HeaderSpacer } from '@/components/layout/Header'
 import CategoryFilter from '@/components/education/CategoryFilter'
@@ -13,11 +11,6 @@ import Pagination from '@/components/education/Pagination'
 import ZipCta from '@/components/marketing/ZipCta'
 import { getArticlePage, getCategories, getCategory } from '@/lib/content/education'
 
-/**
- * Page title and description, which change with the active category.
- * Without this every one of the 10 filter views would share one title, and
- * search engines would treat them as duplicates of each other.
- */
 export async function generateMetadata({ searchParams }) {
   const params = await searchParams
   const category = params?.category ? getCategory(params.category) : null
@@ -35,12 +28,6 @@ export async function generateMetadata({ searchParams }) {
   }
 }
 
-/**
- * Renders the index.
- * The first row is deliberately not a uniform grid. 1 featured article with an
- * image spans 2 columns, and 3 text only links stack beside it, which is what
- * lets the page open with 4 articles instead of 1.
- */
 export default async function EducationPage({ searchParams }) {
   const params = await searchParams
   const categorySlug = params?.category || null
@@ -52,11 +39,6 @@ export default async function EducationPage({ searchParams }) {
     categorySlug: activeCategory ? categorySlug : null,
     page: requestedPage,
   })
-
-  /*
-   Slot 1 is the featured card, slots 2 to 4 are the compact column, and
-   everything after that fills the standard grid below.
-  */
   const [featured, ...rest] = articles
   const compact = rest.slice(0, 3)
   const remaining = rest.slice(3)

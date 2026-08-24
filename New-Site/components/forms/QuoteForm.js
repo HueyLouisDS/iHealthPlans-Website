@@ -1,24 +1,4 @@
 'use client'
-
-/**
- * The site's main lead capture form. Posts to /api/lead.
- *
- * Two modes, driven by the ?callback=1 parameter that OfficeStatusCta sends
- * when the phone line is shut. The fields are the same either way, only the
- * framing changes, because a visitor who arrives out of hours needs to be told
- * when they will actually be contacted rather than left to assume.
- *
- * Field choices, all of them for the 65+ and appointed representative audience:
- *   - 5 fields, no more. Every additional field is another chance to abandon.
- *   - No email. Older users mistype it, you are phoning them anyway, and
- *     requiring it costs completions for a channel nobody will use.
- *   - "Best time to call" earns its place. It cuts failed callbacks and it is
- *     genuinely useful to the agent picking up the record.
- *   - "Who is this for" tells the agent how to open the call, and separates
- *     the beneficiary from the adult child in reporting. Those two convert
- *     very differently and collapsing them hides it.
- */
-
 import { useState } from 'react'
 import Image from 'next/image'
 import FloatingLabelInput from '@/components/forms/FloatingLabelInput'
@@ -38,22 +18,12 @@ const ON_BEHALF_OPTIONS = [
   { value: 'other', label: 'A parent or family member' },
 ]
 
-/**
- * Validates before anything is sent.
- * The same rules run again server side, because this check is trivially
- * bypassed and a form is not a security boundary.
- */
 function validate(values) {
   const errors = {}
 
   if (!/^[0-9]{5}$/.test(values.zip.trim())) errors.zip = 'Please enter your 5 digit zip code.'
   if (!values.firstName.trim()) errors.firstName = 'Please enter your first name.'
   if (!values.lastName.trim()) errors.lastName = 'Please enter your last name.'
-
-  /*
-   Deliberately loose. Real numbers arrive with brackets, dashes, and country
-   codes, and rejecting those loses leads for no benefit.
-  */
   if (values.phone.replace(/[^0-9]/g, '').length < 10) {
     errors.phone = 'Please enter a phone number we can reach you on.'
   }
@@ -63,11 +33,6 @@ function validate(values) {
   return errors
 }
 
-/**
- * Radio group styled as large tappable cards.
- * Cards rather than native radios because a 16px radio dot is a poor target
- * for anyone with unsteady hands, and the whole card is clickable here.
- */
 function ChoiceGroup({ legend, name, options, value, onChange, error }) {
   return (
     <fieldset className="w-full">
@@ -103,16 +68,7 @@ function ChoiceGroup({ legend, name, options, value, onChange, error }) {
   )
 }
 
-/**
- * Renders the form, or the confirmation once a lead has been accepted.
- * `isCallback` only changes wording, never which fields are collected.
- */
 export default function QuoteForm({ isCallback = false, initialZip = '' }) {
-  /*
-   Prefilled from the zip a visitor typed into the closing call to action.
-   Sanitised here as well as on the way in, since it arrives from a query
-   string and anything can put anything in one.
-  */
   const [values, setValues] = useState({
     ...EMPTY,
     zip: /^[0-9]{5}$/.test(initialZip) ? initialZip : '',
@@ -120,10 +76,6 @@ export default function QuoteForm({ isCallback = false, initialZip = '' }) {
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('editing')
 
-  /**
-   * Updates one field and clears its error, so a message disappears as soon as
-   * the visitor starts fixing it rather than on the next submit.
-   */
   function handleChange(field) {
     return (eventOrValue) => {
       const next = typeof eventOrValue === 'string' ? eventOrValue : eventOrValue.target.value
@@ -132,23 +84,12 @@ export default function QuoteForm({ isCallback = false, initialZip = '' }) {
     }
   }
 
-  /**
-   * Validates, posts, and moves to the confirmation.
-   * TODO include the visitorId and sessionId in the body once lib/attribution
-   * exists, so a lead can be traced to the traffic that produced it. Also send
-   * the consent text version actually shown, since proving what somebody
-   * agreed to on the day is the entire point of capturing consent.
-   */
   async function handleSubmit(event) {
     event.preventDefault()
 
     const found = validate(values)
     setErrors(found)
     if (Object.keys(found).length > 0) {
-      /*
-       Move focus to the problem rather than leaving a screen reader user to
-       hunt for what went wrong
-      */
       document.getElementById(Object.keys(found)[0])?.focus()
       return
     }

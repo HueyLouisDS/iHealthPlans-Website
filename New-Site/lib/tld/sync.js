@@ -18,22 +18,12 @@ import {
         THE SHRINK GUARD
 ========================================================*/
 
-/*
- A full pull that comes back materially smaller than the last one is refused
- rather than written. A truncated response, a silently expired key, or a
- changed default page size all produce the same thing, fewer rows, and
- writing them looks exactly like a quiet week rather than a broken sync.
-
- Only applies to full pulls with an established baseline. An incremental pull
- is expected to be small, and the first run of anything has nothing to
- compare against.
-*/
 const SHRINK_TOLERANCE = 0.9            // a full pull may lose up to 10% before it is refused
 
-/* How far back an incremental pull reaches when there is no cursor yet */
+// How far back an incremental pull reaches when there is no cursor yet
 const INITIAL_LOOKBACK_DAYS = 90
 
-/* Overlap on every incremental pull, so a row written during the last run is not missed */
+// Overlap on every incremental pull, so a row written during the last run is not missed
 const CURSOR_OVERLAP_MINUTES = 30
 
 /*=======================================================
@@ -44,34 +34,15 @@ const CURSOR_OVERLAP_MINUTES = 30
  From TLD's own posting instructions: "Any and all Date Time formatted fields
  will be converted to the accounts default timezone: US/Eastern."
 
- So a datetime arriving with no zone marker is Eastern, not UTC and not
- whatever the server happens to be set to. Handing that string straight to
- `new Date()` parses it as local time, which shifts every timestamp by the
- server's offset and makes the same pull produce different rows on a
- developer laptop and on the host.
-
- That would not throw and would not look wrong. It would just move every call
- a few hours, so no call would ever fall inside the window a click is matched
- against, and the attribution rate would sit at zero with nothing to explain
- it.
-
  TODO confirm with --inspect whether TLD sends a zone marker. If it does, the
  explicit branch below already handles it and this constant stops mattering.
 */
 const TLD_TIMEZONE = 'America/New_York'
 
-/* A datetime with no trailing Z and no numeric offset */
+// A datetime with no trailing Z and no numeric offset
 const NAIVE_DATETIME = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/
 const HAS_EXPLICIT_ZONE = /([Zz]|[+-]\d{2}:?\d{2})$/
 
-/**
- * The offset in minutes that a timezone was at a given instant.
- *
- * Computed through Intl rather than hardcoded, so it is correct on both sides
- * of a daylight saving change. A fixed -5 would put every summer call an hour
- * out, which is small enough to survive review and large enough to break a
- * 15 minute match window.
- */
 function zoneOffsetMinutes(date, timeZone) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone,
@@ -86,16 +57,12 @@ function zoneOffsetMinutes(date, timeZone) {
 
   const at = (type) => Number(parts.find((part) => part.type === type).value)
 
-  /* What the wall clock read there, expressed as if it were UTC */
+  // What the wall clock read there, expressed as if it were UTC
   const asUtc = Date.UTC(at('year'), at('month') - 1, at('day'), at('hour') % 24, at('minute'), at('second'))
 
   return (asUtc - date.getTime()) / 60000
 }
 
-/**
- * Formats a date for MySQL DATETIME(3), converting from TLD's zone when the
- * value does not carry one of its own.
- */
 function toMysqlDateTime(value) {
   if (!value) return null
 
@@ -106,7 +73,7 @@ function toMysqlDateTime(value) {
   const text = String(value).trim()
   if (!text) return null
 
-  /* Carries its own zone, so Date reads it correctly and no guessing is needed */
+  // Carries its own zone, so Date reads it correctly and no guessing is needed
   if (HAS_EXPLICIT_ZONE.test(text)) {
     const parsed = new Date(text)
     return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().replace('T', ' ').replace('Z', '')
@@ -114,18 +81,11 @@ function toMysqlDateTime(value) {
 
   const match = NAIVE_DATETIME.exec(text)
   if (!match) {
-    /* A bare date, no time. Stored as written, since a date has no zone. */
+    // A bare date, no time. Stored as written, since a date has no zone.
     return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : null
   }
 
   const [, year, month, day, hour, minute, second = '00'] = match
-
-  /*
-   Read as if the wall clock reading were UTC, then shifted by the offset
-   that zone was actually at. Two passes because the offset itself depends on
-   the instant, and the first guess is close enough to land on the right side
-   of any daylight saving boundary.
-  */
   const naive = Date.UTC(+year, +month - 1, +day, +hour, +minute, +second)
   const firstGuess = new Date(naive - zoneOffsetMinutes(new Date(naive), TLD_TIMEZONE) * 60000)
   const corrected = new Date(naive - zoneOffsetMinutes(firstGuess, TLD_TIMEZONE) * 60000)
@@ -139,30 +99,14 @@ function toMysqlDateTime(value) {
         AN UNREADABLE DNC FLAG MEANS DO NOT CALL
 ========================================================*/
 
-/*
- TLD sends these as 1/0, Y/N, or true/false depending on the field, so all 3
- are recognised. The question is what to do with a 4th spelling nobody
- anticipated.
-
- For is_dnc the answer is suppress. Reading an unrecognised value as "not on
- the list" means somebody who asked not to be called gets called, and that is
- a complaint and a fine. Reading it as "on the list" costs one lead that a
- person can put back by hand.
-
- The other flags go the other way. counts_as_conversion defaulting to true on
- a value nobody understood would inflate every conversion number on the
- dashboard, which is the opposite of useful.
-*/
 const TRUE_VALUES = new Set(['1', 'y', 'yes', 'true', 't'])
 const FALSE_VALUES = new Set(['0', 'n', 'no', 'false', 'f'])
 
-/* Columns where an unrecognised value is resolved to 1 rather than 0 */
+// An unrecognised DNC value suppresses. Reading it as callable dials someone
+// who asked not to be. The other flags go to 0, so a bad value cannot inflate
+// the conversion numbers.
 const FAIL_SUPPRESSED = new Set(['is_dnc'])
 
-/**
- * Reads a TLD flag, resolving anything unrecognised in the safe direction for
- * that particular column.
- */
 function toBoolean(raw, column) {
   const text = String(raw).trim().toLowerCase()
 
@@ -172,12 +116,6 @@ function toBoolean(raw, column) {
   return FAIL_SUPPRESSED.has(column) ? 1 : 0
 }
 
-/**
- * Turns one TLD row into one row for our table.
- *
- * Missing fields become null rather than being skipped, so every row in a
- * batch has the same shape and a single insert statement covers all of them.
- */
 function mapRow(row, map) {
   const mapped = {}                     // our column names to values
 
@@ -205,13 +143,6 @@ function mapRow(row, map) {
   return mapped
 }
 
-/**
- * Works out where an incremental pull should resume from.
- *
- * Rewound by CURSOR_OVERLAP_MINUTES because a row created during the previous
- * run can carry a timestamp just before the cursor was recorded, and resuming
- * exactly at the cursor would step over it. The upsert makes the repeat free.
- */
 function resumeFrom(state) {
   const stored = state?.cursor_value
 
@@ -224,11 +155,6 @@ function resumeFrom(state) {
   return toMysqlDateTime(rewound)
 }
 
-/**
- * Finds the newest value of the cursor column across a batch, which becomes
- * the next run's starting point. Taken from the data rather than from the
- * clock, so a slow run does not skip rows written while it was going.
- */
 function newestCursor(rows, column) {
   let newest = null
 
@@ -240,25 +166,12 @@ function newestCursor(rows, column) {
   return newest
 }
 
-/**
- * Syncs one resource.
- *
- * Never throws. A failure is recorded against that resource and the caller
- * moves on, because 1 broken endpoint should not leave the other 4 stale with
- * no explanation of why.
- */
 export async function syncResource(resource, { dryRun = false } = {}) {
   const startedAt = new Date()
   const syncStartedAt = toMysqlDateTime(startedAt)
 
   const state = await readSyncState(resource.name)
   const params = { ...(resource.params || {}) }
-
-  /*
-   An incremental resource asks for everything since its cursor. A full one
-   asks for everything, except that the leads endpoint refuses a request with
-   no date range at all, so it gets one whether or not it is incremental.
-  */
   if (resource.incremental || resource.requiresRange) {
     params[resource.cursorParam] = resumeFrom(state)
   }
@@ -274,10 +187,6 @@ export async function syncResource(resource, { dryRun = false } = {}) {
     return { name: resource.name, ok: false, rows: 0, error }
   }
 
-  /*
-   The shrink guard, before anything is written. Full pulls only, and only
-   once there is a baseline to compare against.
-  */
   if (!resource.incremental && state?.rows_total > 0) {
     const floor = Math.floor(state.rows_total * SHRINK_TOLERANCE)
 
@@ -306,11 +215,6 @@ export async function syncResource(resource, { dryRun = false } = {}) {
     return { name: resource.name, ok: false, rows: 0, error: cause.message }
   }
 
-  /*
-   Rows that stopped coming back, stamped rather than deleted. Full pulls
-   only. On an incremental one everything outside the window is legitimately
-   absent and would all be marked at once.
-  */
   let missing = 0
   if (resource.tracksMissing && !resource.incremental) {
     missing = await markMissing(resource.table, syncStartedAt)
@@ -330,14 +234,6 @@ export async function syncResource(resource, { dryRun = false } = {}) {
   return { name: resource.name, ok: true, rows: written, total, missing }
 }
 
-/**
- * Syncs every resource, in the order they are declared.
- *
- * Sequential, not parallel. Calls reference agents and dispositions, so a call
- * landing before the agent it points at would show an unknown agent on the
- * dashboard until the next run. The whole thing is a handful of requests
- * against an api with no rate limit, so there is nothing to gain by racing.
- */
 export async function syncAll({ only = null, dryRun = false } = {}) {
   const targets = only ? [resourceByName(only)].filter(Boolean) : RESOURCES
 
@@ -353,14 +249,6 @@ export async function syncAll({ only = null, dryRun = false } = {}) {
   return { ok: results.every((result) => result.ok), results }
 }
 
-/**
- * Fetches one page of each resource and reports what came back against what
- * the map expects. Read only, writes nothing, needs no database.
- *
- * This is what turns "the credentials are in" into a finished mapping. Every
- * field name in resources.js was written against our schema rather than
- * against a real response, so all of them need confirming once.
- */
 export async function inspect() {
   const findings = []
 

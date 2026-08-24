@@ -1,20 +1,9 @@
-/**
- * Site footer. Mostly a frame around the compliance block, plus the legal
- * links and the copyright line.
- */
+// Site footer. Mostly a frame around the compliance block, plus the legal
+// links and the copyright line.
 
 import Link from 'next/link'
 import ComplianceDisclosures from '@/components/compliance/ComplianceDisclosures'
 
-/*
- The footer is the only route to these pages, they are deliberately not in
- the main nav. Order runs from the notices people look for most often to the
- ones they look for least.
- TODO a "Do Not Sell or Share My Personal Information" link may be legally
- required here. Whether it is depends on whether the business sells or shares
- personal information as those terms are defined by state law, which is an
- open question flagged on the privacy rights page.
-*/
 const LEGAL_LINKS = [
   { label: 'Privacy Policy', href: '/privacy-policy' },
   { label: 'Terms of Service', href: '/terms-of-service' },
@@ -25,9 +14,6 @@ const LEGAL_LINKS = [
   { label: 'TPMO Disclosure', href: '/tpmo-disclosure' },
 ]
 
-/**
- * Small outward arrow that follows each legal link on the live site.
- */
 function LinkArrow() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4" aria-hidden="true">
@@ -36,11 +22,6 @@ function LinkArrow() {
   )
 }
 
-/**
- * Renders the footer.
- * The copyright year is computed at render rather than hardcoded, the live
- * site currently ships a literal that will go stale.
- */
 export default function Footer() {
   const year = new Date().getFullYear()
 

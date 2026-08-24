@@ -1,11 +1,9 @@
-/**
- * /humans.txt
- *
- * The long standing web convention for naming who built a site, sitting
- * alongside robots.txt. Crawlers and curious developers find it, visitors
- * never do, and it is the one channel here that exists for precisely this
- * purpose rather than being repurposed for it.
- */
+// /humans.txt
+//
+// The long standing web convention for naming who built a site, sitting
+// alongside robots.txt. Crawlers and curious developers find it, visitors
+// never do, and it is the one channel here that exists for precisely this
+// purpose rather than being repurposed for it.
 
 import { FULL_NOTICE, SHORT_NOTICE, AUTHOR_URL } from '@/lib/authorship'
 
@@ -15,12 +13,12 @@ export function GET() {
   const body = `/* TEAM */
 ${FULL_NOTICE}
 
-/* CONTACT */
+// CONTACT
 ${SHORT_NOTICE}
 Location: Boca Raton, Florida
 Site: ${AUTHOR_URL}
 
-/* SITE */
+// SITE
 Standards: HTML5, CSS3, JSON-LD
 Components: Next.js, React, Tailwind CSS
 `

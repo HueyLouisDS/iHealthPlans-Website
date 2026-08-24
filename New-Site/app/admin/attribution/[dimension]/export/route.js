@@ -1,20 +1,18 @@
-/**
- * CSV export of the attribution breakdown,
- * /admin/attribution/[dimension]/export.
- *
- * It sits under the dimension rather than beside it so the file and the page
- * cannot disagree about what was grouped. When the grouping was a query
- * parameter, a link that lost it exported sources under a heading somebody
- * expected to be campaigns.
- *
- * Unlike the lead and call exports this file holds aggregates, not people, so
- * it carries no personal data and no health information. It is still authorised
- * and still audited, because "this one is harmless" is how an export route ends
- * up being the one nobody checked.
- *
- * TODO the audit currently goes to the server log. It needs a table once the
- * database exists, because a log that rotates is not an audit trail.
- */
+// CSV export of the attribution breakdown,
+// /admin/attribution/[dimension]/export.
+//
+// It sits under the dimension rather than beside it so the file and the page
+// cannot disagree about what was grouped. When the grouping was a query
+// parameter, a link that lost it exported sources under a heading somebody
+// expected to be campaigns.
+//
+// Unlike the lead and call exports this file holds aggregates, not people, so
+// it carries no personal data and no health information. It is still authorised
+// and still audited, because "this one is harmless" is how an export route ends
+// up being the one nobody checked.
+//
+// TODO the audit currently goes to the server log. It needs a table once the
+// database exists, because a log that rotates is not an audit trail.
 
 import { getAdminSession } from '@/lib/admin/session'
 import {
@@ -34,23 +32,9 @@ const COLUMNS = [
   ['callsPerLead', 'Calls per lead'],
   ['conversions', 'Enrollments'],
   ['conversionRate', 'Enrollment rate'],
-  /*
-   Carried into the file on purpose. The thin marker is the only thing
-   stopping a 3 lead row reading as the best performing source, and a
-   spreadsheet strips every visual cue the page had.
-  */
   ['lowVolume', `Fewer than ${LOW_VOLUME_LEADS} leads`],
 ]
 
-/**
- * Escapes one CSV cell.
- *
- * The leading apostrophe on anything starting with an operator is deliberate.
- * A spreadsheet treats a cell beginning with =, +, -, or @ as a formula, so an
- * attacker supplied value becomes code when the file is opened in Excel. Group
- * values here are campaign names and landing paths, which come from whatever
- * somebody typed into an ad platform, so they are exactly that kind of value.
- */
 function toCell(value) {
   const text =
     value === null || value === undefined
@@ -73,10 +57,6 @@ export async function GET(request, { params }) {
 
   const { dimension: slug } = await params
   const dimension = findDimension(slug)
-  /*
-   Same rule as the page. An unknown grouping is a url that does not exist,
-   not a reason to hand somebody the source breakdown under another name.
-  */
   if (!dimension) return new Response('Not found', { status: 404 })
 
   const { searchParams } = new URL(request.url)
@@ -88,11 +68,6 @@ export async function GET(request, { params }) {
     sort: searchParams.get('sort') || 'leads',
   }
 
-  /*
-   An explicit selection from the table. These are slugs rather than the group
-   values themselves, because a campaign name containing a comma would split
-   into 2 ids and export the wrong rows.
-  */
   const ids = (searchParams.get('ids') || '').split(',').map((id) => id.trim()).filter(Boolean)
 
   const rows = await getAttributionForExport(filters, ids)

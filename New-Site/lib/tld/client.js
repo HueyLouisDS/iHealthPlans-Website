@@ -13,22 +13,6 @@ const DEFAULT_PAGE_SIZE = 5000          // rows per request, see the banner
         NO RATE LIMIT MEANS PAYLOAD SIZE IS THE COST
 ========================================================*/
 
-/*
- TLD imposes no request limit, so nothing here paces the calls. What it does
- do is keep the pages large and the columns narrow, because the expensive
- part is holding and moving the body rather than making the request.
-
- If a pull starts running out of memory, lower DEFAULT_PAGE_SIZE before
- touching anything else. A resource can override it, see resources.js.
-*/
-
-/**
- * Fetches one page from a TLD endpoint.
- *
- * Returns { rows, error }. Never throws, because a sync of 5 resources should
- * record which one failed and carry on rather than dying on the first bad
- * response and leaving the other 4 stale with no explanation.
- */
 export async function fetchPage(path, params = {}) {
   const config = crmConfig()
 
@@ -73,11 +57,6 @@ export async function fetchPage(path, params = {}) {
     return { rows: null, error: `${path} did not return JSON.` }
   }
 
-  /*
-   TLD wraps rows in response.results. Both shapes are accepted because an
-   endpoint that returns a bare array would otherwise look like zero rows,
-   and zero rows is indistinguishable from a quiet day.
-  */
   const rows = Array.isArray(body) ? body : body?.results
 
   if (!Array.isArray(rows)) {
@@ -87,22 +66,8 @@ export async function fetchPage(path, params = {}) {
   return { rows, error: null }
 }
 
-/*
- A backstop against a paging bug looping forever, since there is no rate
- limit to slow one down. Hitting it is reported rather than silently
- truncating, because a partial pull that reads as complete is the failure
- this whole layer exists to avoid.
-*/
 const MAX_PAGES = 200                   // pages per resource before the pull is abandoned
 
-/**
- * Fetches every page of an endpoint.
- *
- * Stops on a short page, which is the only reliable end signal when the total
- * is not returned. A page that comes back exactly full is followed by one more
- * request that usually returns nothing, and that is cheaper than trusting a
- * count TLD may not send.
- */
 export async function fetchAll(path, params = {}, { pageSize = DEFAULT_PAGE_SIZE } = {}) {
   const all = []                        // every row across every page
   let offset = 0                        // rows already collected, TLD's offset param

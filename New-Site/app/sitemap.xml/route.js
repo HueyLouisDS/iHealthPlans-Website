@@ -1,10 +1,8 @@
-/**
- * /sitemap.xml
- *
- * Built from the content modules rather than a hand kept list, so an article
- * added or pulled is in or out of the sitemap without anybody remembering to
- * edit this file. A sitemap that lists a 404 is worse than no sitemap.
- */
+// /sitemap.xml
+//
+// Built from the content modules rather than a hand kept list, so an article
+// added or pulled is in or out of the sitemap without anybody remembering to
+// edit this file. A sitemap that lists a 404 is worse than no sitemap.
 
 import { SHORT_NOTICE } from '@/lib/authorship'
 import { SITE_URL } from '@/lib/siteConfig'
@@ -14,12 +12,6 @@ import { getAllLegalPages } from '@/lib/content/legal'
 import { ENROLLMENT_PAGES } from '@/lib/content/enrollment'
 
 export const dynamic = 'force-static'
-
-/*
- Priority is a hint and search engines mostly ignore it, but it costs nothing
- and it documents what this business considers important. The product pages
- sell, the articles bring people in, the legal pages exist because they must.
-*/
 const PRIORITY = {
   home: '1.0',
   product: '0.9',
@@ -29,10 +21,6 @@ const PRIORITY = {
   legal: '0.3',
 }
 
-/**
- * One <url> entry. Dates are optional, since a wrong lastmod is worse than
- * none, and most of these pages have no meaningful modification date.
- */
 function entry(path, priority, lastModified = null) {
   const loc = `${SITE_URL}${path}`
 
@@ -47,13 +35,6 @@ function entry(path, priority, lastModified = null) {
     .join('\n')
 }
 
-/**
- * Every indexable url on the site.
- *
- * The admin area and the api routes are absent on purpose, matching the
- * disallow list in robots.txt. A sitemap that lists a path robots.txt blocks
- * is a contradiction search engines report as an error.
- */
 function urls() {
   const all = [entry('/', PRIORITY.home)]
 
@@ -72,7 +53,7 @@ function urls() {
   }
 
   for (const article of getAllArticles()) {
-    /* ISO date only, which is what the sitemap spec wants for a day precision value */
+    // ISO date only, which is what the sitemap spec wants for a day precision value
     const lastModified = article.date ? String(article.date).slice(0, 10) : null
     all.push(entry(`/education/${article.slug}`, PRIORITY.article, lastModified))
   }

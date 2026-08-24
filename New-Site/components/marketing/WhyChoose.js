@@ -1,16 +1,9 @@
-/**
- * Gradient card holding the 4 value propositions.
- * Same blue to green gradient as the closing call to action, which is what
- * visually bookends the middle of the page.
- */
+// Gradient card holding the 4 value propositions.
+// Same blue to green gradient as the closing call to action, which is what
+// visually bookends the middle of the page.
 
 import Image from 'next/image'
 
-/*
- Icon filenames are inherited from the live site and do not always match the
- heading beside them, for example a-trusted-brand sits under Nationwide
- Support. Left as is so the assets stay traceable to their source.
-*/
 const VALUE_PROPS = [
   {
     icon: '/icons/personalized-guidance.svg',
@@ -46,11 +39,6 @@ const VALUE_PROPS = [
   },
 ]
 
-/**
- * Renders the value proposition grid.
- * brightness-200 forces the dark source SVGs to read as white against the
- * gradient, the assets themselves are not white.
- */
 export default function WhyChoose() {
   return (
     <div className="w-full h-fit py-20 px-4">

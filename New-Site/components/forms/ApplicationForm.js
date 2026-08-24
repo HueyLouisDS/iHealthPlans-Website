@@ -1,32 +1,14 @@
 'use client'
-
-/**
- * Careers application form. Posts to /api/careers and swaps itself for a
- * confirmation on success.
- * This is one of only 2 forms on the site, so it is also the first place
- * lead attribution has to actually attach to a submission.
- */
-
 import { useState } from 'react'
 import Image from 'next/image'
 import FloatingLabelInput from '@/components/forms/FloatingLabelInput'
 
 const EMPTY_APPLICATION = { fullName: '', phone: '', email: '' }
 
-/**
- * Checks the 3 required fields before anything is sent.
- * Client side validation here is a convenience, the same rules are enforced
- * again in the route handler because this check is trivially bypassed.
- */
 function validate(application) {
   const errors = {}
 
   if (!application.fullName.trim()) errors.fullName = 'Please enter your full name.'
-
-  /*
-   Deliberately loose. Real numbers arrive with brackets, dashes, and country
-   codes, and rejecting those loses applicants for no benefit.
-  */
   const digits = application.phone.replace(/[^0-9]/g, '')
   if (digits.length < 10) errors.phone = 'Please enter a phone number we can reach you on.'
 
@@ -37,20 +19,11 @@ function validate(application) {
   return errors
 }
 
-/**
- * Renders the form, or the confirmation once an application has been accepted.
- * Submission state is a single string rather than several booleans, since the
- * states are mutually exclusive and separate flags drift out of sync.
- */
 export default function ApplicationForm() {
   const [application, setApplication] = useState(EMPTY_APPLICATION)
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('editing')
 
-  /**
-   * Updates one field and clears its error, so a message disappears as soon as
-   * the visitor starts fixing the problem rather than on the next submit.
-   */
   function handleChange(field) {
     return (event) => {
       const { value } = event.target
@@ -59,11 +32,6 @@ export default function ApplicationForm() {
     }
   }
 
-  /**
-   * Validates, posts, and moves to the confirmation state.
-   * TODO once sessions exist, include the visitorId and sessionId in the body
-   * so an application can be traced back to the traffic source that produced it.
-   */
   async function handleSubmit(event) {
     event.preventDefault()
 
@@ -83,10 +51,6 @@ export default function ApplicationForm() {
       if (!response.ok) throw new Error(`Request failed with ${response.status}`)
       setStatus('submitted')
     } catch (error) {
-      /*
-       Never leave the visitor on a spinner. They have typed their details in
-       and the only recoverable action is to let them try again.
-      */
       console.error('Careers application failed to send', error)
       setStatus('failed')
     }

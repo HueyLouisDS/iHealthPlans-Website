@@ -1,15 +1,8 @@
-/**
- * Circular photo beside the tenure claim. Pure trust building, no call to
- * action, it sits between the two heavier content blocks to break them up.
- */
+// Circular photo beside the tenure claim. Pure trust building, no call to
+// action, it sits between the two heavier content blocks to break them up.
 
 import Image from 'next/image'
 
-/**
- * Renders the section.
- * The image is forced square and cropped, the source is landscape, so the
- * aspect-square plus object-cover pair is what makes the circle work.
- */
 export default function DecadeOfService() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 grid nm:grid-cols-[0.85fr_1.15fr] items-center gap-14">

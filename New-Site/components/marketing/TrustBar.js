@@ -1,23 +1,14 @@
-/**
- * Thin credibility strip directly under the hero.
- * Two claims with icons, the first hidden on small screens so the row never
- * wraps awkwardly on a phone.
- */
+// Thin credibility strip directly under the hero.
+// Two claims with icons, the first hidden on small screens so the row never
+// wraps awkwardly on a phone.
 
 import Image from 'next/image'
 
-/*
- Both items use the same icon on the live site, despite different alt text.
- TODO get the correct second icon from the client, or drop one of the items.
-*/
 const TRUST_ITEMS = [
   { label: 'Licensed Insurance Agents with Years of Experience', alt: '100 with circle', hideOnMobile: true },
   { label: 'Medicare Advantage Plans', alt: 'People icon', hideOnMobile: false },
 ]
 
-/**
- * Renders the trust strip.
- */
 export default function TrustBar() {
   return (
     <div className="w-full h-fit py-1 sm:py-3 bg-[#f7f7f7] shadow-md">

@@ -1,17 +1,10 @@
-/**
- * Horizontal category filter across the top of the education index.
- * Plain links rather than buttons, so each filtered view has its own url and
- * can be crawled, shared, and reported on. The live site runs this through a
- * carousel library and a click handler, which hides 9 landing pages from search.
- */
+// Horizontal category filter across the top of the education index.
+// Plain links rather than buttons, so each filtered view has its own url and
+// can be crawled, shared, and reported on. The live site runs this through a
+// carousel library and a click handler, which hides 9 landing pages from search.
 
 import Link from 'next/link'
 
-/**
- * Renders the filter row.
- * Scrolls horizontally on narrow screens instead of wrapping, which is what the
- * carousel was doing, just without the dependency.
- */
 export default function CategoryFilter({ categories, activeSlug }) {
   return (
     <div className="w-full h-fit border-b">
@@ -31,10 +24,6 @@ export default function CategoryFilter({ categories, activeSlug }) {
   )
 }
 
-/**
- * One filter link. Active state is a green underline and a darker label,
- * matching the live site's selected tab.
- */
 function FilterLink({ href, label, isActive }) {
   return (
     <Link

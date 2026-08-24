@@ -1,17 +1,10 @@
-/**
- * CMS required disclosure block, rendered in the footer of every page.
- * Kept out of components/layout on purpose. This text is approved marketing
- * material governed by the SMID above it, so it changes on a compliance
- * review cycle and must never be reworded for design reasons.
- */
+// CMS required disclosure block, rendered in the footer of every page.
+// Kept out of components/layout on purpose. This text is approved marketing
+// material governed by the SMID above it, so it changes on a compliance
+// review cycle and must never be reworded for design reasons.
 
 import { SMID, CARRIER_COUNT, PRODUCT_COUNT } from '@/lib/siteConfig'
 
-/**
- * Renders the SMID, the Federal Contracting Statement, the plan availability
- * disclosure, and the jurisdiction disclaimer, in that order.
- * Order is fixed by the approved material, do not rearrange.
- */
 export default function ComplianceDisclosures() {
   return (
     <>

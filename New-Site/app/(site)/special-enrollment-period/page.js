@@ -1,9 +1,7 @@
-/**
- * Page for /special-enrollment-period.
- * Unlike the AEP page this one is not seasonal. It is reached by people who
- * have just had something change, which makes it high intent all year round
- * and the strongest non seasonal call driver of the 3 enrollment pages.
- */
+// Page for /special-enrollment-period.
+// Unlike the AEP page this one is not seasonal. It is reached by people who
+// have just had something change, which makes it high intent all year round
+// and the strongest non seasonal call driver of the 3 enrollment pages.
 
 import Link from 'next/link'
 import { HeaderSpacer } from '@/components/layout/Header'
@@ -15,21 +13,11 @@ import { getEnrollmentPage } from '@/lib/content/enrollment'
 
 const SLUG = 'special-enrollment-period'
 
-/**
- * Title and description, read from the enrollment period data so they
- * cannot drift from the copy on the page.
- */
 export function generateMetadata() {
   const page = getEnrollmentPage(SLUG)
   return { title: page.title, description: page.metaDescription }
 }
 
-/**
- * Renders the SEP page.
- * Qualifying events come first because a visitor is looking for their own
- * situation in a list, not reading an explanation. Timing follows, since the
- * next question is always how long they have.
- */
 export default function SpecialEnrollmentPeriodPage() {
   const page = getEnrollmentPage(SLUG)
 

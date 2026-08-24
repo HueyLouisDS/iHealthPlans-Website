@@ -1,9 +1,7 @@
-/**
- * Hub page for /medicare-enrollment-periods.
- * Lists all 6 enrollment windows and links through to the 2 that have their
- * own pages. This is the page someone lands on when they know timing matters
- * but not which window applies to them.
- */
+// Hub page for /medicare-enrollment-periods.
+// Lists all 6 enrollment windows and links through to the 2 that have their
+// own pages. This is the page someone lands on when they know timing matters
+// but not which window applies to them.
 
 import { HeaderSpacer } from '@/components/layout/Header'
 import PageHero from '@/components/ui/PageHero'
@@ -14,20 +12,11 @@ import { getEnrollmentPage } from '@/lib/content/enrollment'
 
 const SLUG = 'medicare-enrollment-periods'
 
-/**
- * Title and description, read from the enrollment period data so they
- * cannot drift from the copy on the page.
- */
 export function generateMetadata() {
   const page = getEnrollmentPage(SLUG)
   return { title: page.title, description: page.metaDescription }
 }
 
-/**
- * Renders the hub.
- * Windows first, then why timing matters, then the questions. Someone
- * scanning for their own situation should hit the grid immediately.
- */
 export default function MedicareEnrollmentPeriodsPage() {
   const page = getEnrollmentPage(SLUG)
 

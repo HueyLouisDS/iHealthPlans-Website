@@ -1,9 +1,7 @@
-/**
- * Shared template for the 4 Medicare product landing pages.
- * All 4 render through this so the structure, the conversion path, and the
- * compliance register stay identical across them. The differences between the
- * pages live entirely in lib/content/products.js.
- */
+// Shared template for the 4 Medicare product landing pages.
+// All 4 render through this so the structure, the conversion path, and the
+// compliance register stay identical across them. The differences between the
+// pages live entirely in lib/content/products.js.
 
 import Link from 'next/link'
 import { HeaderSpacer } from '@/components/layout/Header'
@@ -13,9 +11,6 @@ import ZipCta from '@/components/marketing/ZipCta'
 import { getProduct } from '@/lib/content/products'
 import { ENROLLMENT_WINDOWS } from '@/lib/content/enrollment'
 
-/**
- * Green tick used through the key points list.
- */
 function CheckIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-ihealthGreen flex-shrink-0 mt-1" aria-hidden="true">
@@ -24,9 +19,6 @@ function CheckIcon() {
   )
 }
 
-/**
- * Narrative section, a heading and 1 or more paragraphs.
- */
 function Explainer({ content }) {
   return (
     <section className="w-full h-fit py-16 px-4">
@@ -42,11 +34,6 @@ function Explainer({ content }) {
   )
 }
 
-/**
- * The 4 headline benefits, as a ticked grid.
- * Sits high on the page because it is what a visitor scanning for relevance
- * actually reads before deciding whether to keep going.
- */
 function KeyPoints({ product }) {
   return (
     <section className="w-full h-fit pb-8 px-4">
@@ -65,11 +52,6 @@ function KeyPoints({ product }) {
   )
 }
 
-/**
- * Term and detail list, used for plan types and cost breakdowns.
- * A definition list rather than a table, because these are label and
- * explanation pairs and a table would imply a comparison that is not there.
- */
 function TermList({ content }) {
   return (
     <section className="w-full h-fit py-16 px-4">
@@ -88,10 +70,6 @@ function TermList({ content }) {
   )
 }
 
-/**
- * Eligibility bullets on a tinted panel, so the qualifying criteria are
- * visually separated from the explanatory copy around them.
- */
 function Eligibility({ content }) {
   return (
     <section className="w-full h-fit py-16 px-4">
@@ -110,12 +88,6 @@ function Eligibility({ content }) {
   )
 }
 
-/**
- * The enrollment windows, shared across all products and the enrollment
- * pages, read from lib/content/enrollment.js.
- * Repeated on every product page on purpose. Timing is the single most common
- * reason someone calls, and it should never be more than 1 scroll away.
- */
 function EnrollmentWindows() {
   return (
     <section className="w-full h-fit py-16 px-4">
@@ -137,12 +109,6 @@ function EnrollmentWindows() {
   )
 }
 
-/**
- * Links to the other 3 products.
- * These 4 pages are genuinely alternatives to one another, and someone who
- * lands on the wrong one should be able to reach the right one without
- * going back to search.
- */
 function RelatedProducts({ product }) {
   return (
     <section className="w-full h-fit py-16 px-4">
@@ -182,11 +148,6 @@ function RelatedProducts({ product }) {
   )
 }
 
-/**
- * Renders a complete product page from its data.
- * Section order is a funnel, what it is, why it matters, what it costs, who
- * qualifies, when to act, then the questions that stop people converting.
- */
 export default function ProductPage({ slug }) {
   const product = getProduct(slug)
   if (!product) return null

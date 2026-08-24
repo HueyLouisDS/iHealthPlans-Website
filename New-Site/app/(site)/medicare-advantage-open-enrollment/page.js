@@ -1,13 +1,11 @@
-/**
- * Page for /medicare-advantage-open-enrollment, shown in the nav as
- * "Open Enrollment".
- *
- * The url is deliberately explicit rather than /open-enrollment. Medicare.gov
- * uses "Open Enrollment" for the 15 October to 7 December window, which is the
- * Annual Enrollment Period on its own page. A vague slug here would compete
- * with that page for searches meant for it, and pull people to the wrong
- * dates.
- */
+// Page for /medicare-advantage-open-enrollment, shown in the nav as
+// "Open Enrollment".
+//
+// The url is deliberately explicit rather than /open-enrollment. Medicare.gov
+// uses "Open Enrollment" for the 15 October to 7 December window, which is the
+// Annual Enrollment Period on its own page. A vague slug here would compete
+// with that page for searches meant for it, and pull people to the wrong
+// dates.
 
 import Link from 'next/link'
 import { HeaderSpacer } from '@/components/layout/Header'
@@ -19,22 +17,11 @@ import { getEnrollmentPage } from '@/lib/content/enrollment'
 
 const SLUG = 'medicare-advantage-open-enrollment'
 
-/**
- * Title and description, read from the enrollment period data so they
- * cannot drift from the copy on the page.
- */
 export function generateMetadata() {
   const page = getEnrollmentPage(SLUG)
   return { title: page.title, description: page.metaDescription }
 }
 
-/**
- * Renders the page.
- * Who it applies to comes before what you can do, which is the reverse of the
- * AEP page. Most people arriving here are not eligible for this window at all,
- * so answering that first saves them reading a page about rules that do not
- * apply to them.
- */
 export default function MedicareAdvantageOpenEnrollmentPage() {
   const page = getEnrollmentPage(SLUG)
 

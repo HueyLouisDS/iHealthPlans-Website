@@ -1,32 +1,25 @@
-/**
- * CSV export of the lead list, /admin/leads/export.
- *
- * This is a bulk extract of personal information about identifiable people,
- * which makes it the single most sensitive action in the admin area. Three
- * things follow from that and none of them are optional.
- *
- * 1. It is authorised again here. Middleware already guards /admin, but a
- *    route that hands out every lead in one file should not rely on a single
- *    check somewhere else in the stack.
- * 2. Every export is written to an audit log with who took it, when, how many
- *    records, and which filters were applied. After an incident this is the
- *    first question asked, and "we do not know" is not an answer.
- * 3. It exports exactly what the filters select, not the page on screen. An
- *    export that silently returns 25 of 800 rows is worse than no export.
- *
- * TODO the audit currently goes to the server log. It needs to go to a table
- * once the database exists, because a log that rotates is not an audit trail.
- */
+// CSV export of the lead list, /admin/leads/export.
+//
+// This is a bulk extract of personal information about identifiable people,
+// which makes it the single most sensitive action in the admin area. Three
+// things follow from that and none of them are optional.
+//
+// 1. It is authorised again here. Middleware already guards /admin, but a
+//    route that hands out every lead in one file should not rely on a single
+//    check somewhere else in the stack.
+// 2. Every export is written to an audit log with who took it, when, how many
+//    records, and which filters were applied. After an incident this is the
+//    first question asked, and "we do not know" is not an answer.
+// 3. It exports exactly what the filters select, not the page on screen. An
+//    export that silently returns 25 of 800 rows is worse than no export.
+//
+// TODO the audit currently goes to the server log. It needs to go to a table
+// once the database exists, because a log that rotates is not an audit trail.
 
 import { getAdminSession } from '@/lib/admin/session'
 import { getLeadsForExport, parsePeriod, usingFixtures } from '@/lib/admin/data'
 
 export const dynamic = 'force-dynamic'
-
-/*
- Columns in the order a person reading the file would expect. The internal
- ids come last, since they matter to us and not to whoever opens the sheet.
-*/
 const COLUMNS = [
   ['name', 'Name'],
   ['phone', 'Phone'],
@@ -45,15 +38,6 @@ const COLUMNS = [
   ['sessionId', 'Session id'],
 ]
 
-/**
- * Escapes one CSV cell.
- *
- * The leading apostrophe on anything starting with an operator is deliberate.
- * A spreadsheet treats a cell beginning with =, +, -, or @ as a formula, so a
- * value like =cmd|'...' in a name field becomes code when somebody opens the
- * file. Lead data is attacker supplied, this file gets opened in Excel, and
- * that is CSV injection.
- */
 function toCell(value) {
   const text = value === null || value === undefined ? '' : String(value)
   const guarded = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text
@@ -75,18 +59,9 @@ export async function GET(request) {
     sort: searchParams.get('sort') || 'newest',
   }
 
-  /*
-   An explicit selection from the table. Still filtered first, so this can
-   only ever narrow what the current view already permits.
-  */
   const ids = (searchParams.get('ids') || '').split(',').map((id) => id.trim()).filter(Boolean)
 
   const leads = await getLeadsForExport(filters, ids)
-
-  /*
-   Written before the response is returned, so an export that is interrupted
-   mid download is still recorded as having been taken
-  */
   console.warn('[audit] lead export', {
     by: session.user.email,
     at: new Date().toISOString(),
@@ -100,11 +75,6 @@ export async function GET(request) {
 
   const header = COLUMNS.map(([, label]) => toCell(label)).join(',')
   const rows = leads.map((lead) => COLUMNS.map(([key]) => toCell(lead[key])).join(','))
-
-  /*
-   The BOM is what makes Excel read the file as UTF-8. Without it, any
-   accented name in the export is mangled on open.
-  */
   const csv = `﻿${[header, ...rows].join('\r\n')}\r\n`
 
   const stamp = new Date().toISOString().slice(0, 10)

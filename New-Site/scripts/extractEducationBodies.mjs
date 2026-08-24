@@ -1,12 +1,10 @@
-/**
- * One off migration tool, the companion to extractEducationIndex.mjs. That one
- * produced the article list, this one produces the article bodies.
- * Reads the scraped pages in ../Old-Site and writes one file per article into
- * content/education/bodies.
- *
- * Run it with: node scripts/extractEducationBodies.mjs
- * It is safe to re-run, everything it writes is derived and overwritten.
- */
+// One off migration tool, the companion to extractEducationIndex.mjs. That one
+// produced the article list, this one produces the article bodies.
+// Reads the scraped pages in ../Old-Site and writes one file per article into
+// content/education/bodies.
+//
+// Run it with: node scripts/extractEducationBodies.mjs
+// It is safe to re-run, everything it writes is derived and overwritten.
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -17,28 +15,9 @@ const appRoot = path.join(scriptDir, '..')
 const pagesDir = path.join(appRoot, '..', 'Old-Site', 'Pages')
 const indexFile = path.join(appRoot, 'content', 'education', 'articles.json')
 const outputDir = path.join(appRoot, 'content', 'education', 'bodies')
-
-/*
- The old site is a Next.js app rendering Sanity portable text, and it wraps
- every article body in this one element. Everything outside it is chrome,
- breadcrumbs, share buttons, and the related articles rail.
-*/
 const WRAPPER = '<div id="portable-text-wrapper">'
-
-/*
- Average adult reading speed for this kind of material. Only used to print
- "4 min read", so being 20 percent out costs nothing.
-*/
 const WORDS_PER_MINUTE = 200
 
-/**
- * Finds the end of an element whose opening tag has already been consumed.
- *
- * Depth counted rather than searching for the next closing tag, because these
- * elements nest and the naive version silently truncates at the first inner
- * close. That failure is invisible, the page still renders, it just stops
- * halfway through. It cost 10 articles their nested lists before this existed.
- */
 function matchBalanced(html, from, tag) {
   const tags = new RegExp(`<(/?)${tag}\\b[^>]*>`, 'g')
   tags.lastIndex = from
@@ -54,26 +33,12 @@ function matchBalanced(html, from, tag) {
   return null
 }
 
-/**
- * Pulls the body out of a page.
- */
 function extractWrapper(html) {
   const start = html.indexOf(WRAPPER)
   if (start < 0) return null
-
-  /*
-   An unbalanced wrapper means the scrape is truncated. Returning the rest of
-   the file would quietly publish the footer as article text.
-  */
   return matchBalanced(html, start + WRAPPER.length, 'div')?.inner ?? null
 }
 
-/**
- * Turns HTML entities back into characters.
- * Only the 3 named entities the scrape actually contains, plus the numeric
- * forms, so an unexpected one shows up as itself rather than being silently
- * mangled into something plausible.
- */
 function decodeEntities(text) {
   return text
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
@@ -86,14 +51,6 @@ function decodeEntities(text) {
     .replace(/&amp;/g, '&')
 }
 
-/**
- * Parses inline markup into spans.
- *
- * Returns plain data rather than HTML, so the renderer never has to trust the
- * scrape. Anything this parser does not recognise is dropped to text, which
- * means a stray tag in the source can produce a wrong looking sentence but
- * never an injected element.
- */
 function parseSpans(html) {
   const spans = []
   const marks = []
@@ -133,23 +90,11 @@ function parseSpans(html) {
 
   buffer += html.slice(cursor)
   flush()
-
-  /*
-   Strip anything left over, which should be nothing. Logged by the caller if
-   it is not, since a surprise here means the scrape changed shape.
-  */
   return spans.map((span) =>
     span.text ? { ...span, text: span.text.replace(/<[^>]*>/g, '') } : span
   )
 }
 
-/**
- * Splits a list's contents into items, keeping any nested list with its item.
- *
- * Lists here go 2 deep. A parent item is a label and the list under it holds
- * the detail, so flattening them would put a label and its own explanation at
- * the same level and read as a contradiction.
- */
 function parseItems(html) {
   const items = []
   const open = /<li\b[^>]*>/g
@@ -184,15 +129,6 @@ function parseItems(html) {
   return items
 }
 
-/**
- * Turns one article body into blocks.
- *
- * Paragraphs and lists only, which is everything these 170 articles use. A
- * paragraph that is nothing but one bold run is treated as a heading, because
- * that is what it is. The old site has no real headings inside an article, so
- * every one of these pages is a wall of paragraphs with no structure for a
- * screen reader to navigate by and nothing for search to read as an outline.
- */
 function parseBlocks(html) {
   const blocks = []
   const unknown = []
@@ -202,10 +138,6 @@ function parseBlocks(html) {
   let match
 
   while ((match = open.exec(html))) {
-    /*
-     Anything between blocks is content the old site put outside a paragraph.
-     Reported rather than dropped, so a shape change is loud.
-    */
     const between = html.slice(cursor, match.index).replace(/<[^>]*>/g, '').trim()
     if (between) unknown.push(between.slice(0, 80))
 
@@ -239,9 +171,6 @@ function parseBlocks(html) {
   return { blocks, unknown }
 }
 
-/**
- * Collects every piece of text in a block tree, nested list items included.
- */
 function collectText(blocks) {
   const out = []
 
@@ -252,12 +181,6 @@ function collectText(blocks) {
     }
   }
 
-  /*
-   Braces on every branch. Without them the trailing `else if` binds to the
-   brace-less `if (span.text)` inside the paragraph loop rather than to this
-   chain, so list text is never collected and every article with a list
-   reports a reading time far shorter than it is.
-  */
   for (const block of blocks) {
     if (block.type === 'heading') {
       out.push(block.text)
@@ -273,9 +196,6 @@ function collectText(blocks) {
   return out.join(' ')
 }
 
-/**
- * Counts words, for the reading time.
- */
 function countWords(blocks) {
   return collectText(blocks).split(/\s+/).filter(Boolean).length
 }
@@ -283,11 +203,6 @@ function countWords(blocks) {
 async function run() {
   const articles = JSON.parse(await fs.readFile(indexFile, 'utf8'))
   await fs.mkdir(outputDir, { recursive: true })
-
-  /*
-   Anything already there is from a previous run. Removed rather than left,
-   so a slug that disappears from the index does not linger as a stale page.
-  */
   for (const stale of await fs.readdir(outputDir).catch(() => [])) {
     if (stale.endsWith('.json')) await fs.unlink(path.join(outputDir, stale))
   }
@@ -318,6 +233,7 @@ async function run() {
       failures.push({ slug: article.slug, reason: 'body parsed to nothing' })
       continue
     }
+
     if (unknown.length) surprises.push({ slug: article.slug, unknown })
 
     const words = countWords(blocks)
@@ -335,6 +251,7 @@ async function run() {
     console.warn(`${surprises.length} articles had text outside a known block:`)
     for (const item of surprises.slice(0, 10)) console.warn('  ', item.slug, item.unknown)
   }
+
   if (failures.length) {
     console.error(`${failures.length} failed:`)
     for (const item of failures) console.error('  ', item.slug, item.reason)

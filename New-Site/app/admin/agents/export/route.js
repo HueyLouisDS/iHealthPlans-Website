@@ -1,19 +1,17 @@
-/**
- * CSV export of agent performance, /admin/agents/export.
- *
- * No health information and no customer data, so this is the least regulated
- * export in the admin area and the most likely to cause a problem anyway. It is
- * named colleagues ranked against each other, which makes it the easiest file
- * here to forward somewhere it should not go.
- *
- * Two things follow from that. The audit line names who took it, same as the
- * others. And the caveat that the rate is not a like for like comparison is a
- * column in the file, not just text on the page, because the page is exactly
- * what gets left behind when a spreadsheet is passed on.
- *
- * TODO the audit currently goes to the server log. It needs a table once the
- * database exists, because a log that rotates is not an audit trail.
- */
+// CSV export of agent performance, /admin/agents/export.
+//
+// No health information and no customer data, so this is the least regulated
+// export in the admin area and the most likely to cause a problem anyway. It is
+// named colleagues ranked against each other, which makes it the easiest file
+// here to forward somewhere it should not go.
+//
+// Two things follow from that. The audit line names who took it, same as the
+// others. And the caveat that the rate is not a like for like comparison is a
+// column in the file, not just text on the page, because the page is exactly
+// what gets left behind when a spreadsheet is passed on.
+//
+// TODO the audit currently goes to the server log. It needs a table once the
+// database exists, because a log that rotates is not an audit trail.
 
 import { getAdminSession } from '@/lib/admin/session'
 import { getAgentPerformance, parsePeriod, usingFixtures, LOW_VOLUME_LEADS } from '@/lib/admin/data'
@@ -33,14 +31,6 @@ const COLUMNS = [
   ['lowVolume', `Fewer than ${LOW_VOLUME_LEADS} leads`],
 ]
 
-/**
- * Escapes one CSV cell.
- *
- * The leading apostrophe on anything starting with an operator is deliberate.
- * A spreadsheet treats a cell beginning with =, +, -, or @ as a formula, so a
- * value that came from outside becomes code when the file is opened in Excel.
- * Agent names are typed by a person into the phone system, so they qualify.
- */
 function toCell(value) {
   const text =
     value === null || value === undefined
@@ -77,22 +67,12 @@ export async function GET(request) {
     at: new Date().toISOString(),
     records: rows.length,
     filters: { days, sort },
-    /*
-     Named rather than counted. Exporting one person's numbers is a different
-     act from exporting the team's, and the log should be able to tell them
-     apart later without the file itself.
-    */
     selection: ids.length ? ids : 'all agents',
     fixtures: usingFixtures(),
   })
 
   const header = COLUMNS.map(([, label]) => toCell(label)).join(',')
   const body = rows.map((agent) => COLUMNS.map(([key]) => toCell(agent[key])).join(','))
-
-  /*
-   Travels with the file so the caveat survives being forwarded. A ranking
-   that looks objective and is not is worse than no ranking.
-  */
   const note =
     'Enrollment rate is not a like for like comparison. Lead quality varies by source and by hour, and none of that is held constant. Comparing agents fairly means comparing them within a source.'
 

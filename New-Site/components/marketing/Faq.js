@@ -1,16 +1,10 @@
-/**
- * The 7 homepage questions.
- * Holds the copy only, the accordion behaviour lives in components/ui/Accordion
- * so the product pages reuse the identical interaction rather than growing a
- * second, slightly different one.
- */
+// The 7 homepage questions.
+// Holds the copy only, the accordion behaviour lives in components/ui/Accordion
+// so the product pages reuse the identical interaction rather than growing a
+// second, slightly different one.
 
 import Accordion from '@/components/ui/Accordion'
 
-/*
- Questions and answers are the client's approved copy, recovered from the
- live bundle. Treat edits here as content changes, not code changes.
-*/
 const FAQ_ITEMS = [
   {
     question: 'What Is Medicare Advantage?',
@@ -49,9 +43,6 @@ const FAQ_ITEMS = [
   },
 ]
 
-/**
- * Renders the homepage FAQ block.
- */
 export default function Faq() {
   return (
     <div className="w-full h-fit px-4 pb-20">

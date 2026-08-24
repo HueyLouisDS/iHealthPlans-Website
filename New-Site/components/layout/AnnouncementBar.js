@@ -1,18 +1,10 @@
-/**
- * The dark blue call bar pinned above the header.
- * Two variants of the copy exist on the live site, one in the desktop header
- * and a longer one inside the open mobile menu, so the message is a prop.
- */
+// The dark blue call bar pinned above the header.
+// Two variants of the copy exist on the live site, one in the desktop header
+// and a longer one inside the open mobile menu, so the message is a prop.
 
 import CallLink from '@/components/tracking/CallLink'
 import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS } from '@/lib/siteConfig'
 
-/**
- * Renders the announcement bar.
- * `variant` picks which of the 2 approved sentences follows the number.
- * `location` is passed through to CallLink so the 2 bars stay distinguishable
- * in the click report even though they show the same number.
- */
 export default function AnnouncementBar({ variant = 'header', location = 'announcementBar' }) {
   const isMenu = variant === 'menu'
 

@@ -1,19 +1,17 @@
-/**
- * Whether the phone line is staffed right now, and when it opens next.
- *
- * The phone is answered Monday to Friday, 9:00 to 17:30 Eastern. That is 42.5
- * hours out of 168, so roughly 75% of the week a tel: link rings out. Knowing
- * which side of that a visitor is on is what lets the page offer a callback
- * instead of a dead end.
- *
- * Everything here is computed in America/New_York regardless of where the
- * visitor is. A caller in Los Angeles at 3pm is calling an office that closed
- * 30 minutes ago, and the page has to say so. Using the visitor's own clock
- * would tell them the opposite.
- *
- * Daylight saving is handled by Intl rather than by an offset, because EST and
- * EDT differ and a hardcoded -5 would be an hour wrong for 8 months of the year.
- */
+// Whether the phone line is staffed right now, and when it opens next.
+//
+// The phone is answered Monday to Friday, 9:00 to 17:30 Eastern. That is 42.5
+// hours out of 168, so roughly 75% of the week a tel: link rings out. Knowing
+// which side of that a visitor is on is what lets the page offer a callback
+// instead of a dead end.
+//
+// Everything here is computed in America/New_York regardless of where the
+// visitor is. A caller in Los Angeles at 3pm is calling an office that closed
+// 30 minutes ago, and the page has to say so. Using the visitor's own clock
+// would tell them the opposite.
+//
+// Daylight saving is handled by Intl rather than by an offset, because EST and
+// EDT differ and a hardcoded -5 would be an hour wrong for 8 months of the year.
 
 const TIME_ZONE = 'America/New_York'
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -23,11 +21,6 @@ const FULL_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 
 const OPENS_AT = 9 * 60
 const CLOSES_AT = 17 * 60 + 30
 
-/**
- * Reads the weekday and clock time as they are in the office's timezone.
- * formatToParts is used rather than string parsing because the formatted
- * output varies by locale and would break on a machine set to another one.
- */
 function officeClock(date) {
   const parts = Object.fromEntries(
     new Intl.DateTimeFormat('en-US', {
@@ -50,21 +43,10 @@ function officeClock(date) {
   }
 }
 
-/**
- * Whether a day index is a working day. Monday to Friday.
- * TODO holidays are not handled. The office is presumably shut on public
- * holidays, and telling somebody to call back on Thanksgiving is worse than
- * saying nothing. Needs a holiday list from the client.
- */
 function isWorkingDay(dayIndex) {
   return dayIndex >= 1 && dayIndex <= 5
 }
 
-/**
- * Works out the status and the next opening.
- * Pure, takes the current time as an argument, so it can be tested at any
- * moment of the week without waiting for one.
- */
 export function getOfficeStatus(now = new Date()) {
   const { dayIndex, minutes } = officeClock(now)
 

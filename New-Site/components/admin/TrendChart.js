@@ -1,35 +1,11 @@
 'use client'
-
-/**
- * Daily leads and calls on the dashboard, with a legend that filters.
- *
- * Client rather than server only because of the legend. The chart itself is
- * plain divs sized as percentages, so there is no charting library here and
- * nothing to hydrate beyond which series are showing.
- *
- * Gridlines and a labelled scale rather than a bare row of bars, so a reader
- * can tell roughly what a bar is worth without hovering it.
- */
-
 import { useState } from 'react'
 
-/*
- "Connected" rather than "Calls", because the series counts connected calls
- only, matching the funnel stage above it. It used to count every call, which
- put a peak of 45 on a chart sitting under a tile reading 528 connected out
- of 939. Two numbers for the same word on one screen is how a dashboard
- stops being believed.
-*/
 const SERIES = [
   { key: 'leads', label: 'Leads', colour: 'bg-ihealthBlue' },
   { key: 'calls', label: 'Connected', colour: 'bg-ihealthGreen' },
 ]
 
-/*
- Colour per funnel stage, for when a tile has focused the chart on one of
- them. Leads and calls keep the colours they have in the default 2 series
- view, or selecting a tile would recolour a series the reader just learned.
-*/
 const STAGE_COLOURS = {
   sessions: 'bg-ihealthGreen',
   callClicks: 'bg-ihealthGreen',
@@ -38,13 +14,6 @@ const STAGE_COLOURS = {
   conversions: 'bg-ihealthBlue',
 }
 
-/**
- * One legend entry, which is also the control that shows and hides its series.
- *
- * A real button rather than a span with an onClick, so it is reachable by
- * keyboard and announces its state. aria-pressed is the right role here
- * because this is a toggle, not navigation.
- */
 function LegendToggle({ series, isVisible, onToggle }) {
   return (
     <button
@@ -66,25 +35,9 @@ function LegendToggle({ series, isVisible, onToggle }) {
   )
 }
 
-/**
- * Renders the chart.
- *
- * `peak` comes from the server as the peak across both series. It is
- * recalculated here from whatever is showing, because that is the whole point
- * of hiding a series. Leads top out around 13 a day against calls at 45, so
- * leaving the axis alone would leave leads as a row of stubs and the filter
- * would show you nothing you could not already see.
- */
 export default function TrendChart({ days, peak: fullPeak, stage = null }) {
   const [hidden, setHidden] = useState(() => new Set())
 
-  /**
-   * Shows or hides one series.
-   *
-   * Hiding the last visible series brings both back rather than emptying the
-   * chart. An empty chart is never what someone meant by clicking, and it is
-   * a state you would then have to work out how to leave.
-   */
   function toggle(key) {
     setHidden((current) => {
       const next = new Set(current)
@@ -95,34 +48,14 @@ export default function TrendChart({ days, peak: fullPeak, stage = null }) {
     })
   }
 
-  /*
-   A selected funnel stage overrides the legend entirely. The 2 series view
-   and a single focused stage are different questions, and offering both
-   controls at once would let you hide the very series you just asked for.
-  */
   const visible = stage
     ? [{ key: stage.key, label: stage.label, colour: STAGE_COLOURS[stage.key] || 'bg-ihealthGreen' }]
     : SERIES.filter((series) => !hidden.has(series.key))
-
-  /*
-   Rescaled to what is on screen. Never below 1, or a period with no activity
-   divides by zero and every bar renders as NaN percent.
-  */
   const peak = Math.max(
     1,
     ...days.flatMap((day) => visible.map((series) => day[series.key]))
   )
-
-  /*
-   A long period would render bars a pixel wide, so past a point only the
-   gaps between them are dropped rather than the bars themselves
-  */
   const gap = days.length > 45 ? 'gap-px' : 'gap-1'
-
-  /*
-   The axis labels sit in this gutter. Sessions run to 4 digits where leads
-   run to 2, so a fixed gutter would let "1117" sit on top of the first bar.
-  */
   const gutter = peak >= 1000 ? 'pl-12' : 'pl-8'
 
   return (

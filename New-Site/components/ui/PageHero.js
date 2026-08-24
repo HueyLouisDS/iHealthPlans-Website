@@ -1,24 +1,16 @@
-/**
- * Gradient page hero, shared by the product pages and the enrollment pages.
- * Extracted from ProductPage rather than copied, so the 7 landing pages that
- * use it cannot drift apart visually.
- *
- * Deliberately not a photo hero. Choosing stock photography for regulated
- * pages is a client decision, and the brand gradient is already part of the
- * design system, so these ship without waiting on image selection.
- */
+// Gradient page hero, shared by the product pages and the enrollment pages.
+// Extracted from ProductPage rather than copied, so the 7 landing pages that
+// use it cannot drift apart visually.
+//
+// Deliberately not a photo hero. Choosing stock photography for regulated
+// pages is a client decision, and the brand gradient is already part of the
+// design system, so these ship without waiting on image selection.
 
 import Link from 'next/link'
 import CallLink from '@/components/tracking/CallLink'
 import CallAccessDetails from '@/components/compliance/CallAccessDetails'
 import { PHONE_NUMBER } from '@/lib/siteConfig'
 
-/**
- * Renders the hero.
- * `callLocation` is passed straight through to CallLink, so every page using
- * this hero reports its phone clicks under its own name rather than all of
- * them collapsing into one bucket in the funnel report.
- */
 export default function PageHero({ eyebrow, headline, intro, callLocation, children }) {
   return (
     <div className="w-full bg-[linear-gradient(96deg,var(--ihealth-blue)_20%,var(--ihealth-green)_140%)] text-white">

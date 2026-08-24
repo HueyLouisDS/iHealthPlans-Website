@@ -1,16 +1,11 @@
-/**
- * The section blocks the 3 enrollment pages are assembled from.
- * Grouped in one file because each is small and they are only ever used
- * together. Splitting them into 5 files would add navigation cost without
- * adding clarity.
- */
+// The section blocks the 3 enrollment pages are assembled from.
+// Grouped in one file because each is small and they are only ever used
+// together. Splitting them into 5 files would add navigation cost without
+// adding clarity.
 
 import Link from 'next/link'
 import { ENROLLMENT_WINDOWS } from '@/lib/content/enrollment'
 
-/**
- * Green tick, matching the one used on the product pages.
- */
 export function CheckIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-ihealthGreen flex-shrink-0 mt-1" aria-hidden="true">
@@ -19,11 +14,6 @@ export function CheckIcon() {
   )
 }
 
-/**
- * All 6 enrollment windows as cards.
- * Windows that have their own page link through to it, the rest do not, which
- * is why the card renders as either a Link or a div.
- */
 export function WindowGrid() {
   return (
     <section className="w-full h-fit py-16 px-4">
@@ -75,9 +65,6 @@ export function WindowGrid() {
   )
 }
 
-/**
- * Narrative block, a heading and paragraphs.
- */
 export function Explainer({ content }) {
   return (
     <section className="w-full h-fit py-16 px-4">
@@ -93,9 +80,6 @@ export function Explainer({ content }) {
   )
 }
 
-/**
- * Ticked list on a tinted panel, used for what you can do in a window.
- */
 export function TickList({ content }) {
   return (
     <section className="w-full h-fit py-16 px-4">
@@ -114,11 +98,6 @@ export function TickList({ content }) {
   )
 }
 
-/**
- * Term and detail list, used for qualifying events, exclusions, and checklists.
- * A definition list rather than a table, since these are label and explanation
- * pairs and a table would imply a comparison that is not there.
- */
 export function TermList({ content, columns = 1 }) {
   return (
     <section className="w-full h-fit py-16 px-4">
@@ -149,12 +128,6 @@ export function TermList({ content, columns = 1 }) {
   )
 }
 
-/**
- * Penalty explainer for the hub page.
- * Describes the mechanism only. No percentages or dollar amounts, because
- * those belong on a page a compliance reviewer has signed off with a plan
- * year attached to it.
- */
 export function PenaltyNote() {
   return (
     <section className="w-full h-fit py-16 px-4">

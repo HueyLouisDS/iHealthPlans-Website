@@ -1,16 +1,6 @@
 'use client'
-
-/**
- * Generic single open accordion.
- * Pulled out of the homepage FAQ so the product pages can reuse the exact
- * interaction rather than growing a second, slightly different one.
- */
-
 import { useState } from 'react'
 
-/**
- * Plus and minus glyph for the toggle, swapped by the open state.
- */
 function ToggleIcon({ isOpen }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6" aria-hidden="true">
@@ -20,11 +10,6 @@ function ToggleIcon({ isOpen }) {
   )
 }
 
-/**
- * Renders a list of question and answer pairs.
- * Tracks a single open index rather than a set, so opening one closes the
- * others, which is how the live site behaves.
- */
 export default function Accordion({ items }) {
   const [openIndex, setOpenIndex] = useState(null)
 

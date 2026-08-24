@@ -1,13 +1,11 @@
-/**
- * Shared template for the legal and compliance notices.
- * Plain, high contrast, generous line height, and a contents list at the top.
- * These pages get read by people who are annoyed, worried, or acting on
- * somebody else's behalf, so findability beats visual interest.
- *
- * Any content string beginning "TO CONFIRM:" renders as a visible amber block
- * rather than as body copy. That is deliberate. An unresolved legal notice
- * should be impossible to publish without somebody seeing it.
- */
+// Shared template for the legal and compliance notices.
+// Plain, high contrast, generous line height, and a contents list at the top.
+// These pages get read by people who are annoyed, worried, or acting on
+// somebody else's behalf, so findability beats visual interest.
+//
+// Any content string beginning "TO CONFIRM:" renders as a visible amber block
+// rather than as body copy. That is deliberate. An unresolved legal notice
+// should be impossible to publish without somebody seeing it.
 
 import Link from 'next/link'
 import { HeaderSpacer } from '@/components/layout/Header'
@@ -17,9 +15,6 @@ import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS } from '@/lib/siteConfig'
 
 const CONFIRM_PREFIX = 'TO CONFIRM:'
 
-/**
- * Turns a heading into an anchor id, so the contents list can link to it.
- */
 function toAnchorId(heading) {
   return heading
     .toLowerCase()
@@ -27,11 +22,6 @@ function toAnchorId(heading) {
     .replace(/^-|-$/g, '')
 }
 
-/**
- * Highlighted block for an unresolved item.
- * Amber rather than red, since these are open questions rather than errors,
- * but loud enough that nobody ships the page by accident.
- */
 function ToConfirm({ text }) {
   return (
     <div className="w-full my-4 border-l-4 border-l-amber-500 bg-amber-50 px-5 py-4 rounded-r-lg">
@@ -43,20 +33,11 @@ function ToConfirm({ text }) {
   )
 }
 
-/**
- * Renders one paragraph, or a ToConfirm block if that is what it is.
- */
 function Paragraph({ text }) {
   if (text.startsWith(CONFIRM_PREFIX)) return <ToConfirm text={text} />
   return <p className="text-lg leading-relaxed">{text}</p>
 }
 
-/**
- * Contact rows. The phone entry is a real CallLink rather than plain text,
- * because these pages carry the number that a person in difficulty will use,
- * and a call from a legal notice is a meaningfully different signal from a
- * call off a landing page.
- */
 function Contacts({ items, slug }) {
   return (
     <dl className="w-full my-4 divide-y divide-gray-900/10 border-y border-gray-900/10">
@@ -85,10 +66,6 @@ function Contacts({ items, slug }) {
   )
 }
 
-/**
- * Renders a complete notice from its data.
- * Contents list first, then the sections, each with its own anchor.
- */
 export default function LegalPage({ slug }) {
   const page = getLegalPage(slug)
   if (!page) return null

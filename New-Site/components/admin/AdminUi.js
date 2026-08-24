@@ -1,20 +1,10 @@
-/**
- * Small shared pieces for the admin pages, grouped in one file because each is
- * a few lines and they are only ever used together.
- * Stat tiles, tables, empty states, and the "no data yet" notice that every
- * page currently shows.
- */
+// Small shared pieces for the admin pages, grouped in one file because each is
+// a few lines and they are only ever used together.
+// Stat tiles, tables, empty states, and the "no data yet" notice that every
+// page currently shows.
 
 import Link from 'next/link'
 
-/**
- * A single number with its label, and optionally the rate it converts at from
- * the stage above it in the funnel.
- *
- * Pass `href` to make the whole tile a link, which is what the funnel tiles on
- * the dashboard use to select a stage. `isSelected` draws the green ring.
- * Without an href it stays a plain div rather than a link that goes nowhere.
- */
 export function StatTile({ label, value, rate, delta, isMuted = false, href, isSelected = false, selectedLabel }) {
   const className = `bg-white border rounded-lg p-5 flex flex-col gap-1 transition-[box-shadow,opacity,border-color] ${
     isMuted ? 'opacity-60' : ''
@@ -52,11 +42,6 @@ export function StatTile({ label, value, rate, delta, isMuted = false, href, isS
   return (
     <Link
       href={href}
-      /*
-       aria-current says which tile is driving the page, and the ring is not
-       the only signal. Colour alone is unreadable for anyone with a red
-       green deficiency, so the state is announced as well as drawn.
-      */
       aria-current={isSelected ? 'true' : undefined}
       className={className}
     >
@@ -66,23 +51,13 @@ export function StatTile({ label, value, rate, delta, isMuted = false, href, isS
   )
 }
 
-/**
- * Change against the previous period of the same length.
- *
- * Direction is carried by an arrow and a word as well as by colour, because
- * colour alone is unreadable for anyone with a red green deficiency, and that
- * is roughly 1 in 12 men.
- *
- * No judgement is attached to the direction. On this dashboard up is good for
- * leads and bad for unmatched calls, and the component has no way to know
- * which it is looking at.
- */
 export function DeltaBadge({ delta }) {
   const styles = {
     up: 'bg-green-100 text-green-900',
     down: 'bg-red-100 text-red-900',
     flat: 'bg-gray-100 text-gray-700',
   }
+
   const arrows = { up: '↑', down: '↓', flat: '→' }
 
   return (
@@ -100,12 +75,6 @@ export function DeltaBadge({ delta }) {
   )
 }
 
-/**
- * Generic table.
- * `columns` is a list of { key, label, align, render }. Passing a render
- * function keeps formatting decisions with the page that owns the data rather
- * than pushing them into this component.
- */
 export function DataTable({ columns, rows, emptyMessage, getRowHref }) {
   if (!rows || rows.length === 0) {
     return <EmptyState message={emptyMessage} />
@@ -165,11 +134,6 @@ export function DataTable({ columns, rows, emptyMessage, getRowHref }) {
   )
 }
 
-/**
- * Coloured pill for a lead status, so a list can be scanned rather than read.
- * Colour is a second channel here, never the only one, the label is always
- * present for anyone who cannot distinguish them.
- */
 export function StatusPill({ status }) {
   const styles = {
     new: 'bg-blue-100 text-blue-900',
@@ -186,10 +150,6 @@ export function StatusPill({ status }) {
   )
 }
 
-/**
- * Yes or no marker for whether a call matched back to a web session.
- * Unmatched is the interesting case, so it is the one that draws the eye.
- */
 export function MatchPill({ matched }) {
   return (
     <span className={`inline-block px-2.5 py-1 rounded text-sm font-semibold ${matched ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'}`}>
@@ -198,9 +158,6 @@ export function MatchPill({ matched }) {
   )
 }
 
-/**
- * Shown when a query returns nothing.
- */
 export function EmptyState({ message }) {
   return (
     <div className="bg-white border rounded-lg px-6 py-14 text-center">
@@ -209,18 +166,6 @@ export function EmptyState({ message }) {
   )
 }
 
-/**
- * The notice every admin page currently carries.
- * These pages are built and their data contracts are settled, but nothing is
- * being captured yet, so every number is zero. Saying so plainly is better
- * than showing a confident zero that reads as "we had no leads".
- */
-/**
- * Shown on every page while LH_ADMIN_USE_FIXTURES is on.
- * Loud and red on purpose. Fabricated numbers rendered in a real looking
- * dashboard are worse than no numbers at all, so this must be impossible to
- * miss and impossible to mistake for a styling flourish.
- */
 export function DemoDataNotice() {
   return (
     <div className="mb-6 border-2 border-red-500 bg-red-50 px-5 py-4 rounded-lg">
@@ -240,10 +185,6 @@ export function DemoDataNotice() {
   )
 }
 
-/**
- * Renders whichever notice is correct for the current mode, so no page has to
- * decide for itself and none can accidentally show neither.
- */
 export function DataSourceNotice({ isFixtures, needs }) {
   return isFixtures ? <DemoDataNotice /> : <NoDataYetNotice needs={needs} />
 }

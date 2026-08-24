@@ -1,37 +1,12 @@
 'use client'
-
-/**
- * Top traffic sources on the dashboard, with a control that changes what the
- * bars measure.
- *
- * Ranked by leads produced rather than by traffic sent. A source that sends a
- * lot of traffic and no leads is not a top source, it is a cost.
- *
- * Client rather than server only because of the measure toggle. The bars are
- * plain divs sized as percentages, so there is nothing else to hydrate.
- */
-
 import Link from 'next/link'
 import { useState } from 'react'
 
-/*
- Counts only. A conversion rate belongs here in principle, but a source with
- 3 leads and 1 enrollment ranks first at 33 percent and the card has no room
- for the thin volume marking that makes such a number safe to read. The
- attribution page does that properly, and the link at the top right goes
- straight to it.
-*/
 const MEASURES = [
   { key: 'leads', label: 'Leads', noun: 'leads' },
   { key: 'conversions', label: 'Enrollments', noun: 'enrollments' },
 ]
 
-/**
- * One measure button.
- *
- * A real button with aria-pressed, so it is keyboard reachable and announces
- * its state, matching the trend chart legend above it.
- */
 function MeasureToggle({ measure, isActive, onSelect }) {
   return (
     <button
@@ -47,14 +22,6 @@ function MeasureToggle({ measure, isActive, onSelect }) {
   )
 }
 
-/**
- * Renders the card.
- *
- * `measures` carries a separately ranked list per measure rather than one list
- * the client re-sorts. Taking the top 5 by leads and re-ordering those by
- * enrollments would hide a source that converts well on modest volume, which
- * is the source most worth finding.
- */
 export default function TopSources({ measures }) {
   const [active, setActive] = useState(MEASURES[0])
 
@@ -103,11 +70,6 @@ export default function TopSources({ measures }) {
                   className={`h-full rounded-full transition-[width] duration-300 ${
                     active.key === 'leads' ? 'bg-ihealthGreen' : 'bg-ihealthBlue'
                   }`}
-                  /*
-                   Scaled against the leader in the selected measure, so the
-                   top row always fills its bar and the rest read relative
-                   to it. Refitting is the point of switching.
-                  */
                   style={{ width: `${row.share * 100}%` }}
                 />
               </div>

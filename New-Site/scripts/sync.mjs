@@ -1,19 +1,17 @@
-/**
- * Calls the sync endpoint. This is what cron runs.
- *
- * Deliberately thin. The work happens in /api/admin/sync because the `@/`
- * alias, `import 'server-only'`, and revalidateTag all need the Next runtime,
- * and a script that pulled the data without invalidating the cache would leave
- * the admin pages showing yesterday's numbers over today's rows.
- *
- * Usage:
- *   node scripts/sync.mjs                  full sync
- *   node scripts/sync.mjs --only calls     one resource
- *   node scripts/sync.mjs --dry-run        fetch and map, write nothing
- *   node scripts/sync.mjs --inspect        report the field mapping
- *
- * Reads LH_SITE_URL and LH_CRON_SECRET from .env.local.
- */
+// Calls the sync endpoint. This is what cron runs.
+//
+// Deliberately thin. The work happens in /api/admin/sync because the `@/`
+// alias, `import 'server-only'`, and revalidateTag all need the Next runtime,
+// and a script that pulled the data without invalidating the cache would leave
+// the admin pages showing yesterday's numbers over today's rows.
+//
+// Usage:
+//   node scripts/sync.mjs                  full sync
+//   node scripts/sync.mjs --only calls     one resource
+//   node scripts/sync.mjs --dry-run        fetch and map, write nothing
+//   node scripts/sync.mjs --inspect        report the field mapping
+//
+// Reads LH_SITE_URL and LH_CRON_SECRET from .env.local.
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -23,7 +21,7 @@ const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 try {
   process.loadEnvFile(path.join(appRoot, '.env.local'))
 } catch {
-  /* No .env.local is fine when the values come from the real environment */
+  // No .env.local is fine when the values come from the real environment
 }
 
 const args = process.argv.slice(2)
@@ -79,6 +77,7 @@ if (body.inspect) {
       console.log(`  available but unmapped:\n    ${finding.unused.join(', ')}`)
     }
   }
+
   process.exit(result.findings?.some((f) => f.error || f.missing?.length) ? 1 : 0)
 }
 

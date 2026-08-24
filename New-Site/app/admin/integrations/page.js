@@ -1,14 +1,12 @@
-/**
- * Integration status and setup, /admin/integrations.
- *
- * Answers whether each integration is connected, without ever showing the
- * credential that connects it. Everything rendered comes through describe(),
- * which reports whether a key is present and never what it is.
- *
- * Server component. lib/integrations/config.js carries `import 'server-only'`,
- * so the described shape is passed down to the client card rather than the
- * config itself, which is what keeps the key off the boundary.
- */
+// Integration status and setup, /admin/integrations.
+//
+// Answers whether each integration is connected, without ever showing the
+// credential that connects it. Everything rendered comes through describe(),
+// which reports whether a key is present and never what it is.
+//
+// Server component. lib/integrations/config.js carries `import 'server-only'`,
+// so the described shape is passed down to the client card rather than the
+// config itself, which is what keeps the key off the boundary.
 
 import { getAdminSession } from '@/lib/admin/session'
 import AdminShell from '@/components/admin/AdminShell'

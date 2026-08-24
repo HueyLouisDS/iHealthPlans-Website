@@ -1,18 +1,11 @@
-/**
- * Full bleed homepage hero. Background photo, dark gradient scrim, headline
- * stack, and the 2 primary calls to action.
- * The gradient is what keeps the white copy readable over the photo, it is
- * load bearing rather than decorative.
- */
+// Full bleed homepage hero. Background photo, dark gradient scrim, headline
+// stack, and the 2 primary calls to action.
+// The gradient is what keeps the white copy readable over the photo, it is
+// load bearing rather than decorative.
 
 import Image from 'next/image'
 import OfficeStatusCta from '@/components/marketing/OfficeStatusCta'
 
-/**
- * Renders the hero.
- * The image is marked priority because it is the largest contentful paint on
- * the page and lazy loading it measurably delays the headline.
- */
 export default function Hero() {
   return (
     <div className="w-full h-fit pb-12 pt-20 sm:py-40 sm:min-h-[600px] relative">

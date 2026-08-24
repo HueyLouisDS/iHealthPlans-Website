@@ -1,9 +1,7 @@
-/**
- * Page for /annual-enrollment-period.
- * The most seasonal page on the site. Traffic to it spikes from roughly
- * September to early December, so it carries a live status banner telling a
- * visitor whether the window is open and how long they have.
- */
+// Page for /annual-enrollment-period.
+// The most seasonal page on the site. Traffic to it spikes from roughly
+// September to early December, so it carries a live status banner telling a
+// visitor whether the window is open and how long they have.
 
 import Link from 'next/link'
 import { HeaderSpacer } from '@/components/layout/Header'
@@ -16,22 +14,11 @@ import { getEnrollmentPage } from '@/lib/content/enrollment'
 
 const SLUG = 'annual-enrollment-period'
 
-/**
- * Title and description, read from the enrollment period data so they
- * cannot drift from the copy on the page.
- */
 export function generateMetadata() {
   const page = getEnrollmentPage(SLUG)
   return { title: page.title, description: page.metaDescription }
 }
 
-/**
- * Renders the AEP page.
- * Order is what you can do, what this window does not cover, why to review
- * anyway, then what to check. The exclusions sit high on purpose, because
- * assuming Medigap is covered by this window is the most expensive
- * misunderstanding a visitor can leave with.
- */
 export default function AnnualEnrollmentPeriodPage() {
   const page = getEnrollmentPage(SLUG)
 

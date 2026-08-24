@@ -1,11 +1,4 @@
 'use client'
-
-/**
- * Fixed site header, announcement bar plus logo, nav, phone block, and the
- * mobile menu. Client side only because of the menu toggle.
- * Pairs with HeaderSpacer, which reserves the height this steals from flow.
- */
-
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -13,20 +6,9 @@ import AnnouncementBar from '@/components/layout/AnnouncementBar'
 import CallLink from '@/components/tracking/CallLink'
 import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS, NAV_LINKS } from '@/lib/siteConfig'
 
-/*
- Shared by the plain nav links and the dropdown trigger, so a hover state or
- a spacing change never applies to only half the nav.
- Padding stepped down from the original px-12 when the nav went from 3 items
- to 5. At px-12 the row overflows into the phone block at the lg breakpoint.
-*/
 const NAV_ITEM_CLASS =
   'flex text-[#111C39] text-base xl:text-lg font-semibold flex-col items-center py-1 relative border-r last:border-r-0 border-[#E5E5E5] hover:opacity-70 transition-opacity duration-300 px-5 xl:px-7 whitespace-nowrap'
 
-/**
- * Hamburger glyph, inlined rather than pulled from an icon package.
- * The live site ships react-icons for this single shape, which is not worth a
- * dependency here.
- */
 function MenuIcon({ className }) {
   return (
     <svg viewBox="0 0 1024 1024" fill="currentColor" className={className} aria-hidden="true">
@@ -35,9 +17,6 @@ function MenuIcon({ className }) {
   )
 }
 
-/**
- * Close glyph for the open mobile menu.
- */
 function CloseIcon({ className }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
@@ -46,10 +25,6 @@ function CloseIcon({ className }) {
   )
 }
 
-/**
- * The site logo, repeated in the header and the open menu.
- * Priority loading, it is the largest contentful paint candidate above the fold.
- */
 function Logo({ className }) {
   return (
     <Link href="/" className={className}>
@@ -65,9 +40,6 @@ function Logo({ className }) {
   )
 }
 
-/**
- * Small chevron on the dropdown trigger.
- */
 function ChevronIcon({ isOpen }) {
   return (
     <svg
@@ -83,12 +55,6 @@ function ChevronIcon({ isOpen }) {
   )
 }
 
-/**
- * Desktop nav item that opens a panel of child links.
- * Opens on hover for a mouse and on click for keyboard and touch, because
- * hover alone is unreachable without a pointer. The wrapper keeps the panel
- * open while the cursor travels from the trigger down into it.
- */
 function NavDropdown({ link }) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -97,10 +63,6 @@ function NavDropdown({ link }) {
       className="relative"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
-      /*
-       Closing on blur that leaves the whole group is what makes tabbing out
-       of the last child dismiss the panel
-      */
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false)
       }}
@@ -133,16 +95,7 @@ function NavDropdown({ link }) {
               key={child.href}
               href={child.href}
               onClick={() => setIsOpen(false)}
-              /*
-               Not focusable while closed, otherwise tabbing lands on links
-               nobody can see
-              */
               tabIndex={isOpen ? 0 : -1}
-              /*
-               An overview entry reads as the parent of the ones below it,
-               which are indented under it. Same single level of menu, just
-               grouped, so nothing here needs a second flyout to reach.
-              */
               className={`block py-3 text-base transition-colors hover:bg-ihealthBlue/5 hover:text-ihealthBlue ${
                 child.isOverview
                   ? 'px-5 font-bold text-ihealthBlue border-b border-[#E5E5E5] mb-1'
@@ -158,11 +111,6 @@ function NavDropdown({ link }) {
   )
 }
 
-/**
- * Renders the whole header stack.
- * Fixed positioning means it sits outside normal flow, so any page using it
- * must also render HeaderSpacer or the hero slides underneath.
- */
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -241,10 +189,6 @@ export default function Header() {
 
           <div className="w-full px-4 pt-20 grid grid-cols-1 gap-5 flex-shrink-0">
             {NAV_LINKS.map((link) =>
-              /*
-               A group with children has no page of its own, so it renders as
-               a heading with its links nested rather than as a dead link
-              */
               link.children ? (
                 <div key={link.label} className="w-full flex flex-col items-start">
                   <span className="w-full flex items-center justify-center text-ihealthBlue/60 font-semibold text-[clamp(16px,3.55vw,32px)]">
@@ -303,11 +247,6 @@ export default function Header() {
   )
 }
 
-/**
- * Reserves the vertical space the fixed header occupies.
- * Separate export so a page can place it explicitly, which matters because the
- * hero is full bleed and needs to start exactly where the header ends.
- */
 export function HeaderSpacer() {
   return <div className="h-[107px]" aria-hidden="true" />
 }

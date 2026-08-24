@@ -1,20 +1,15 @@
-/**
- * Quote and callback page, /quote-health-plans.
- * The destination every call to action on the site points at.
- *
- * ?callback=1 switches the wording to a callback request. OfficeStatusCta adds
- * it automatically when the phone line is shut, which is roughly 75% of the
- * week, so a visitor arriving in the evening or at a weekend gets a page that
- * matches what just happened rather than one telling them to call.
- */
+// Quote and callback page, /quote-health-plans.
+// The destination every call to action on the site points at.
+//
+// ?callback=1 switches the wording to a callback request. OfficeStatusCta adds
+// it automatically when the phone line is shut, which is roughly 75% of the
+// week, so a visitor arriving in the evening or at a weekend gets a page that
+// matches what just happened rather than one telling them to call.
 
 import { HeaderSpacer } from '@/components/layout/Header'
 import QuoteForm from '@/components/forms/QuoteForm'
 import { BUSINESS_HOURS, PHONE_NUMBER, PHONE_TTY } from '@/lib/siteConfig'
 
-/**
- * Title and description for this route.
- */
 export async function generateMetadata({ searchParams }) {
   const params = await searchParams
   const isCallback = params?.callback === '1'

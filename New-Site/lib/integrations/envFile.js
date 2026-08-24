@@ -17,6 +17,7 @@ import { WRITABLE_KEYS } from '@/lib/integrations/fields'
  succeed and change nothing. next build always sets NODE_ENV to production,
  so a deployed app cannot reach this path.
 */
+
 export function envWritesEnabled() {
   return process.env.NODE_ENV !== 'production'
 }
@@ -25,17 +26,19 @@ const ENV_FILE = '.env.local'
 const APPEND_HEADING = '# Added from /admin/integrations'
 
 /*
- * Absolute path to .env.local. next dev runs with cwd at the app root, which
- * is where Next looks for it too.
+  Absolute path to .env.local. next dev runs with cwd at the app root, which
+  is where Next looks for it too.
  */
+
 function envPath() {
   return path.join(process.cwd(), ENV_FILE)
 }
 
 /*
- * Formats a value for a dotenv line. Quoted only when it has to be, since an
- * unescaped quote truncates the value at parse time rather than erroring.
+  Formats a value for a dotenv line. Quoted only when it has to be, since an
+  unescaped quote truncates the value at parse time rather than erroring.
  */
+
 function serialise(value) {
   if (value === '') return ''
   if (/^[A-Za-z0-9_./:@+-]+$/.test(value)) return value
@@ -44,11 +47,12 @@ function serialise(value) {
 }
 
 /*
- * Rewrites .env.local with the given values.
- *
- * Existing keys are replaced in place so the layout and comments survive.
- * Returns key names, never values.
+  Rewrites .env.local with the given values.
+
+  Existing keys are replaced in place so the layout and comments survive.
+  Returns key names, never values.
  */
+
 export async function writeEnvValues(values) {
   if (!envWritesEnabled()) {
     throw new Error('Environment writes are disabled outside development.')
@@ -67,7 +71,7 @@ export async function writeEnvValues(values) {
   const pending = new Map(Object.entries(values))
   const updated = []                      // keys overwritten in place
 
-  /* Matched at line start, so a commented out example is left alone */
+  // Matched at line start, so a commented out example is left alone
   const rewritten = lines.map((line) => {
     const match = line.match(/^([A-Z0-9_]+)=/)
     if (!match) return line
@@ -95,20 +99,21 @@ export async function writeEnvValues(values) {
     }
   }
 
-  /* Trailing newline, or the next append lands on the last value's line */
+  // Trailing newline, or the next append lands on the last value's line
   let output = rewritten.join('\n')
   if (!output.endsWith('\n')) output += '\n'
 
-  /* 0o600, since the default 0o644 is world readable. Ignored on Windows. */
+  // 0o600, since the default 0o644 is world readable. Ignored on Windows.
   await fs.writeFile(filePath, output, { encoding: 'utf8', mode: 0o600 })
 
   return { updated, added }
 }
 
 /*
- * Which writable keys have a value. Presence only, so the UI can show what is
- * set without holding a credential.
+  Which writable keys have a value. Presence only, so the UI can show what is
+  set without holding a credential.
  */
+
 export function describeWritableKeys() {
   const present = {}                      // key name to boolean, never a value
 

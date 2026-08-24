@@ -1,22 +1,19 @@
-/**
- * Closing call to action, a gradient card with a zip field and a quote button.
- * Appears at the foot of the homepage, the product pages, the enrollment
- * pages, and the education index.
- *
- * The zip field used to be decorative. On the live site whatever a visitor
- * types is discarded and the button is a plain link carrying nothing, so a
- * person who has volunteered their location has it thrown away at the last
- * step of the page. It now carries through to the quote form and prefills it.
- *
- * Written as a plain GET form rather than a client component with state. That
- * means no JavaScript is needed to submit it, the browser handles the query
- * string, and the resulting url is shareable and shows up in reporting with
- * the zip attached.
- */
+// Closing call to action, a gradient card with a zip field and a quote button.
+// Appears at the foot of the homepage, the product pages, the enrollment
+// pages, and the education index.
+//
+// The zip field used to be decorative. On the live site whatever a visitor
+// types is discarded and the button is a plain link carrying nothing, so a
+// person who has volunteered their location has it thrown away at the last
+// step of the page. It now carries through to the quote form and prefills it.
+//
+// Written as a plain GET form rather than a client component with state. That
+// means no JavaScript is needed to submit it, the browser handles the query
+// string, and the resulting url is shareable and shows up in reporting with
+// the zip attached.
 
-/**
- * Renders the closing call to action.
- */
+// Renders the closing call to action.
+
 export default function ZipCta() {
   return (
     <div className="w-full h-fit py-[clamp(80px,11.85vw,128px)] px-4">
@@ -39,10 +36,6 @@ export default function ZipCta() {
             type="text"
             inputMode="numeric"
             autoComplete="postal-code"
-            /*
-             5 digits, enforced again on the quote form and in the route
-             handler. Here it only saves a wasted round trip.
-            */
             pattern="[0-9]{5}"
             maxLength={5}
             placeholder="Enter your zipcode"

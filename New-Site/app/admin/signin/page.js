@@ -1,11 +1,9 @@
-/**
- * Admin sign in, /admin/signin.
- * The only page under /admin that middleware lets through unauthenticated,
- * because otherwise nobody could ever get in.
- *
- * Google Workspace only. There is no password field here by design, so there
- * is no password for this application to store, leak, or get wrong.
- */
+// Admin sign in, /admin/signin.
+// The only page under /admin that middleware lets through unauthenticated,
+// because otherwise nobody could ever get in.
+//
+// Google Workspace only. There is no password field here by design, so there
+// is no password for this application to store, leak, or get wrong.
 
 import { signIn } from '@/auth'
 
@@ -15,10 +13,6 @@ export const metadata = {
   robots: { index: false, follow: false, nocache: true },
 }
 
-/**
- * Google's mark, inlined. The button must carry it to be recognisable, and
- * loading a remote asset on the sign in page is an unnecessary dependency.
- */
 function GoogleMark() {
   return (
     <svg viewBox="0 0 48 48" className="w-6 h-6 flex-shrink-0" aria-hidden="true">
@@ -30,28 +24,18 @@ function GoogleMark() {
   )
 }
 
-/**
- * Human readable text for the errors Auth.js can hand back.
- * AccessDenied is the one that will actually happen, and it means the account
- * signed in successfully at Google but is not on the allowlist. Saying that
- * plainly saves a support call.
- */
 function errorMessage(code) {
   if (!code) return null
   if (code === 'AccessDenied') {
     return 'That account is not authorised for the reporting area. Access is limited to specific members of the management team. If you think you should have access, ask an administrator to add your address.'
   }
+
   return 'Something went wrong signing in. Please try again.'
 }
 
 export default async function AdminSignInPage({ searchParams }) {
   const params = await searchParams
   const error = errorMessage(params?.error)
-
-  /*
-   Only ever accept a path, never a full url, so this cannot be used to
-   bounce someone to another origin after a successful sign in
-  */
   const requested = String(params?.next || '')
   const redirectTo = requested.startsWith('/admin') ? requested : '/admin'
 

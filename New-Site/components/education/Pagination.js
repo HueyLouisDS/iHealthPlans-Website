@@ -1,24 +1,12 @@
-/**
- * Page navigation under the article grid.
- * Server rendered links rather than client state, so every one of the 14 pages
- * has a real url. The live site paginates in the browser, which means search
- * engines only ever see the newest 13 of 170 articles.
- */
+// Page navigation under the article grid.
+// Server rendered links rather than client state, so every one of the 14 pages
+// has a real url. The live site paginates in the browser, which means search
+// engines only ever see the newest 13 of 170 articles.
 
 import Link from 'next/link'
 
-/*
- How many numbered links to show around the current page before collapsing
- the rest into an ellipsis. 14 pages would fit, but a category filter can
- change the count and this keeps the row a fixed width.
-*/
 const WINDOW_SIZE = 2
 
-/**
- * Builds the list of page numbers to render, with nulls marking gaps.
- * Always keeps the first and last page visible so a visitor can jump to either
- * end without stepping through.
- */
 function buildPageList(currentPage, totalPages) {
   const pages = new Set([1, totalPages])
 
@@ -39,11 +27,6 @@ function buildPageList(currentPage, totalPages) {
   return withGaps
 }
 
-/**
- * Renders the pagination row, or nothing at all when there is only 1 page.
- * `categorySlug` is carried through every link so paging never silently drops
- * the active filter.
- */
 export default function Pagination({ page, totalPages, categorySlug }) {
   if (totalPages <= 1) return null
 
@@ -84,11 +67,6 @@ export default function Pagination({ page, totalPages, categorySlug }) {
   )
 }
 
-/**
- * One pagination control.
- * Disabled ends render as a span rather than a link, since a link that goes
- * nowhere is still focusable and still announced to a screen reader.
- */
 function PageLink({ href, children, isActive = false, isDisabled = false, label }) {
   const base = 'w-10 h-10 rounded-md flex items-center justify-center text-sm font-semibold transition-colors'
 

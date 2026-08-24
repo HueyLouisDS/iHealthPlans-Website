@@ -1,14 +1,12 @@
-/**
- * Applies the SQL files in db/migrations, in filename order, once each.
- *
- * Run it with:
- *   node scripts/migrate.mjs           apply anything not yet applied
- *   node scripts/migrate.mjs --status  list what has run and what has not
- *
- * Deliberately small. A migration tool is a dependency that has to be
- * understood by whoever is holding the pager at 2am, and this one is 100 lines
- * of code they can read in full.
- */
+// Applies the SQL files in db/migrations, in filename order, once each.
+//
+// Run it with:
+//   node scripts/migrate.mjs           apply anything not yet applied
+//   node scripts/migrate.mjs --status  list what has run and what has not
+//
+// Deliberately small. A migration tool is a dependency that has to be
+// understood by whoever is holding the pager at 2am, and this one is 100 lines
+// of code they can read in full.
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -20,31 +18,13 @@ import { resolveDbConfig, describeDbConfig } from '../lib/db/dsn.js'
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const appRoot = path.join(scriptDir, '..')
 const migrationsDir = path.join(appRoot, 'db', 'migrations')
-
-/*
- Next loads .env.local automatically, plain node does not, so a script run
- from a terminal would see no DATABASE_URL and report it as unset when it is
- sitting right there in the file.
-
- Resolved against the app root rather than the working directory, so this
- works whether it is run from New-Site or from the repository root.
-*/
 try {
   process.loadEnvFile(path.join(appRoot, '.env.local'))
 } catch {
-  /*
-   environment directly. The missing DATABASE_URL check below reports it. */
    }
 
    /*================================================================================
    MIGRATIONS ARE APPLIED, NEVER EDITED
-
-   Each file's contents are hashed and the hash is stored. Editing a file that
-   has already run makes the hash disagree and this refuses to continue.
-
-   That is not pedantry. An edited migration produces 2 databases with the
-   same version number and different schemas, and the one that is wrong is
-   always production. Fix a mistake with a new migration.
    ==================================================================================*/
 
    const LEDGER = `
@@ -57,16 +37,6 @@ try {
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
    `
 
-   /**
-   Splits a migration file into statements.
-
-   MySQL's protocol runs one statement per call unless multipleStatements is
-   enabled, and enabling that turns every query in the process into a possible
-   injection point. Splitting here keeps that flag off.
-
-   Comment lines are stripped first so a semicolon inside a comment does not
-   split a statement in half.
-  */
 function statements(sql) {
   return sql
     .split('\n')
@@ -77,29 +47,16 @@ function statements(sql) {
     .filter(Boolean)
 }
 
-/**
- * Connects, creating the database first if it does not exist yet.
- *
- * Saves a separate step and a confusing first error. A url naming a database
- * that has not been created fails with ER_BAD_DB_ERROR, which reads like a
- * credentials problem to anybody who has not seen it before.
- *
- * Only the database is created. Nothing here creates a user or grants
- * anything, so the credentials still have to be real.
- */
 async function connect() {
   const { config } = resolveDbConfig()
   const { database, ...server } = config
 
   if (database) {
-    /* Connect with no database selected, so this works before it exists */
+    // Connect with no database selected, so this works before it exists
     const bootstrap = await mysql.createConnection(server)
     try {
       const [before] = await bootstrap.query('SHOW DATABASES LIKE ?', [database])
       if (before.length === 0) {
-        /*
-         cannot be a placeholder. The backticks inside the name are stripped
-         so the quoting cannot be escaped out of. */
          await bootstrap.query(`CREATE DATABASE \`${database.replace(/`/g, '')}\`
          CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`)
          console.log(`  created  database ${database}`)
@@ -113,12 +70,6 @@ async function connect() {
          }
 
          async function run() {
-         /*
-         --check reports what the settings resolved to without connecting. The
-         password length is the useful part, since a 15 character password
-         reported as 4 means a url truncated it at a special character, which is a
-         different problem from a wrong password.
-        */
   if (process.argv.includes('--check')) {
     console.log(describeDbConfig())
     return
@@ -177,13 +128,6 @@ async function connect() {
       }
 
       const started = Date.now()
-
-      /*
-       No transaction around this. MySQL commits DDL implicitly, so wrapping
-       it would give the false impression that a half applied migration
-       rolls back. It does not, which is why each file should do one
-       coherent thing.
-      */
       for (const statement of statements(sql)) {
         await connection.query(statement)
       }

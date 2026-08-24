@@ -1,18 +1,11 @@
-/**
- * Article card with a hero image, used in 2 sizes on the education index.
- * The featured variant spans 2 grid columns at the top of page 1, the standard
- * variant fills the 3 column grid below it.
- */
+// Article card with a hero image, used in 2 sizes on the education index.
+// The featured variant spans 2 grid columns at the top of page 1, the standard
+// variant fills the 3 column grid below it.
 
 import Image from 'next/image'
 import Link from 'next/link'
 import CategoryChip from '@/components/education/CategoryChip'
 
-/**
- * Small calendar glyph beside the date.
- * Inlined for the same reason as the header icons, the live site pulls a whole
- * icon package in for a handful of shapes.
- */
 function CalendarIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 text-ihealthGreen" aria-hidden="true">
@@ -22,11 +15,6 @@ function CalendarIcon() {
   )
 }
 
-/**
- * Renders one article card.
- * `isFeatured` only changes the type scale and the image height, the markup is
- * otherwise identical so the 2 variants cannot drift apart.
- */
 export default function ArticleCard({ article, isFeatured = false }) {
   return (
     <Link href={`/education/${article.slug}`} className="w-full flex flex-col items-start group">

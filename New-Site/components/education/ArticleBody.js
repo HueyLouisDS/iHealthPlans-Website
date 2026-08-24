@@ -1,18 +1,15 @@
-/**
- * Renders an article body from the block data in content/education/bodies.
- * Used only by the article page. Every block type the extractor can emit has a
- * case here, and anything unrecognised is skipped rather than guessed at.
- *
- * Nothing here uses dangerouslySetInnerHTML. The source is a scrape of a site
- * we do not control, and the whole point of extracting it to blocks was so the
- * renderer never has to trust it.
- */
+// Renders an article body from the block data in content/education/bodies.
+// Used only by the article page. Every block type the extractor can emit has a
+// case here, and anything unrecognised is skipped rather than guessed at.
+//
+// Nothing here uses dangerouslySetInnerHTML. The source is a scrape of a site
+// we do not control, and the whole point of extracting it to blocks was so the
+// renderer never has to trust it.
 
-/**
- * One run of text with its marks applied.
- * Marks nest rather than compose into a single class, so bold inside italic
- * survives without needing a case for every combination.
- */
+// One run of text with its marks applied.
+// Marks nest rather than compose into a single class, so bold inside italic
+// survives without needing a case for every combination.
+
 function Span({ span }) {
   if (span.break) return <br />
 
@@ -26,20 +23,10 @@ function Span({ span }) {
   return node
 }
 
-/**
- * Joins spans into a line of text.
- */
 function Spans({ spans }) {
   return spans.map((span, index) => <Span key={index} span={span} />)
 }
 
-/**
- * A list, and any list nested inside one of its items.
- *
- * These go 2 deep in the source, where a parent item is a label and the list
- * under it carries the detail. Flattening them would put a label beside its own
- * explanation and read as a contradiction.
- */
 function BlockList({ ordered, items, isNested = false }) {
   const Tag = ordered ? 'ol' : 'ul'
 
@@ -59,14 +46,6 @@ function BlockList({ ordered, items, isNested = false }) {
   )
 }
 
-/**
- * Renders the whole body.
- *
- * Headings come out as h2. The old site marked its subheadings as bold
- * paragraphs, which gives a screen reader nothing to navigate by and search
- * nothing to read as an outline. They are real headings here, and the h1 is the
- * article title on the page above this.
- */
 export default function ArticleBody({ blocks }) {
   return (
     <div className="w-full">

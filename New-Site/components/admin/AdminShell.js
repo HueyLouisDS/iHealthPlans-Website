@@ -1,27 +1,18 @@
-/**
- * Chrome for every admin page. Sidebar navigation, the signed in user, and
- * sign out.
- * Deliberately plain and dense. This is an internal tool read by people
- * looking for a number, not a marketing page, so information density beats
- * whitespace here in a way it does not anywhere else on the site.
- *
- * Stays a server component so the sign out server action works and so none of
- * the nav ships to the client. The collapse state lives in AdminFrame, which
- * receives the sidebar built here as a prop.
- */
+// Chrome for every admin page. Sidebar navigation, the signed in user, and
+// sign out.
+// Deliberately plain and dense. This is an internal tool read by people
+// looking for a number, not a marketing page, so information density beats
+// whitespace here in a way it does not anywhere else on the site.
+//
+// Stays a server component so the sign out server action works and so none of
+// the nav ships to the client. The collapse state lives in AdminFrame, which
+// receives the sidebar built here as a prop.
 
 import Image from 'next/image'
 import Link from 'next/link'
 import { signOut } from '@/auth'
 import AdminFrame from '@/components/admin/AdminFrame'
 
-/*
- `match` is the prefix that lights the item up, for when it differs from the
- href. Attribution needs both: the link has to skip past /admin/attribution
- because that path only redirects, and a redirect cannot be a soft
- navigation, so routing the sidebar through it made the whole page flash on
- every click. The item still has to stay lit on every dimension under it.
-*/
 const ADMIN_NAV = [
   { label: 'Dashboard', href: '/admin', exact: true },
   { label: 'Leads', href: '/admin/leads' },
@@ -31,18 +22,6 @@ const ADMIN_NAV = [
   { label: 'Integrations', href: '/admin/integrations' },
 ]
 
-/**
- * The Gmail mark, inlined.
- *
- * Inlined rather than fetched because the sidebar renders on every admin page
- * and this is 5 paths. Decorative, so it is hidden from assistive tech, the
- * name and address beside it already say whose account this is.
- *
- * Every account here is Google Workspace, which is the whole reason sign in is
- * Google only, so the mark is doing real work rather than decoration. It says
- * which credential you are holding, which matters on a machine where somebody
- * may be signed into more than one.
- */
 function GmailIcon() {
   return (
     <svg viewBox="0 0 48 48" className="w-6 h-6 flex-shrink-0" aria-hidden="true">
@@ -55,11 +34,6 @@ function GmailIcon() {
   )
 }
 
-/**
- * The sidebar contents, rendered on the server and handed to AdminFrame.
- * Kept separate so the server action below never has to cross into a client
- * component, which it cannot do.
- */
 function Sidebar({ user, currentPath }) {
   return (
     <>
@@ -136,8 +110,6 @@ function Sidebar({ user, currentPath }) {
         {user?.isDevBypass ? (
           <p className="mt-3 text-sm text-white/60">No session to sign out of.</p>
         ) : (
-          /*
-           no JavaScript and cannot be left half done by a failed fetch */
            <form
            action={async () => {
            'use server'
@@ -161,11 +133,6 @@ function Sidebar({ user, currentPath }) {
            )
            }
 
-           /**
-           Wraps a page in the admin chrome.
-           `currentPath` drives the active nav state, passed in rather than read from a
-           hook so this stays a server component.
-          */
 export default function AdminShell({ user, currentPath = '/admin', title, description, children }) {
   return (
     <AdminFrame

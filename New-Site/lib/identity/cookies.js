@@ -8,15 +8,6 @@
         THESE NAMES ARE PERMANENT
 ========================================================*/
 
-/*
- A visitor cookie is a 2 year identifier sitting in browsers we do not
- control. There is no migration for it. Whatever ships first is the name
- forever, so it is settled here rather than invented inline by whoever
- writes the tracking route.
-
- Short values on purpose. These ride on every request including static asset
- requests, so 4 characters of name and a uuid is the whole budget.
-*/
 export const VISITOR_COOKIE = 'lh_vid'  // the browser, persists across visits
 export const SESSION_COOKIE = 'lh_sid'  // one visit, refreshed on activity
 

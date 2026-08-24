@@ -1,20 +1,18 @@
-/**
- * CSV export of the call log, /admin/calls/export.
- *
- * Same rules as the lead export, and one more that is specific to calls.
- *
- * 1. Authorised again here rather than relying on middleware alone.
- * 2. Every export is audited, with who, when, how many, and which filters.
- * 3. It exports what the filters select, not the page on screen.
- * 4. NO RECORDING URLS. A call recording contains personal health information,
- *    and a url in a spreadsheet is a link that gets forwarded, pasted into
- *    chat, and opened by people who were never granted access. The export says
- *    whether a recording exists. Reaching it stays behind the audited path on
- *    the call detail page.
- *
- * TODO the audit currently goes to the server log. It needs a table once the
- * database exists, because a log that rotates is not an audit trail.
- */
+// CSV export of the call log, /admin/calls/export.
+//
+// Same rules as the lead export, and one more that is specific to calls.
+//
+// 1. Authorised again here rather than relying on middleware alone.
+// 2. Every export is audited, with who, when, how many, and which filters.
+// 3. It exports what the filters select, not the page on screen.
+// 4. NO RECORDING URLS. A call recording contains personal health information,
+//    and a url in a spreadsheet is a link that gets forwarded, pasted into
+//    chat, and opened by people who were never granted access. The export says
+//    whether a recording exists. Reaching it stays behind the audited path on
+//    the call detail page.
+//
+// TODO the audit currently goes to the server log. It needs a table once the
+// database exists, because a log that rotates is not an audit trail.
 
 import { getAdminSession } from '@/lib/admin/session'
 import { getCallsForExport, parsePeriod, usingFixtures } from '@/lib/admin/data'
@@ -36,13 +34,6 @@ const COLUMNS = [
   ['visitorId', 'Visitor id'],
 ]
 
-/**
- * Escapes one CSV cell.
- *
- * The leading apostrophe on anything starting with an operator is deliberate.
- * A spreadsheet treats a cell beginning with =, +, -, or @ as a formula, so an
- * attacker supplied value becomes code when the file is opened in Excel.
- */
 function toCell(value) {
   const text =
     value === null || value === undefined
@@ -73,10 +64,6 @@ export async function GET(request) {
     sort: searchParams.get('sort') || 'newest',
   }
 
-  /*
-   An explicit selection from the table. Still filtered first, so this can
-   only narrow what the current view already permits.
-  */
   const ids = (searchParams.get('ids') || '').split(',').map((id) => id.trim()).filter(Boolean)
 
   const calls = await getCallsForExport(filters, ids)

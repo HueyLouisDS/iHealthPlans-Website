@@ -1,17 +1,14 @@
-/**
- * Text input with a label that floats above the field once it has focus or a
- * value. The site uses this pattern on both the careers form and the quote
- * form, so it lives here rather than being copied into each.
- * The effect is pure CSS, driven by Tailwind's peer variants and the
- * placeholder-shown state, which is why the placeholder is a single space.
- */
+// Text input with a label that floats above the field once it has focus or a
+// value. The site uses this pattern on both the careers form and the quote
+// form, so it lives here rather than being copied into each.
+// The effect is pure CSS, driven by Tailwind's peer variants and the
+// placeholder-shown state, which is why the placeholder is a single space.
 
-/**
- * Renders one labelled field.
- * `name` doubles as the element id, which is what ties the label to the input
- * for screen readers. The live site omits that association entirely, so its
- * fields announce as unlabelled.
- */
+// Renders one labelled field.
+// `name` doubles as the element id, which is what ties the label to the input
+// for screen readers. The live site omits that association entirely, so its
+// fields announce as unlabelled.
+
 export default function FloatingLabelInput({
   name,
   label,
@@ -37,11 +34,6 @@ export default function FloatingLabelInput({
           onChange={onChange}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? `${name}-error` : undefined}
-          /*
-           The single space placeholder is load bearing. Tailwind's
-           peer-placeholder-shown variant is what holds the label in the
-           centre of an empty field, and an empty string does not trigger it.
-          */
           placeholder=" "
           className={`border focus:border-[#214F7A] block rounded-lg px-2.5 pb-2.5 pt-3 w-full bg-white text-[#5C5F69] appearance-none focus:outline-none focus:ring-0 peer ${
             error ? 'border-red-500' : 'border-black border-opacity-5'
