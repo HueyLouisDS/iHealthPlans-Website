@@ -216,7 +216,7 @@ export function EmptyState({ message }) {
  * than showing a confident zero that reads as "we had no leads".
  */
 /**
- * Shown on every page while ADMIN_USE_FIXTURES is on.
+ * Shown on every page while LH_ADMIN_USE_FIXTURES is on.
  * Loud and red on purpose. Fabricated numbers rendered in a real looking
  * dashboard are worse than no numbers at all, so this must be impossible to
  * miss and impossible to mistake for a styling flourish.
@@ -232,7 +232,7 @@ export function DemoDataNotice() {
         before tracking is in place. No decision should be made from anything shown here.
       </p>
       <p className="text-base text-red-900 mt-2">
-        Turn it off by removing <code className="font-mono font-semibold">ADMIN_USE_FIXTURES</code>{' '}
+        Turn it off by removing <code className="font-mono font-semibold">LH_ADMIN_USE_FIXTURES</code>{' '}
         from <code className="font-mono font-semibold">.env.local</code>. It must never be set in a
         deployed environment.
       </p>

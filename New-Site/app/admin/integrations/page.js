@@ -110,8 +110,8 @@ export default async function AdminIntegrationsPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <IntegrationCard status={dialer} envPrefix="DIALER" />
-        <IntegrationCard status={crm} envPrefix="CRM" />
+        <IntegrationCard status={dialer} envPrefix="LH_DIALER" />
+        <IntegrationCard status={crm} envPrefix="LH_CRM" />
       </div>
     </AdminShell>
   )

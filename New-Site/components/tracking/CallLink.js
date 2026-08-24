@@ -34,7 +34,7 @@ export default function CallLink({ location, className, children, number = PHONE
   }
 
   return (
-    <a href={`tel:${dialable}`} className={className} onClick={handleClick} data-call-location={location}>
+    <a href={`tel:${dialable}`} className={className} onClick={handleClick} data-lh-call-location={location}>
       {children}
     </a>
   )

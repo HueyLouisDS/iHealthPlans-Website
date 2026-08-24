@@ -7,7 +7,7 @@
     THIS IS FABRICATED DATA. It is not measurement and no decision should ever
     be made from it.
 
-    It is only ever returned when ADMIN_USE_FIXTURES is explicitly set to true,
+    It is only ever returned when LH_ADMIN_USE_FIXTURES is explicitly set to true,
     which lives in .env.local and must never be set in a deployed environment.
     Any page rendering it shows a banner saying so. See lib/admin/data.js for
     the switch.

@@ -4,7 +4,7 @@
  *
  * There is no database yet. Every function below has 2 paths.
  *
- *   ADMIN_USE_FIXTURES=true   returns fabricated demo data from fixtures.js,
+ *   LH_ADMIN_USE_FIXTURES=true   returns fabricated demo data from fixtures.js,
  *                             so the UI can be built and reviewed. Local only.
  *   otherwise                 returns an empty result of the correct shape,
  *                             which is the truth until tracking exists.
@@ -25,7 +25,7 @@ import { getDataset, AGENTS, formatDuration, formatDateTime } from '@/lib/admin/
  * must never appear because of a typo or a default.
  */
 export function usingFixtures() {
-  return process.env.ADMIN_USE_FIXTURES === 'true'
+  return process.env.LH_ADMIN_USE_FIXTURES === 'true'
 }
 
 

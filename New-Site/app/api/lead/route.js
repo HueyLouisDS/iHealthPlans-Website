@@ -11,6 +11,7 @@
  */
 
 import { validateLead, normaliseLead, redactLead } from '@/lib/leads/schema'
+import { ERRORS, errorResponse } from '@/lib/errorCodes'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,7 @@ export async function POST(request) {
   try {
     body = await request.json()
   } catch {
-    return Response.json({ error: 'Expected a JSON body.' }, { status: 400 })
+    return errorResponse(ERRORS.malformedJson, { error: 'Expected a JSON body.' })
   }
 
   /*
@@ -33,7 +34,7 @@ export async function POST(request) {
    */
   const errors = validateLead(body, { origin: 'site' })
   if (Object.keys(errors).length > 0) {
-    return Response.json({ errors }, { status: 400 })
+    return errorResponse(ERRORS.invalidPayload, { errors })
   }
 
   const lead = normaliseLead(body, {

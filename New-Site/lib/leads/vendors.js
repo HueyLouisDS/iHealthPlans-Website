@@ -8,7 +8,7 @@
  * mistake or otherwise. That matters because the whole reason this endpoint
  * exists is to compare vendors against each other.
  *
- * Configured as LEAD_VENDOR_KEYS in the environment:
+ * Configured as LH_LEAD_VENDOR_KEYS in the environment:
  *   acme-leads:sk_live_xxxx,other-vendor:sk_live_yyyy
  *
  * TODO move to a vendors table once the database exists, with an enabled flag
@@ -25,7 +25,7 @@ import { createHash, timingSafeEqual } from 'node:crypto'
  * serverless instance until it happens to be recycled.
  */
 function configuredVendors() {
-  const raw = process.env.LEAD_VENDOR_KEYS || ''
+  const raw = process.env.LH_LEAD_VENDOR_KEYS || ''
 
   return raw
     .split(',')

@@ -94,8 +94,8 @@ function normaliseBaseUrl(value, name) {
 /**
  * Reads one integration's settings from the environment.
  *
- * `prefix` is the environment variable prefix, so DIALER reads DIALER_BASE_URL,
- * DIALER_API_ID, and DIALER_API_KEY. One function rather than one per
+ * `prefix` is the environment variable prefix, so DIALER reads LH_DIALER_BASE_URL,
+ * LH_DIALER_API_ID, and LH_DIALER_API_KEY. One function rather than one per
  * integration, because 2 copies of this drift and the copy that drifts is the
  * one that stops checking https.
  *
@@ -208,15 +208,15 @@ export function authHeaders(config) {
 =============================================*/
 
 /**
- * The dialer. Reads DIALER_BASE_URL, DIALER_API_ID, DIALER_API_KEY.
+ * The dialer. Reads LH_DIALER_BASE_URL, LH_DIALER_API_ID, LH_DIALER_API_KEY.
  */
 export function dialerConfig() {
-  return integrationConfig('DIALER', { label: 'Dialer' })
+  return integrationConfig('LH_DIALER', { label: 'Dialer' })
 }
 
 /**
- * The CRM. Reads CRM_BASE_URL, CRM_API_ID, CRM_API_KEY.
+ * The CRM. Reads LH_CRM_BASE_URL, LH_CRM_API_ID, LH_CRM_API_KEY.
  */
 export function crmConfig() {
-  return integrationConfig('CRM', { label: 'CRM' })
+  return integrationConfig('LH_CRM', { label: 'CRM' })
 }

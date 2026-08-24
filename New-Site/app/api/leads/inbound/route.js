@@ -36,6 +36,7 @@
 
 import { validateLead, normaliseLead, redactLead, MAX_CONSENT_AGE_DAYS } from '@/lib/leads/schema'
 import { vendorFromAuthHeader, ingestionEnabled } from '@/lib/leads/vendors'
+import { ERRORS, errorResponse } from '@/lib/errorCodes'
 
 // node rather than edge, because the key comparison uses node:crypto
 export const runtime = 'nodejs'
@@ -52,7 +53,7 @@ const MAX_BODY_BYTES = 16 * 1024
  * Every response carries this, so an integrator can tell a rejected lead from
  * a network failure without parsing prose.
  */
-function respond(status, payload) {
+function accepted(status, payload) {
   return Response.json(payload, {
     status,
     headers: { 'Cache-Control': 'no-store' },
@@ -73,38 +74,33 @@ export async function POST(request) {
      * Distinct from a 401 on purpose. Nothing is configured, so no key could
      * ever work, and an integrator should not spend a day checking theirs.
      */
-    return respond(503, {
+    return errorResponse(ERRORS.ingestionOff, {
       error: 'Lead ingestion is not configured on this environment.',
-      code: 'ingestion_disabled',
     })
   }
 
   const vendor = vendorFromAuthHeader(request.headers.get('authorization'))
   if (!vendor) {
-    return respond(401, {
-      error: 'A valid Bearer key is required.',
-      code: 'unauthorised',
-    })
+    return errorResponse(ERRORS.unauthorised, { error: 'A valid Bearer key is required.' })
   }
 
   // From the header, so an oversized body is refused before it is read
   const declared = Number.parseInt(request.headers.get('content-length') || '0', 10)
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
-    return respond(413, { error: 'Body too large.', code: 'too_large' })
+    return errorResponse(ERRORS.tooLarge, { error: 'Body too large.' })
   }
 
   let body
   try {
     body = await request.json()
   } catch {
-    return respond(400, { error: 'Expected a JSON body.', code: 'malformed_json' })
+    return errorResponse(ERRORS.malformedJson, { error: 'Expected a JSON body.' })
   }
 
   const errors = validateLead(body, { origin: 'vendor' })
   if (Object.keys(errors).length > 0) {
-    return respond(400, {
+    return errorResponse(ERRORS.invalidLead, {
       error: 'Lead rejected.',
-      code: 'invalid_lead',
       errors,
       /*
        * Named in the response because a rejected consent is the failure most
@@ -156,8 +152,7 @@ export async function POST(request) {
  * wrong path or the wrong method.
  */
 export async function GET() {
-  return respond(405, {
+  return errorResponse(ERRORS.methodNotAllowed, {
     error: 'POST a single lead as JSON with a Bearer key.',
-    code: 'method_not_allowed',
   })
 }

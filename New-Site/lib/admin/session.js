@@ -9,7 +9,7 @@
       NODE_ENV !== 'production'      next build always sets production, so a
                                      built and deployed app can never take this
                                      path no matter what the environment says.
-      ADMIN_DEV_BYPASS_AUTH==='true' explicit opt in, exact string, in .env.local
+      LH_ADMIN_DEV_BYPASS_AUTH==='true' explicit opt in, exact string, in .env.local
 
     That means the bypass only works under `next dev` on a developer's machine.
     It is not a flag somebody can flip in production hosting and it is not a
@@ -28,7 +28,7 @@ import { auth } from '@/auth'
  * including middleware, agrees on it.
  */
 export function devAuthBypassEnabled() {
-  return process.env.NODE_ENV !== 'production' && process.env.ADMIN_DEV_BYPASS_AUTH === 'true'
+  return process.env.NODE_ENV !== 'production' && process.env.LH_ADMIN_DEV_BYPASS_AUTH === 'true'
 }
 
 /**

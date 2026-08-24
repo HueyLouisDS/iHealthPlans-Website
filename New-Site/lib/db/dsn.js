@@ -16,7 +16,7 @@
     "Access denied", which sends somebody off checking credentials that were
     correct all along. It cost us exactly that once already.
 
-    So DB_HOST and friends take precedence when present. No encoding, no
+    So LH_DB_HOST and friends take precedence when present. No encoding, no
     parsing, no class of bug.
 ==================================================================================*/
 
@@ -50,12 +50,12 @@ const BEHAVIOUR = {
 export function resolveDbConfig(env = process.env) {
   const problems = []
 
-  /* Discrete variables win. Set DB_HOST to opt into this form. */
-  if (env.DB_HOST) {
-    const port = Number.parseInt(env.DB_PORT || '3306', 10)
-    if (!Number.isFinite(port)) problems.push('DB_PORT is not a number.')
-    if (!env.DB_USER) problems.push('DB_USER is not set.')
-    if (!env.DB_NAME) problems.push('DB_NAME is not set.')
+  /* Discrete variables win. Set LH_DB_HOST to opt into this form. */
+  if (env.LH_DB_HOST) {
+    const port = Number.parseInt(env.LH_DB_PORT || '3306', 10)
+    if (!Number.isFinite(port)) problems.push('LH_DB_PORT is not a number.')
+    if (!env.LH_DB_USER) problems.push('LH_DB_USER is not set.')
+    if (!env.LH_DB_NAME) problems.push('LH_DB_NAME is not set.')
 
     return {
       source: 'discrete',
@@ -63,13 +63,13 @@ export function resolveDbConfig(env = process.env) {
       config: problems.length
         ? null
         : {
-            host: env.DB_HOST,
+            host: env.LH_DB_HOST,
             port,
-            user: env.DB_USER,
+            user: env.LH_DB_USER,
             /* Empty string is a valid MySQL password, so undefined rather
                than a falsy check, or a blank password becomes "not set" */
-            password: env.DB_PASSWORD ?? '',
-            database: env.DB_NAME,
+            password: env.LH_DB_PASSWORD ?? '',
+            database: env.LH_DB_NAME,
             ...BEHAVIOUR,
           },
     }
@@ -106,7 +106,7 @@ export function resolveDbConfig(env = process.env) {
 
   return {
     source: 'none',
-    problems: ['No database configured. Set DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME.'],
+    problems: ['No database configured. Set LH_DB_HOST, LH_DB_USER, LH_DB_PASSWORD, and LH_DB_NAME.'],
     config: null,
   }
 }

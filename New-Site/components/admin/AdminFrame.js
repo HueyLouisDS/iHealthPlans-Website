@@ -78,7 +78,7 @@ export default function AdminFrame({ sidebar, title, description, showBypassBann
           <div className="bg-red-600 text-white px-6 py-3">
             <p className="font-bold">Authentication bypassed. Development mode only, nobody signed in.</p>
             <p className="text-sm text-white/90">
-              Remove ADMIN_DEV_BYPASS_AUTH from .env.local to require a real Google sign in. It
+              Remove LH_ADMIN_DEV_BYPASS_AUTH from .env.local to require a real Google sign in. It
               cannot take effect in a production build.
             </p>
           </div>

@@ -5,13 +5,13 @@
  *
  * Two independent checks must both pass, and neither is sufficient alone.
  *
- * 1. The account's email domain must match ADMIN_ALLOWED_DOMAIN, and it must
+ * 1. The account's email domain must match LH_ADMIN_ALLOWED_DOMAIN, and it must
  *    be verified by Google. This is checked here on the server, against the
  *    profile Google returns. The `hd` parameter sent in the authorization
  *    request is only a hint to Google's account chooser, it is trivially
  *    altered by the caller, and it must never be treated as a control.
  *
- * 2. The email address must appear in ADMIN_ALLOWED_EMAILS. The domain check
+ * 2. The email address must appear in LH_ADMIN_ALLOWED_EMAILS. The domain check
  *    alone would admit all 150 licensed agents, and this area is for the
  *    management team. An allowlist is crude but it is auditable, it fails
  *    closed, and it needs no Directory API access to maintain.
@@ -39,8 +39,8 @@ function parseList(value) {
   )
 }
 
-const allowedDomain = String(process.env.ADMIN_ALLOWED_DOMAIN || '').trim().toLowerCase()
-const allowedEmails = parseList(process.env.ADMIN_ALLOWED_EMAILS)
+const allowedDomain = String(process.env.LH_ADMIN_ALLOWED_DOMAIN || '').trim().toLowerCase()
+const allowedEmails = parseList(process.env.LH_ADMIN_ALLOWED_EMAILS)
 
 /**
  * Decides whether an authenticated Google account may enter the admin area.
@@ -117,7 +117,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     /**
      * Re-checks authorisation on every session read rather than trusting the
-     * token alone. Removing someone from ADMIN_ALLOWED_EMAILS then takes
+     * token alone. Removing someone from LH_ADMIN_ALLOWED_EMAILS then takes
      * effect on their next request instead of whenever their session happens
      * to expire.
      */
