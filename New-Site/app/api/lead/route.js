@@ -75,16 +75,24 @@ export async function POST(request) {
    * reconciliation sweep. The reverse order would lose a submission whenever
    * the database write failed after a successful push.
    */
-  let leadId = null
+  /*
+   * Minted here rather than by the insert, so the push carries a tracking_id
+   * even when storage fails. A lead that reached TLD with no id on it can
+   * never be tied back to a session, and that is precisely the case where
+   * something has already gone wrong and the trail matters most.
+   */
+  const leadId = randomUUID()
+
+  let stored = false
   try {
-    leadId = await insertLead(lead)
+    stored = await insertLead(lead, leadId)
   } catch (cause) {
     /*
-     * Logged and swallowed. A person who filled in the form correctly should
-     * not see a failure because our database is down, and the redacted log
-     * line below is what tells us it happened.
+     * Logged with the id, not swallowed silently. If the push then succeeds,
+     * this line is the only record tying that TLD lead back to anything, so it
+     * has to carry the id somebody would search for.
      */
-    console.error('[lead] could not store lead:', cause.message)
+    console.error('[lead] could not store lead %s: %s', leadId, cause.message)
   }
 
   await deliver(lead, leadId)

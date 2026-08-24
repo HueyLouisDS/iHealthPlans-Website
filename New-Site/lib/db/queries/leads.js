@@ -34,13 +34,15 @@ import { query, transaction, databaseConfigured } from '@/lib/db/client'
  * succeeded would leave a record that looks consented in the UI but has no
  * evidence behind it, which is worse than the write failing outright.
  *
- * Returns the generated lead id, or null when there is no database configured,
- * which is a normal state in development.
+ * The id is passed in rather than generated here, because the caller sends it
+ * to TLD as tracking_id whether or not this write succeeds. Minting it inside
+ * would mean a failed insert produced a push with no join key on it.
+ *
+ * Returns true when stored, false when there is no database configured, which
+ * is a normal state in development.
  */
-export async function insertLead(lead) {
-  if (!databaseConfigured()) return null
-
-  const leadId = randomUUID()             // ours, and what TLD gets as tracking_id
+export async function insertLead(lead, leadId) {
+  if (!databaseConfigured()) return false
 
   await transaction(async (connection) => {
     await connection.query(
@@ -95,7 +97,7 @@ export async function insertLead(lead) {
     }
   })
 
-  return leadId
+  return true
 }
 
 /**
