@@ -6,6 +6,13 @@
  */
 
 /*
+ The canonical origin, used to build absolute urls for the sitemap and for
+ canonical tags. Overridable so a preview deploy does not publish a sitemap
+ pointing at production.
+*/
+export const SITE_URL = (process.env.LH_SITE_URL || 'https://ihealthplans.com').replace(/\/$/, '')
+
+/*
  The one number the whole site dials today. Every rendering of it goes
  through components/tracking/CallLink so a click can be attributed later.
 */

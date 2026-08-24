@@ -24,7 +24,7 @@ export function envWritesEnabled() {
 const ENV_FILE = '.env.local'
 const APPEND_HEADING = '# Added from /admin/integrations'
 
-/**
+/*
  * Absolute path to .env.local. next dev runs with cwd at the app root, which
  * is where Next looks for it too.
  */
@@ -32,7 +32,7 @@ function envPath() {
   return path.join(process.cwd(), ENV_FILE)
 }
 
-/**
+/*
  * Formats a value for a dotenv line. Quoted only when it has to be, since an
  * unescaped quote truncates the value at parse time rather than erroring.
  */
@@ -43,7 +43,7 @@ function serialise(value) {
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
 }
 
-/**
+/*
  * Rewrites .env.local with the given values.
  *
  * Existing keys are replaced in place so the layout and comments survive.
@@ -105,7 +105,7 @@ export async function writeEnvValues(values) {
   return { updated, added }
 }
 
-/**
+/*
  * Which writable keys have a value. Presence only, so the UI can show what is
  * set without holding a credential.
  */

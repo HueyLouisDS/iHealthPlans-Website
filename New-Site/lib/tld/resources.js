@@ -7,19 +7,34 @@
 ========================================================*/
 
 /*
- Written against the schema, not a live response. Run
- `node scripts/sync.mjs --inspect` once the key is in, it prints what TLD
- actually sends beside what this file expects. Read only.
-*/
-
-/*
- The dialer's own columns, which is where did_number lives. TODO confirm the
- parameter name, `vicidial` is a guess.
-*/
+ * These were written against the schema rather than against a live response,
+ * because there were no credentials when this was built. They are the shape
+ * the sync needs, not proof of what TLD returns.
+ *
+ * Run `node scripts/sync.mjs --inspect` once the api key is in. It fetches one
+ * page of each resource and prints the field names it actually got beside the
+ * ones this file expects, which turns the whole thing into a list of edits
+ * rather than a debugging session.
+ *
+ * Nothing writes to the database until the maps are confirmed. --inspect is
+ * read only.
+ *
+ * The VICIdial options. TLD exposes the dialer's own columns as an option on
+ * each endpoint rather than as a separate api, and the granular call data
+ * lives there rather than in the standard field set.
+ *
+ * calls needs it. did_number in particular is the attribution join, the field
+ * that matches call_clicks.presented_number, and a summarised call record is
+ * unlikely to carry the number the caller actually dialed.
+ *
+ * TODO confirm the parameter name. `vicidial` is a guess.
+ */
 const VICIDIAL_OPTION = { vicidial: 1 }
 
 export const RESOURCES = [
-  // Dispositions. Small, no cursor, replaced whole every run.
+  /*-----------------------------------------------------------------------
+    Dispositions. Small, no cursor, replaced whole every run.
+  -----------------------------------------------------------------------*/
   {
     name: 'dispositions',
     path: '/api/egress/statuses',
@@ -37,7 +52,9 @@ export const RESOURCES = [
     },
   },
 
-  // Agents. Also small and also replaced whole.
+  /*-----------------------------------------------------------------------
+    Agents. Also small and also replaced whole.
+  -----------------------------------------------------------------------*/
   {
     name: 'agents',
     path: '/api/egress/users',
@@ -55,7 +72,9 @@ export const RESOURCES = [
     },
   },
 
-  // Leads that exist only in the dialer. Needs a date range.
+  /*-----------------------------------------------------------------------
+    Leads that exist only in the dialer. Needs a date range.
+  -----------------------------------------------------------------------*/
   {
     name: 'dialer_leads',
     path: '/api/egress/leads',
@@ -89,7 +108,9 @@ export const RESOURCES = [
     },
   },
 
-  // Calls. The big one, and the one the attribution depends on.
+  /*-----------------------------------------------------------------------
+    Calls. The big one, and the one the attribution depends on.
+  -----------------------------------------------------------------------*/
   {
     name: 'calls',
     path: '/api/egress/calls',
@@ -123,8 +144,10 @@ export const RESOURCES = [
     },
   },
 
-  /* Policies. Cursor on modified, not created, because a status change after
-    submission is the entire reason to re-read a policy. */
+  /*-----------------------------------------------------------------------
+    Policies. Cursor on modified, not created, because a status change after
+    submission is the entire reason to re-read a policy.
+  -----------------------------------------------------------------------*/
   {
     name: 'policies',
     path: '/api/egress/policies',
@@ -155,12 +178,19 @@ export const RESOURCES = [
   },
 ]
 
-/* Looks up one resource by name, for a targeted re-sync. */
+/**
+ * Looks up one resource by name, for a targeted re-sync.
+ */
 export function resourceByName(name) {
   return RESOURCES.find((resource) => resource.name === name) || null
 }
 
-/* Listed, not sniffed. A guessed date that fails to parse becomes a null. */
+/*
+ * Columns that hold a timestamp, so the mapper knows to reformat them.
+ * Listed rather than sniffed from the value, because a sniff would have to
+ * guess and a date that silently fails to parse becomes a null in a column the
+ * reporting sorts by.
+ */
 export const DATE_COLUMNS = new Set([
   'created_at',
   'started_at',
