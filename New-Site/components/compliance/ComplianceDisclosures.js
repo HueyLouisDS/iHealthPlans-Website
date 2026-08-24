@@ -19,9 +19,9 @@ export default function ComplianceDisclosures() {
 
       <p>
         We do not offer every plan available in your area. Currently we represent {CARRIER_COUNT}{' '}
-        organizations which offer {PRODUCT_COUNT} products in your area. Please contact
-        Medicare.gov, 1-800-MEDICARE, or your local State Health Insurance Program (SHIP) to get
-        information on all of your options.
+        organizations which offer {PRODUCT_COUNT} products in all areas. Please contact
+        medicare.gov, 1-800-MEDICARE, or your State Health Insurance Program (SHIP) to get
+        information on all your options.
       </p>
 
       <p>

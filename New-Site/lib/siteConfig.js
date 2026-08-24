@@ -22,8 +22,14 @@ export const PHONE_NUMBER = '1-888-243-8046'
 export const PHONE_TTY = 'TTY 711'
 export const BUSINESS_HOURS = 'Monday-Friday, 9 AM-5:30 PM EST'
 export const SMID = 'MULTIPLAN_IHP_WEB2025_C'
-export const CARRIER_COUNT = 10
-export const PRODUCT_COUNT = 38
+
+/*
+ Quoted in the Federal Contracting Statement, which CMS requires to be
+ accurate. Both come from Spark's Plan Counts DKB 2026 calculator, with 9
+ carriers and 4 states selected, AZ NC VA WV. Re-run it when either changes.
+*/
+export const CARRIER_COUNT = 9          // organisations iHealth Plans represents
+export const PRODUCT_COUNT = 359        // products in all areas, not per area
 export const NAV_LINKS = [
   { label: 'Home', href: '/' },
   {
