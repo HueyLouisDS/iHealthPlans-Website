@@ -1,5 +1,5 @@
 // Reads and rewrites .env.local so the admin page can set integration
-// credentials without hand editing the file. Development only, see the banner.
+// credentials without hand editing the file. Development only.
 
 import 'server-only'
 
@@ -9,51 +9,32 @@ import path from 'node:path'
 import { WRITABLE_KEYS } from '@/lib/integrations/fields'
 
 /*=======================================================
-        DEVELOPMENT ONLY, AND THE GUARD IS NOT OPTIONAL
+        DEVELOPMENT ONLY
 ========================================================*/
 
-/**
- * A deployed app must never write this file. Three reasons, any one of which
- * is enough:
- *
- *   .env.local is not where a deployed app gets its environment. The host
- *   injects those, so a write would succeed and change nothing, which is worse
- *   than failing because it looks like it worked.
- *
- *   Production filesystems are usually read only, and on the ones that are not,
- *   a web form that writes an executable config file is a foothold.
- *
- *   Secrets that arrive through a browser have been through the browser. That
- *   is acceptable on a developer machine and not acceptable for live keys.
- *
- * next build always sets NODE_ENV to production, so a built and deployed app
- * cannot take this path regardless of what the environment says. Same guard
- * shape as the auth bypass in lib/admin/session.js.
- */
+/*
+ A deployed app gets its environment from the host, so a write there would
+ succeed and change nothing. next build always sets NODE_ENV to production,
+ so a deployed app cannot reach this path.
+*/
 export function envWritesEnabled() {
   return process.env.NODE_ENV !== 'production'
 }
 
 const ENV_FILE = '.env.local'
-
-/* Marks where this file appends keys that were not already present */
 const APPEND_HEADING = '# Added from /admin/integrations'
 
 /**
- * Absolute path to .env.local, resolved from the process working directory.
- * next dev runs with cwd at the app root, which is where Next itself looks for
- * the file, so the 2 always agree.
+ * Absolute path to .env.local. next dev runs with cwd at the app root, which
+ * is where Next looks for it too.
  */
 function envPath() {
   return path.join(process.cwd(), ENV_FILE)
 }
 
 /**
- * Formats a value for a dotenv line.
- *
- * Bare when it is safe to be bare, which covers urls, ids and keys. Anything
- * else is quoted with backslashes and quotes escaped, because an unescaped
- * quote silently truncates the value at parse time rather than erroring.
+ * Formats a value for a dotenv line. Quoted only when it has to be, since an
+ * unescaped quote truncates the value at parse time rather than erroring.
  */
 function serialise(value) {
   if (value === '') return ''
@@ -65,13 +46,8 @@ function serialise(value) {
 /**
  * Rewrites .env.local with the given values.
  *
- * Existing lines keep their position and their comments. A key already in the
- * file is replaced in place, so the layout and the explanations around each
- * block survive. Anything new is appended under one heading rather than
- * scattered, so it is obvious what was set from the UI.
- *
- * Returns { updated, added } as key name arrays for the caller to report. It
- * never returns a value.
+ * Existing keys are replaced in place so the layout and comments survive.
+ * Returns key names, never values.
  */
 export async function writeEnvValues(values) {
   if (!envWritesEnabled()) {
@@ -80,22 +56,18 @@ export async function writeEnvValues(values) {
 
   const filePath = envPath()
 
-  let original = ''                       // current file contents, empty if there is none
+  let original = ''                       // current contents, empty if no file
   try {
     original = await fs.readFile(filePath, 'utf8')
   } catch (cause) {
     if (cause.code !== 'ENOENT') throw cause
   }
 
-  const lines = original.split(/\r?\n/)   // split on both, the file may be CRLF on Windows
+  const lines = original.split(/\r?\n/)   // both, the file may be CRLF
   const pending = new Map(Object.entries(values))
-  const updated = []
+  const updated = []                      // keys overwritten in place
 
-  /*
-   Replace in place. Matched on the key at the start of a line so a commented
-   out example like `# LH_CRM_API_ID=` is left alone rather than being
-   uncommented and overwritten, which would lose the example.
-  */
+  /* Matched at line start, so a commented out example is left alone */
   const rewritten = lines.map((line) => {
     const match = line.match(/^([A-Z0-9_]+)=/)
     if (!match) return line
@@ -110,10 +82,9 @@ export async function writeEnvValues(values) {
     return `${key}=${serialise(value)}`
   })
 
-  const added = [...pending.keys()]
+  const added = [...pending.keys()]       // keys not already in the file
 
   if (added.length > 0) {
-    // One blank line before the heading, and only add the heading once
     if (!original.includes(APPEND_HEADING)) {
       if (rewritten[rewritten.length - 1] !== '') rewritten.push('')
       rewritten.push(APPEND_HEADING)
@@ -124,28 +95,19 @@ export async function writeEnvValues(values) {
     }
   }
 
-  /*
-   Written with a trailing newline. A file ending mid line parses fine but
-   makes the next append land on the same line as the last value.
-  */
+  /* Trailing newline, or the next append lands on the last value's line */
   let output = rewritten.join('\n')
   if (!output.endsWith('\n')) output += '\n'
 
-  /*
-   0o600, owner read and write only. The default would be 0o644 on a unix
-   machine, which puts live credentials in a world readable file. Ignored on
-   Windows, where the parent directory's ACL governs instead.
-  */
+  /* 0o600, since the default 0o644 is world readable. Ignored on Windows. */
   await fs.writeFile(filePath, output, { encoding: 'utf8', mode: 0o600 })
 
   return { updated, added }
 }
 
 /**
- * Which writable keys currently have a value in the environment.
- *
- * Presence only. Used so the UI can show which fields are already set without
- * the page ever holding a credential.
+ * Which writable keys have a value. Presence only, so the UI can show what is
+ * set without holding a credential.
  */
 export function describeWritableKeys() {
   const present = {}                      // key name to boolean, never a value
