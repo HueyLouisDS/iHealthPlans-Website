@@ -255,7 +255,7 @@ export async function pushLead(lead) {
       outcome: OUTCOMES.config,
       code: null,
       raw: null,
-      error: `Lead post is not configured: ${config.problems.join(' ')}`,
+      error: `Lead Post is not configured: ${config.problems.join(' ')}`,
     }
   }
 

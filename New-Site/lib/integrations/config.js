@@ -92,7 +92,7 @@ function normaliseBaseUrl(value, name) {
   return { url: parsed.toString().replace(/\/$/, ''), error: null }
 }
 
-/**
+/*
  * Reads one integration's settings from the environment.
  *
  * `prefix` is the environment variable prefix, so DIALER reads LH_DIALER_BASE_URL,
@@ -231,7 +231,7 @@ export function dialerPostConfig() {
 
   return {
     name: 'dialer_post',
-    label: 'Lead post',
+    label: 'Lead Post',
     postUrl,
     vendorId,
     postKey,

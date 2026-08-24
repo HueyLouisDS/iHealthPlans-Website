@@ -19,19 +19,11 @@
  */
 export const INTEGRATIONS = [
   {
-    name: 'dialer',
-    label: 'Dialer',
-    hint: 'Reads calls, agents and dispositions out of TLD.',
-    fields: [
-      { key: 'LH_DIALER_BASE_URL', label: 'Base url', placeholder: 'https://ihp.tldcrm.com' },
-      { key: 'LH_DIALER_API_ID', label: 'API id' },
-      { key: 'LH_DIALER_API_KEY', label: 'API key', secret: true },
-    ],
-  },
-  {
     name: 'crm',
     label: 'CRM',
-    hint: 'Reads leads and policies.',
+    hint:
+      'TLD. The API key created under Settings, API, which is a different place from the vendor ' +
+      'source that Lead Post uses. Everything the site reads comes through this.',
     fields: [
       { key: 'LH_CRM_BASE_URL', label: 'Base url', placeholder: 'https://ihp.tldcrm.com' },
       { key: 'LH_CRM_API_ID', label: 'API id' },
@@ -39,8 +31,18 @@ export const INTEGRATIONS = [
     ],
   },
   {
+    name: 'dialer',
+    label: 'Dialer',
+    hint: 'The dialer side, if it is ever reached separately from the CRM API above.',
+    fields: [
+      { key: 'LH_DIALER_BASE_URL', label: 'Base url' },
+      { key: 'LH_DIALER_API_ID', label: 'API id' },
+      { key: 'LH_DIALER_API_KEY', label: 'API key', secret: true },
+    ],
+  },
+  {
     name: 'dialer_post',
-    label: 'Lead post',
+    label: 'Lead Post',
     hint: 'Writes a lead into TLD when the site form is submitted.',
     fields: [
       { key: 'LH_DIALER_POST_URL', label: 'Post url', placeholder: 'https://ihp.tldcrm.com/post' },
