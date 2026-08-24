@@ -10,17 +10,18 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { devAuthBypassEnabled } from '@/lib/admin/session'
-import { AUTHOR_NAME, AUTHOR_ORG, AUTHOR_URL } from '@/lib/authorship'
+import { SHORT_NOTICE } from '@/lib/authorship'
 
 /*
- * Build credit on every response. Headers are read by scrapers, crawlers, and
- * anything inspecting the network tab, and cost a visitor nothing. See
- * lib/authorship.js.
+ * X-Author on every response, per ~/.claude/rules/attribution.md.
+ *
+ * The only mark that reaches assets with no HTML in them, images, fonts, and
+ * JSON endpoints. Some edge configs strip unknown headers, so it is verified
+ * after deploy rather than assumed.
  */
 function withCredit(response) {
   const target = response || new Response(null)
-  target.headers?.set('X-Built-By', `${AUTHOR_NAME}, ${AUTHOR_ORG}`)
-  target.headers?.set('X-Built-By-Url', AUTHOR_URL)
+  target.headers?.set('X-Author', SHORT_NOTICE)
   return target
 }
 

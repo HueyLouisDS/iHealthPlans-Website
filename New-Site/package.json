@@ -2,6 +2,9 @@
   "name": "ihealthplans-website",
   "version": "0.1.0",
   "private": true,
+  "author": "H.L, LionsHead Analytics Group (https://lionsheadanalyticsgroup.com/)",
+  "license": "UNLICENSED",
+  "copyright": "Copyright (c) 2026 iHealth Plans LLC. All rights reserved.",
   "main": "server.js",
   "scripts": {
     "dev": "next dev",

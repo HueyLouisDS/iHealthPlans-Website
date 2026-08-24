@@ -8,7 +8,7 @@
 
 import { Source_Sans_3 } from 'next/font/google'
 import './globals.css'
-import { authorshipMetadata, authorshipJsonLd, AUTHOR_STATEMENT } from '@/lib/authorship'
+import { authorshipMetadata, authorshipJsonLd, BUNDLER_BANNER } from '@/lib/authorship'
 
 /*
  * Matches the live site, a variable weight face across the full 200 to 900
@@ -56,7 +56,8 @@ export default function RootLayout({ children }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(authorshipJsonLd()) }}
         />
-        <script type="text/x-build-credit" dangerouslySetInnerHTML={{ __html: AUTHOR_STATEMENT }} />
+        {/* Bang delimiter, so minifiers keep it as a legal comment */}
+        <script type="text/x-notice" dangerouslySetInnerHTML={{ __html: BUNDLER_BANNER }} />
       </body>
     </html>
   )

@@ -7,30 +7,22 @@
  * purpose rather than being repurposed for it.
  */
 
-import {
-  AUTHOR_NAME,
-  AUTHOR_ORG,
-  AUTHOR_URL,
-  AUTHOR_TAGLINE,
-  AUTHOR_STATEMENT,
-} from '@/lib/authorship'
+import { FULL_NOTICE, SHORT_NOTICE, AUTHOR_URL } from '@/lib/authorship'
 
 export const dynamic = 'force-static'
 
 export function GET() {
   const body = `/* TEAM */
-Architect: ${AUTHOR_NAME}
-Company: ${AUTHOR_ORG}
-Site: ${AUTHOR_URL}
-Location: Boca Raton, Florida
+${FULL_NOTICE}
 
-/* CREDIT */
-${AUTHOR_STATEMENT}
+/* CONTACT */
+${SHORT_NOTICE}
+Location: Boca Raton, Florida
+Site: ${AUTHOR_URL}
 
 /* SITE */
 Standards: HTML5, CSS3, JSON-LD
 Components: Next.js, React, Tailwind CSS
-Doctrine: ${AUTHOR_TAGLINE}
 `
 
   return new Response(body, {
