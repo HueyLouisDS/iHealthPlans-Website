@@ -43,7 +43,7 @@ const VENDOR_EXPECTED_CODE = 104
  */
 const CRM_TEST_PATH = '/api/egress/policies?limit=1'
 
-/**
+/*
  * Wraps fetch with a timeout and turns network failures into a result rather
  * than a throw, so a caller never has to distinguish the two.
  */
@@ -101,7 +101,7 @@ export async function testCrm({ baseUrl, apiId, apiKey }) {
   }
 }
 
-/**
+/*
  * Checks the vendor source without writing a lead.
  *
  * See the banner above. An empty payload is refused by validation, and getting
