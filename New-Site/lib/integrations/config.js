@@ -184,7 +184,7 @@ export function authHeaders(config) {
     No rate limit means the cost is payload size, not requests per second.
     Narrow the columns on a big pull rather than pacing the calls.
 
-    The vendor post endpoint authenticates differently, see dialerPostConfig.
+    The vendor post endpoint authenticates differently, see vendorConfig.
 =============================================*/
 
 /**
@@ -212,26 +212,26 @@ export function crmConfig() {
  * The vendor id changes between the test vendor and the live one, so both it
  * and the key are environment configuration rather than anything committed.
  */
-export function dialerPostConfig() {
+export function vendorConfig() {
   assertNoPublicSecrets()
 
   const { url: postUrl, error: urlError } = normaliseBaseUrl(
-    process.env.LH_DIALER_POST_URL,
-    'LH_DIALER_POST_URL'
+    process.env.LH_VENDOR_POST_URL,
+    'LH_VENDOR_POST_URL'
   )
 
-  const vendorId = String(process.env.LH_DIALER_POST_VENDOR_ID || '').trim()
-  const postKey = String(process.env.LH_DIALER_POST_KEY || '').trim()
+  const vendorId = String(process.env.LH_VENDOR_ID || '').trim()
+  const postKey = String(process.env.LH_VENDOR_POST_KEY || '').trim()
 
   const problems = []
-  if (!process.env.LH_DIALER_POST_URL) problems.push('LH_DIALER_POST_URL is not set.')
+  if (!process.env.LH_VENDOR_POST_URL) problems.push('LH_VENDOR_POST_URL is not set.')
   else if (urlError) problems.push(urlError)
-  if (!vendorId) problems.push('LH_DIALER_POST_VENDOR_ID is not set.')
-  if (!postKey) problems.push('LH_DIALER_POST_KEY is not set.')
+  if (!vendorId) problems.push('LH_VENDOR_ID is not set.')
+  if (!postKey) problems.push('LH_VENDOR_POST_KEY is not set.')
 
   return {
-    name: 'dialer_post',
-    label: 'Lead Post',
+    name: 'vendor',
+    label: 'Vendor',
     postUrl,
     vendorId,
     postKey,
@@ -247,7 +247,7 @@ export function dialerPostConfig() {
  * That is fine for an api id, which identifies rather than authenticates, and
  * wrong for a post key, which is the whole credential.
  */
-export function describePost(config) {
+export function describeVendor(config) {
   return {
     name: config.name,
     label: config.label,

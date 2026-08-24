@@ -5,7 +5,7 @@
 
 import 'server-only'
 
-import { dialerPostConfig } from '@/lib/integrations/config'
+import { vendorConfig } from '@/lib/integrations/config'
 
 /*=======================================================
         THE POST KEY TRAVELS IN THE QUERY STRING
@@ -248,14 +248,14 @@ export function buildPayload(lead) {
  * leads.pushed_at and leads.push_error.
  */
 export async function pushLead(lead) {
-  const config = dialerPostConfig()
+  const config = vendorConfig()
 
   if (!config.isConfigured) {
     return {
       outcome: OUTCOMES.config,
       code: null,
       raw: null,
-      error: `Lead Post is not configured: ${config.problems.join(' ')}`,
+      error: `The vendor post is not configured: ${config.problems.join(' ')}`,
     }
   }
 

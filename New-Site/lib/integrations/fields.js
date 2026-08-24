@@ -23,7 +23,7 @@ export const INTEGRATIONS = [
     label: 'CRM',
     hint:
       'TLD. The API key created under Settings, API, which is a different place from the vendor ' +
-      'source that Lead Post uses. Everything the site reads comes through this.',
+      'source the Vendor card below uses. Everything the site reads comes through this.',
     fields: [
       { key: 'LH_CRM_BASE_URL', label: 'Base url', placeholder: 'https://ihp.tldcrm.com' },
       { key: 'LH_CRM_API_ID', label: 'API id' },
@@ -41,13 +41,15 @@ export const INTEGRATIONS = [
     ],
   },
   {
-    name: 'dialer_post',
-    label: 'Lead Post',
-    hint: 'Writes a lead into TLD when the site form is submitted.',
+    name: 'vendor',
+    label: 'Vendor',
+    hint:
+      'The vendor source, which is how the site posts a lead in when the form is submitted. ' +
+      'Write only, and not interchangeable with the CRM API key above.',
     fields: [
-      { key: 'LH_DIALER_POST_URL', label: 'Post url', placeholder: 'https://ihp.tldcrm.com/post' },
-      { key: 'LH_DIALER_POST_VENDOR_ID', label: 'Vendor id', placeholder: '15781' },
-      { key: 'LH_DIALER_POST_KEY', label: 'Post key', secret: true },
+      { key: 'LH_VENDOR_POST_URL', label: 'Post url', placeholder: 'https://ihp.tldcrm.com/post' },
+      { key: 'LH_VENDOR_ID', label: 'Vendor id', placeholder: '15781' },
+      { key: 'LH_VENDOR_POST_KEY', label: 'Post key', secret: true },
     ],
   },
 ]
