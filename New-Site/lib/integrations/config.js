@@ -87,6 +87,17 @@ function normaliseBaseUrl(value, name) {
   parsed.username = ''
   parsed.password = ''
 
+  /*
+   * The query string goes too. TLD's vendor post endpoint takes its post key
+   * as a url parameter, so a base url pasted straight from their instructions
+   * arrives here carrying a live credential. Left on, it would be stored, and
+   * describe() below would print it to any health check or screenshot.
+   *
+   * Parameters are added at the call site instead, where they are used once
+   * and never held.
+   */
+  parsed.search = ''
+
   /* Trailing slash removed so callers can join paths without doubling it */
   return { url: parsed.toString().replace(/\/$/, ''), error: null }
 }
@@ -219,4 +230,62 @@ export function dialerConfig() {
  */
 export function crmConfig() {
   return integrationConfig('LH_CRM', { label: 'CRM' })
+}
+
+/**
+ * The vendor post endpoint, which is how the site writes a lead into TLD.
+ *
+ * Separate from integrationConfig above because it authenticates completely
+ * differently. The reporting api takes tld-api-id and tld-api-key headers.
+ * This one takes a vendor id and a post key as url parameters, on a POST, and
+ * there is no header form of it.
+ *
+ * The vendor id changes between the test vendor and the live one, so both it
+ * and the key are environment configuration rather than anything committed.
+ */
+export function dialerPostConfig() {
+  assertNoPublicSecrets()
+
+  const { url: postUrl, error: urlError } = normaliseBaseUrl(
+    process.env.LH_DIALER_POST_URL,
+    'LH_DIALER_POST_URL'
+  )
+
+  const vendorId = String(process.env.LH_DIALER_POST_VENDOR_ID || '').trim()
+  const postKey = String(process.env.LH_DIALER_POST_KEY || '').trim()
+
+  const problems = []
+  if (!process.env.LH_DIALER_POST_URL) problems.push('LH_DIALER_POST_URL is not set.')
+  else if (urlError) problems.push(urlError)
+  if (!vendorId) problems.push('LH_DIALER_POST_VENDOR_ID is not set.')
+  if (!postKey) problems.push('LH_DIALER_POST_KEY is not set.')
+
+  return {
+    name: 'dialer_post',
+    label: 'Lead post',
+    postUrl,
+    vendorId,
+    postKey,
+    isConfigured: problems.length === 0,
+    problems,
+  }
+}
+
+/**
+ * A view of the post config safe to render or log.
+ *
+ * describe() above cannot be reused, because it returns apiId in the clear.
+ * That is fine for an api id, which identifies rather than authenticates, and
+ * wrong for a post key, which is the whole credential.
+ */
+export function describePost(config) {
+  return {
+    name: config.name,
+    label: config.label,
+    isConfigured: config.isConfigured,
+    postUrl: config.postUrl,
+    vendorId: config.vendorId || null,
+    hasPostKey: Boolean(config.postKey),
+    problems: config.problems,
+  }
 }
