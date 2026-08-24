@@ -6,10 +6,7 @@
 // pages is a client decision, and the brand gradient is already part of the
 // design system, so these ship without waiting on image selection.
 
-import Link from 'next/link'
-import CallLink from '@/components/tracking/CallLink'
-import CallAccessDetails from '@/components/compliance/CallAccessDetails'
-import { PHONE_NUMBER } from '@/lib/siteConfig'
+import OfficeStatusCta from '@/components/marketing/OfficeStatusCta'
 
 export default function PageHero({ eyebrow, headline, intro, callLocation, children }) {
   return (
@@ -27,23 +24,10 @@ export default function PageHero({ eyebrow, headline, intro, callLocation, child
             live enrollment status banner on the AEP page */}
         {children}
 
-        <div className="flex flex-wrap flex-col-reverse sm:flex-row items-start gap-4">
-          <Link
-            href="/quote-health-plans"
-            className="px-7 py-2.5 rounded-lg sm:text-lg bg-white text-ihealthBlue font-semibold min-w-[225px] text-center"
-          >
-            Get a Free Quote
-          </Link>
-          <CallLink
-            location={callLocation}
-            className="bg-transparent text-white border border-white/60 hover:border-white transition-colors px-7 py-2.5 rounded-lg sm:text-lg"
-          >
-            Call Now {PHONE_NUMBER}
-          </CallLink>
-        </div>
-
-        {/* Required beside the number, not only in the footer */}
-        <CallAccessDetails tone="dark" className="mt-3" />
+        {/* Hours aware, so a visitor arriving outside the 42.5 staffed hours is
+            offered a callback rather than a number that rings out. Carries the
+            TTY code and hours with it, which must sit beside the number. */}
+        <OfficeStatusCta location={callLocation} tone="dark" />
       </div>
     </div>
   )

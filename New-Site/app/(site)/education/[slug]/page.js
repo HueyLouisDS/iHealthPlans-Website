@@ -17,8 +17,9 @@ import ArticleBody from '@/components/education/ArticleBody'
 import ArticleCard from '@/components/education/ArticleCard'
 import CategoryChip from '@/components/education/CategoryChip'
 import ZipCta from '@/components/marketing/ZipCta'
+import OfficeStatusCta from '@/components/marketing/OfficeStatusCta'
 import CallLink from '@/components/tracking/CallLink'
-import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS } from '@/lib/siteConfig'
+import { PHONE_NUMBER } from '@/lib/siteConfig'
 import { getArticle, getArticleBody, getAllSlugs, getRelatedArticles } from '@/lib/content/education'
 
 /**
@@ -170,25 +171,21 @@ export default async function ArticlePage({ params }) {
             )}
           </div>
 
-          {/* Placed after the body rather than floating beside it. Someone who
-              has read to the end has a question, and that is the moment the
-              number is worth putting in front of them. */}
-          <aside className="max-w-[900px] w-full mt-14 p-6 md:p-8 rounded-lg bg-ihealthGreen/10 flex flex-col md:flex-row md:items-center gap-5 justify-between">
+          {/* Someone who read to the end has a question, so the ask goes here
+              rather than beside the body. Hours aware, because the line is
+              staffed 42.5 hours a week and a phone only cta is a dead end for
+              the other 125. */}
+          <aside className="max-w-[900px] w-full mt-14 p-6 md:p-8 rounded-lg bg-ihealthGreen/10 flex flex-col gap-5">
             <div>
               <p className="text-[clamp(18px,2vw,22px)] font-semibold text-ihealthBlue">
                 Questions about your own coverage?
               </p>
               <p className="text-base text-[#525B67] mt-1">
-                Talk to a licensed agent. {BUSINESS_HOURS}.
+                Talk to a licensed agent about the plans available where you live.
               </p>
             </div>
 
-            <CallLink
-              location="articleFooterCta"
-              className="h-14 px-7 rounded-md bg-ihealthGreen text-white text-lg font-semibold inline-flex items-center justify-center flex-shrink-0 hover:brightness-95 transition-[filter] focus:outline-none focus:ring-4 focus:ring-ihealthGreen/40"
-            >
-              Call {PHONE_NUMBER} ({PHONE_TTY})
-            </CallLink>
+            <OfficeStatusCta location="articleFooterCta" tone="light" />
           </aside>
         </article>
 
