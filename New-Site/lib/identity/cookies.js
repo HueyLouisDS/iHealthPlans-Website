@@ -22,19 +22,6 @@ export const SESSION_COOKIE = 'lh_sid'  // one visit, refreshed on activity
 
 const TWO_YEARS_SECONDS = 63_072_000    // visitor lifetime, the practical ceiling browsers honour
 const THIRTY_MINUTES_SECONDS = 1_800    // session lifetime, restarted by activity rather than fixed
-
-/*
- Cookie options for the visitor identifier.
-
- Not httpOnly, deliberately. The client side tracking has to read the visitor
- id to attach it to a call click before the request leaves the page, and a
- cookie the page cannot read would need a round trip to fetch a value the
- browser already has.
-
- That is an acceptable trade only because this value is an opaque random id.
- It is not a session token, it grants nothing, and reading it tells an
- attacker only what they already knew about their own browser.
-*/
 export const visitorCookieOptions = {
   maxAge: TWO_YEARS_SECONDS,
   sameSite: 'lax',                      // lax not strict, or the cookie is absent on inbound ad clicks
@@ -42,21 +29,9 @@ export const visitorCookieOptions = {
   path: '/',
 }
 
-/*
- Cookie options for the session identifier.
- Same reasoning as the visitor cookie, shorter life.
-*/
 export const sessionCookieOptions = {
   maxAge: THIRTY_MINUTES_SECONDS,
   sameSite: 'lax',
   secure: process.env.NODE_ENV === 'production',
   path: '/',
 }
-
-/*
- TODO the consent question. These are first party analytics identifiers
- rather than advertising ones, so several state privacy laws treat them
- differently from a tracking cookie. Confirm with compliance whether they
- need a banner before the tracking route ships, because retrofitting consent
- to an identifier already set is worse than gating it from the start.
-*/

@@ -1,12 +1,10 @@
-/*
- Writes integration credentials into .env.local, POST /api/admin/integrations.
-
- Backs the Configure button on /admin/integrations, so the keys can be set
- from the UI instead of by hand editing the file mid session.
-
- Development only. See the banner in lib/integrations/envFile.js for why a
- deployed app must never take this path.
-*/
+// Writes integration credentials into .env.local, POST /api/admin/integrations.
+//
+// Backs the Configure button on /admin/integrations, so the keys can be set
+// from the UI instead of by hand editing the file mid session.
+//
+// Development only. See the banner in lib/integrations/envFile.js for why a
+// deployed app must never take this path.
 
 import { getAdminSession } from '@/lib/admin/session'
 import { validateValue } from '@/lib/integrations/fields'
@@ -17,19 +15,7 @@ import { ERRORS, errorResponse } from '@/lib/errorCodes'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/**
- * Accepts a map of environment variable names to values.
- *
- * 403 outside development or without an authorised session. 400 on any key
- * outside the whitelist or any value carrying a line break. 200 with which
- * keys changed, never with a value.
- */
 export async function POST(request) {
-  /*
-   Ordered so the production refusal comes first. A deployed app should
-   answer the same way whether or not the caller is signed in, since the
-   answer is no either way and the auth check is the slower of the two.
-  */
   if (!envWritesEnabled()) {
     return errorResponse(ERRORS.forbidden, {
       error: 'Integration settings can only be changed in development. Set these on the host.',
@@ -53,10 +39,6 @@ export async function POST(request) {
     return errorResponse(ERRORS.invalidPayload, { error: 'Expected a values object.' })
   }
 
-  /*
-   Every key checked before anything is written, so a rejected field cannot
-   leave the file half updated with the ones that came before it.
-  */
   const errors = []
   for (const [key, value] of Object.entries(values)) {
     const problem = validateValue(key, value)
@@ -75,20 +57,11 @@ export async function POST(request) {
   try {
     result = await writeEnvValues(values)
   } catch (cause) {
-    /*
-     The message only. A filesystem error carries the absolute path, and on a
-     developer machine that is a home directory with a real name in it.
-    */
     return errorResponse(ERRORS.invalidPayload, {
       error: `Could not write .env.local: ${cause.message}`,
     })
   }
 
-  /*
-   Key names only, never values. This is a credential change and it should be
-   visible in the console of whoever is running the dev server, but the whole
-   point of the page is that the key is never displayed.
-  */
   console.warn('[admin:integrations] env updated by %s: %s', session.user.email, [
     ...result.updated,
     ...result.added,
@@ -98,18 +71,10 @@ export async function POST(request) {
     status: 'saved',
     updated: result.updated,
     added: result.added,
-    /*
-     next dev watches .env.local and reloads it, but the reload is not
-     instant and a page that refreshed immediately would read the old values
-     and report the change as having failed.
-    */
     note: 'The dev server reloads .env.local automatically. Give it a second, then refresh.',
   })
 }
 
-/**
- * Everything else, answered explicitly rather than with a bare 405.
- */
 export async function GET() {
   return errorResponse(ERRORS.methodNotAllowed, {
     error: 'POST a values object with the integration settings to change.',

@@ -13,29 +13,12 @@ import { INTEGRATIONS } from '@/lib/integrations/fields'
 /*=======================================================
         NOTHING HERE EVER RECEIVES A CREDENTIAL
 ========================================================*/
-
-/*
- The props carry presence booleans and label text. A value typed into one of
- these inputs goes to our own route and is dropped from state on save, so it
- never sits in a component a devtools session could read afterwards.
-
- Inputs use type="password" for secrets and autoComplete="off" throughout, so
- the browser does not offer to remember an api key under the admin origin.
-*/
-
-/* Per card connection state, and what the badge says for each */
+// Per card connection state, and what the badge says for each
 const UNTESTED = 'untested'
 const TESTING = 'testing'
 const CONNECTED = 'connected'
 const FAILED = 'failed'
 
-/**
- * One environment variable, as a clickable pill that opens an input.
- *
- * The pill is the variable name, which is what somebody scanning the page is
- * looking for anyway, so the thing you read and the thing you click are the
- * same thing.
- */
 function EnvField({ field, isSet, value, onChange }) {
   const [open, setOpen] = useState(false)   // whether the input is showing
   const hasEdit = value !== undefined       // true once anything is typed this session
@@ -88,27 +71,23 @@ function EnvField({ field, isSet, value, onChange }) {
   )
 }
 
-/**
- * The status badge, which reports the tested state rather than whether values
- * are merely present.
- *
- * Those are different questions and conflating them is the bug this page
- * exists to avoid. Three filled in fields prove somebody typed something, and
- * only a round trip proves the credential works.
- */
 function StatusBadge({ state, isConfigured }) {
   if (state === CONNECTED) {
     return <Badge className="bg-green-100 text-green-900">Connected</Badge>
   }
+
   if (state === TESTING) {
     return <Badge className="bg-blue-100 text-blue-900">Testing</Badge>
   }
+
   if (state === FAILED) {
     return <Badge className="bg-red-100 text-red-900">Failed</Badge>
   }
+
   if (isConfigured) {
     return <Badge className="bg-amber-100 text-amber-900">Set, untested</Badge>
   }
+
   return <Badge className="bg-amber-100 text-amber-900">Not configured</Badge>
 }
 
@@ -120,9 +99,6 @@ function Badge({ className, children }) {
   )
 }
 
-/**
- * One integration card, status on top, editable fields, then its own test.
- */
 function Card({ integration, status, present, values, onChange, test, onTest }) {
   const state = test?.state || UNTESTED
 
@@ -169,14 +145,6 @@ function Card({ integration, status, present, values, onChange, test, onTest }) 
   )
 }
 
-/**
- * The cards, their tests, and the Configure button.
- *
- * Configure stays disabled until every integration has come back Connected,
- * so nothing reaches .env.local until a round trip has proved it works. That
- * is the whole point of the gate. Saving a wrong key is how you end up
- * debugging a sync that was never going to run.
- */
 export default function IntegrationCards({ statuses, present, canWrite }) {
   const router = useRouter()
   const [values, setValues] = useState({})  // pending edits, key to typed value
@@ -187,11 +155,6 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
   const changedCount = Object.keys(values).length
   const allConnected = INTEGRATIONS.every((one) => tests[one.name]?.state === CONNECTED)
 
-  /**
-   * Editing a field clears that card's test result.
-   * A green badge next to a value that has since been changed is a lie, and it
-   * is exactly the lie that would let an untested key through the gate.
-   */
   function handleChange(key, value) {
     const owner = INTEGRATIONS.find((one) => one.fields.some((field) => field.key === key))
 
@@ -248,12 +211,6 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
         setResult({ ok: false, message: body.errors?.join(' ') || body.error || 'Save failed.' })
         return
       }
-
-      /*
-       Cleared on success so a typed key does not stay in client state after
-       it has been written. The refresh re-reads presence from the server,
-       which is what the page should be showing anyway.
-      */
       setValues({})
       setResult({ ok: true, message: body.note || 'Saved.' })
       router.refresh()
@@ -264,7 +221,7 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
     }
   }
 
-  /* Why the button is disabled, said plainly rather than left to be guessed */
+  // Why the button is disabled, said plainly rather than left to be guessed
   const blockedReason = !canWrite
     ? 'Read only. Set these on the host in a deployed environment.'
     : changedCount === 0

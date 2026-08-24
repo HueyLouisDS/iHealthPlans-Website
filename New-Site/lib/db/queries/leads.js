@@ -27,20 +27,6 @@ import { query, transaction, databaseConfigured } from '@/lib/db/client'
  not meet.
 */
 
-/**
- * Stores a lead and its consent record, if there is one.
- *
- * Both in one transaction. A consent row that failed to write while the lead
- * succeeded would leave a record that looks consented in the UI but has no
- * evidence behind it, which is worse than the write failing outright.
- *
- * The id is passed in rather than generated here, because the caller sends it
- * to TLD as tracking_id whether or not this write succeeds. Minting it inside
- * would mean a failed insert produced a push with no join key on it.
- *
- * Returns true when stored, false when there is no database configured, which
- * is a normal state in development.
- */
 export async function insertLead(lead, leadId) {
   if (!databaseConfigured()) return false
 
@@ -81,11 +67,6 @@ export async function insertLead(lead, leadId) {
           leadId,
           toMysqlDateTime(lead.consent.capturedAt),
           lead.consent.text,
-          /*
-           Hashed so a disclosure can be proved unchanged without diffing
-           prose. Two leads showing the same wording share a hash, and a
-           reworded disclosure is visible as a new one immediately.
-          */
           createHash('sha256').update(lead.consent.text).digest('hex'),
           lead.consent.version || null,
           lead.consent.url,
@@ -100,14 +81,6 @@ export async function insertLead(lead, leadId) {
   return true
 }
 
-/**
- * Records what happened when the lead was pushed to TLD.
- *
- * pushed_at is only stamped on an accepted push. Every other outcome leaves it
- * null on purpose, because null is what the reconciliation sweep looks for.
- * Stamping it on a rejection would mark the lead as delivered and it would
- * never be retried or noticed.
- */
 export async function recordPushOutcome(leadId, result) {
   if (!databaseConfigured() || !leadId) return
 
@@ -126,13 +99,6 @@ export async function recordPushOutcome(leadId, result) {
   )
 }
 
-/**
- * Converts an ISO string to what MySQL DATETIME(3) accepts.
- *
- * The driver runs with dateStrings and timezone Z, so values go in and come
- * out as strings in UTC. Handing it an ISO string with the trailing Z would
- * store the literal text and lose the milliseconds.
- */
 function toMysqlDateTime(iso) {
   return String(iso).replace('T', ' ').replace('Z', '')
 }

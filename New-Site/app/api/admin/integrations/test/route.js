@@ -1,11 +1,9 @@
-/**
- * Tests one integration's credentials, POST /api/admin/integrations/test.
- *
- * Backs the Test Connection buttons. Runs against the values typed into the
- * form rather than the saved ones, because nothing is saved until Configure
- * and you would otherwise have to write a bad key to disk to find out it was
- * bad.
- */
+// Tests one integration's credentials, POST /api/admin/integrations/test.
+//
+// Backs the Test Connection buttons. Runs against the values typed into the
+// form rather than the saved ones, because nothing is saved until Configure
+// and you would otherwise have to write a bad key to disk to find out it was
+// bad.
 
 import { getAdminSession } from '@/lib/admin/session'
 import { validateValue } from '@/lib/integrations/fields'
@@ -20,21 +18,8 @@ export const dynamic = 'force-dynamic'
 
 /*=============================================
     TYPED VALUES ARE ONLY ACCEPTED IN DEVELOPMENT
-
-    Outside development the form is read only, so there is nothing legitimate
-    to submit. Accepting a base url from a browser and then having the server
-    fetch it is a request forgery primitive, and the fewer environments that
-    can reach it the better.
-
-    In production the button still works, it just tests what is already
-    configured on the host and ignores anything sent with the request.
 =============================================*/
 
-/**
- * Runs one integration's check.
- * 400 for an unknown integration, 401 without an authorised session, 200 with
- * { ok, message } either way once it has actually run.
- */
 export async function POST(request) {
   const session = await getAdminSession()
   if (!session?.user?.isAuthorised) {
@@ -50,11 +35,6 @@ export async function POST(request) {
 
   const name = String(body?.name || '')
   const submitted = body?.values && typeof body.values === 'object' ? body.values : {}
-
-  /*
-   Checked against the same whitelist the write route uses, so this endpoint
-   cannot be handed an arbitrary key name either.
-  */
   const errors = []
   for (const [key, value] of Object.entries(submitted)) {
     const problem = validateValue(key, value)
@@ -95,9 +75,6 @@ export async function POST(request) {
   return errorResponse(ERRORS.invalidPayload, { error: `Unknown integration "${name}".` })
 }
 
-/**
- * Everything else, answered explicitly rather than with a bare 405.
- */
 export async function GET() {
   return errorResponse(ERRORS.methodNotAllowed, {
     error: 'POST { name, values } to test one integration.',
