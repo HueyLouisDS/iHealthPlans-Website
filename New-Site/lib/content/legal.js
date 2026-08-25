@@ -137,8 +137,8 @@ export const LEGAL_PAGES = {
         body: ['If you have a question about these terms, contact us.'],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'TO CONFIRM: contact email address' },
-          { label: 'By post', value: 'TO CONFIRM: business mailing address, and the full registered legal entity name' },
+          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By post', value: 'iHealth Plans LLC, 1166 W Newport Center Dr. #312, Deerfield Beach, FL 33442' },
         ],
       },
     ],
@@ -255,8 +255,8 @@ export const LEGAL_PAGES = {
         body: ['If you have a question about this policy, or about information we hold, contact us.'],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'TO CONFIRM: privacy contact email address' },
-          { label: 'By post', value: 'TO CONFIRM: business mailing address' },
+          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By post', value: 'iHealth Plans LLC, 1166 W Newport Center Dr. #312, Deerfield Beach, FL 33442' },
         ],
       },
     ],
@@ -307,8 +307,8 @@ export const LEGAL_PAGES = {
         ],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'TO CONFIRM: accessibility contact email address' },
-          { label: 'By post', value: 'TO CONFIRM: business mailing address' },
+          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By post', value: 'iHealth Plans LLC, 1166 W Newport Center Dr. #312, Deerfield Beach, FL 33442' },
         ],
       },
       {
@@ -343,7 +343,7 @@ export const LEGAL_PAGES = {
         body: ['If you need any of the services described above, please contact us.'],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'TO CONFIRM: civil rights or compliance contact email address' },
+          { label: 'By email', value: 'admin@ihealthplans.com' },
         ],
       },
       {
@@ -402,7 +402,7 @@ export const LEGAL_PAGES = {
         heading: 'How many organizations we represent',
         body: [
           'iHealth Plans represents Medicare Advantage organizations that have a Medicare contract. The number of organizations and products we represent in your area is stated in the footer of every page on this site.',
-          'TO CONFIRM: the counts currently published are 10 organizations and 38 products. Confirm these are accurate for the current plan year, and set a process for updating them, because they change and a stale count is a misstatement.',
+          'TO CONFIRM: the counts are now 8 organizations and 3459 products, computed from the 2026 catalog across the 36 states on the NIPR licence. Set a process for updating them, because they change and a stale count is a misstatement.',
         ],
       },
       {
@@ -445,8 +445,8 @@ export const LEGAL_PAGES = {
         ],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'TO CONFIRM: opt out request email address' },
-          { label: 'By post', value: 'TO CONFIRM: business mailing address' },
+          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By post', value: 'iHealth Plans LLC, 1166 W Newport Center Dr. #312, Deerfield Beach, FL 33442' },
         ],
         afterBody: [
           'TO CONFIRM: whether a self service opt out form should be added to this page. A form creates a timestamped record of the request, which is far better evidence than a phone note if a complaint is ever made.',
@@ -519,7 +519,7 @@ export const LEGAL_PAGES = {
         body: ['You can make a request using any of the methods below.'],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'TO CONFIRM: privacy request email address' },
+          { label: 'By email', value: 'admin@ihealthplans.com' },
           { label: 'Online', value: 'TO CONFIRM: whether a self service privacy request form will be provided' },
         ],
         afterBody: [
