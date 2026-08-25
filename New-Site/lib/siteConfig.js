@@ -25,11 +25,13 @@ export const SMID = 'MULTIPLAN_IHP_WEB2025_C'
 
 /*
  Quoted in the Federal Contracting Statement, which CMS requires to be
- accurate. Both come from Spark's Plan Counts DKB 2026 calculator, with 9
- carriers and 4 states selected, AZ NC VA WV. Re-run it when either changes.
+ accurate. Counted from Spark's Plan Counts DKB 2026 catalog across the 36
+ states on the NIPR licence, FL resident plus 35 non resident. Recount when a
+ licence or a carrier contract changes.
 */
-export const CARRIER_COUNT = 9          // organisations iHealth Plans represents
-export const PRODUCT_COUNT = 359        // products in all areas, not per area
+export const CARRIER_COUNT = 8          // carriers iHealth Plans is ready to sell
+export const PRODUCT_COUNT = 3459       // their plans across all licensed states
+
 export const NAV_LINKS = [
   { label: 'Home', href: '/' },
   {
