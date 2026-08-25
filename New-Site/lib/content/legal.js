@@ -2,6 +2,12 @@
  * Content for the 5 legal and compliance notices.
  */
 
+import { CARRIER_COUNT, PRODUCT_COUNT } from '@/lib/siteConfig'
+
+// Thousands separated, matching the approved material. Locale pinned so a
+// server in another region cannot render it with a different separator.
+const productCount = PRODUCT_COUNT.toLocaleString('en-US')
+
 /*=============================================
     READ THIS BEFORE PUBLISHING ANY OF THESE PAGES.
 
@@ -394,15 +400,13 @@ export const LEGAL_PAGES = {
       {
         heading: 'The plans we offer',
         body: [
-          'We do not offer every plan available in your area. Any information we provide is limited to those plans we do offer in your area. Please contact Medicare.gov or 1-800-MEDICARE, or your local State Health Insurance Assistance Program, to get information on all of your options.',
-          'TO CONFIRM: this is the standard TPMO disclaimer. Verify the exact wording against the current CMS marketing rule, and confirm it matches the version used across all other marketing materials so they do not diverge.',
+          `We do not offer every plan available in your area. Currently we represent ${CARRIER_COUNT} organizations which offer ${productCount} products in your area. Please contact Medicare.gov, 1-800-MEDICARE, or your local State Health Insurance Program (SHIP) to get information on all of your options.`,
         ],
       },
       {
         heading: 'How many organizations we represent',
         body: [
-          'iHealth Plans represents Medicare Advantage organizations that have a Medicare contract. The number of organizations and products we represent in your area is stated in the footer of every page on this site.',
-          'TO CONFIRM: the counts are now 8 organizations and 3459 products, computed from the 2026 catalog across the 36 states on the NIPR licence. Set a process for updating them, because they change and a stale count is a misstatement.',
+          `iHealth Plans represents Medicare Advantage organizations that have a Medicare contract. We currently represent ${CARRIER_COUNT} organizations offering ${productCount} products, and the same figures appear in the footer of every page on this site.`,
         ],
       },
       {
