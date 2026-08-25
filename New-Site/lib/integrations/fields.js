@@ -7,20 +7,19 @@
         THIS LIST IS THE WRITE WHITELIST
 ========================================================*/
 
+export const EMAIL_LIST = 'emailList'   // field kind, rendered as removable chips
+export const EMAIL_SHAPE = /^[^@\s,]+@[^@\s,]+\.[^@\s,]+$/
+
 export const INTEGRATIONS = [
   {
     name: 'admin',
     label: 'Admin Access',
     hint:
-      'Who can open this area. Both checks must pass, the address must be on the domain and ' +
-      'in the list. Empty list means nobody gets in, which is deliberate.',
+      'Who can open this area. Both checks must pass, the address must be on the allowed domain ' +
+      'and in this list. Empty list means nobody gets in, which is deliberate. The domain itself ' +
+      'is set in the environment, not here.',
     fields: [
-      { key: 'LH_ADMIN_ALLOWED_DOMAIN', label: 'Allowed domain', placeholder: 'ihealthplans.com' },
-      {
-        key: 'LH_ADMIN_ALLOWED_EMAILS',
-        label: 'Allowed emails, comma separated',
-        placeholder: 'first@ihealthplans.com,second@ihealthplans.com',
-      },
+      { key: 'LH_ADMIN_ALLOWED_EMAILS', label: 'Allowed emails', kind: EMAIL_LIST },
     ],
   },
   {
@@ -62,36 +61,42 @@ export const WRITABLE_KEYS = new Set(
   INTEGRATIONS.flatMap((integration) => integration.fields.map((field) => field.key))
 )
 
-export function validateValue(key, value, all = {}) {
-  if (!WRITABLE_KEYS.has(key)) return `${key} is not a writable setting.`
+/*
+ The allowlist can only ever hold addresses on the allowed domain. Enforced
+ here rather than only in the UI, so it holds against a direct POST as well as
+ against the form.
 
-  /*
-   The allowlist can only ever hold addresses on the allowed domain. Enforced
-   here rather than only in the UI, so it holds against a direct POST as well
-   as against the form.
+ The domain is read from the environment because it is not writable through
+ this route, which is what stops the domain and the list being widened in the
+ same request. The break glass address is outside the domain by design and is
+ also environment only. See auth.js.
+*/
+function validateEmailList(value) {
+  const domain = String(process.env.LH_ADMIN_ALLOWED_DOMAIN || '').trim().toLowerCase()
+  if (!domain) return 'LH_ADMIN_ALLOWED_DOMAIN is not set, so no address can be checked.'
 
-   The break glass address is deliberately outside the domain and is set in
-   the environment, never through this route. See auth.js.
-  */
-  if (key === 'LH_ADMIN_ALLOWED_EMAILS' && value) {
-    const domain = String(all.LH_ADMIN_ALLOWED_DOMAIN || process.env.LH_ADMIN_ALLOWED_DOMAIN || '')
-      .trim()
-      .toLowerCase()
+  const entries = value
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean)
 
-    if (!domain) return 'Set the allowed domain before listing addresses.'
+  const malformed = entries.filter((email) => !EMAIL_SHAPE.test(email))
+  if (malformed.length > 0) return `Not a valid address: ${malformed.join(', ')}`
 
-    const offDomain = String(value)
-      .split(',')
-      .map((entry) => entry.trim().toLowerCase())
-      .filter(Boolean)
-      .filter((email) => email.split('@')[1] !== domain)
-
-    if (offDomain.length > 0) {
-      return `Only ${domain} addresses can be listed here. Refused: ${offDomain.join(', ')}`
-    }
+  const offDomain = entries.filter((email) => email.split('@')[1] !== domain)
+  if (offDomain.length > 0) {
+    return `Only ${domain} addresses can be listed here. Refused: ${offDomain.join(', ')}`
   }
+
+  return null
+}
+
+export function validateValue(key, value) {
+  if (!WRITABLE_KEYS.has(key)) return `${key} is not a writable setting.`
   if (typeof value !== 'string') return `${key} must be a string.`
   if (/[\r\n]/.test(value)) return `${key} cannot contain a line break.`
   if (value.length > 500) return `${key} is too long.`
+  if (key === 'LH_ADMIN_ALLOWED_EMAILS' && value) return validateEmailList(value)
+
   return null
 }

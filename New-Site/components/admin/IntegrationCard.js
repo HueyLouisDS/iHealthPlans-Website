@@ -8,7 +8,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { INTEGRATIONS } from '@/lib/integrations/fields'
+import { INTEGRATIONS, EMAIL_LIST, EMAIL_SHAPE } from '@/lib/integrations/fields'
 
 /*=======================================================
         NOTHING HERE EVER RECEIVES A CREDENTIAL
@@ -70,6 +70,115 @@ function EnvField({ field, isSet, value, onChange }) {
   )
 }
 
+function parseList(value) {
+  return String(value || '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+}
+
+/*
+ The allowlist as removable chips, one address per Enter. Stored as the same
+ comma separated string the environment holds, so the save and test routes are
+ unchanged, the joining just happens here instead of in the user's head.
+
+ Shown open rather than behind the key name like the credential fields, since
+ the list is not a secret and hiding it makes the remove buttons unfindable.
+*/
+function EmailListField({ field, domain, saved, value, onChange }) {
+  const [draft, setDraft] = useState('')     // the address being typed, not yet a chip
+  const [problem, setProblem] = useState(null)
+
+  const emails = parseList(value ?? saved)   // pending edit wins over what is saved
+
+  function addEmail() {
+    const entry = draft.trim().toLowerCase()
+    if (!entry) return
+
+    if (!EMAIL_SHAPE.test(entry)) return setProblem('That is not an email address.')
+    if (domain && entry.split('@')[1] !== domain) {
+      return setProblem(`Only ${domain} addresses can be added.`)
+    }
+    if (emails.includes(entry)) return setProblem('Already on the list.')
+
+    onChange(field.key, [...emails, entry].join(','))
+    setDraft('')
+    setProblem(null)
+  }
+
+  function removeEmail(target) {
+    onChange(field.key, emails.filter((email) => email !== target).join(','))
+    setProblem(null)
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault()
+      addEmail()
+      return
+    }
+
+    // Backspace on an empty box takes the last chip back, the usual behaviour here
+    if (event.key === 'Backspace' && draft === '' && emails.length > 0) {
+      removeEmail(emails[emails.length - 1])
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="font-mono text-sm px-2 py-1 text-amber-900">{field.key}</span>
+        {emails.length === 0 ? (
+          <span className="text-sm text-amber-900">nobody can sign in</span>
+        ) : (
+          <span className="text-sm font-semibold text-green-900">
+            {emails.length} {emails.length === 1 ? 'address' : 'addresses'}
+          </span>
+        )}
+      </div>
+
+      {emails.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {emails.map((email) => (
+            <span
+              key={email}
+              className="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 rounded px-2 py-1 font-mono text-sm"
+            >
+              {email}
+              <button
+                type="button"
+                onClick={() => removeEmail(email)}
+                aria-label={`Remove ${email}`}
+                className="text-amber-900 hover:text-red-900 font-bold leading-none text-base"
+              >
+                &times;
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <input
+        type="email"
+        autoComplete="off"
+        spellCheck={false}
+        disabled={!domain}
+        placeholder={domain ? `name@${domain}, then Enter` : 'Set LH_ADMIN_ALLOWED_DOMAIN first'}
+        value={draft}
+        onChange={(event) => {
+          setDraft(event.target.value)
+          setProblem(null)
+        }}
+        onKeyDown={handleKeyDown}
+        onBlur={addEmail}
+        className="font-mono text-sm border rounded px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-ihealthGreen disabled:bg-[#f7f7f7] disabled:cursor-not-allowed"
+      />
+
+      {problem && <p className="text-sm text-red-900">{problem}</p>}
+    </div>
+  )
+}
+
 function StatusBadge({ state, isConfigured }) {
   if (state === CONNECTED) {
     return <Badge className="bg-green-100 text-green-900">Connected</Badge>
@@ -98,7 +207,7 @@ function Badge({ className, children }) {
   )
 }
 
-function Card({ integration, status, present, values, onChange, test, onTest }) {
+function Card({ integration, status, present, admin, values, onChange, test, onTest }) {
   const state = test?.state || UNTESTED
 
   return (
@@ -111,15 +220,26 @@ function Card({ integration, status, present, values, onChange, test, onTest }) 
       <p className="text-sm text-[#6C7381]">{integration.hint}</p>
 
       <div className="flex flex-col gap-3 border-t pt-4">
-        {integration.fields.map((field) => (
-          <EnvField
-            key={field.key}
-            field={field}
-            isSet={Boolean(present[field.key])}
-            value={values[field.key]}
-            onChange={onChange}
-          />
-        ))}
+        {integration.fields.map((field) =>
+          field.kind === EMAIL_LIST ? (
+            <EmailListField
+              key={field.key}
+              field={field}
+              domain={admin.domain}
+              saved={admin.emails}
+              value={values[field.key]}
+              onChange={onChange}
+            />
+          ) : (
+            <EnvField
+              key={field.key}
+              field={field}
+              isSet={Boolean(present[field.key])}
+              value={values[field.key]}
+              onChange={onChange}
+            />
+          )
+        )}
       </div>
 
       <div className="border-t pt-4 flex items-center justify-between gap-3 flex-wrap">
@@ -144,7 +264,7 @@ function Card({ integration, status, present, values, onChange, test, onTest }) 
   )
 }
 
-export default function IntegrationCards({ statuses, present, canWrite }) {
+export default function IntegrationCards({ statuses, present, admin, canWrite }) {
   const router = useRouter()
   const [values, setValues] = useState({})  // pending edits, key to typed value
   const [tests, setTests] = useState({})    // integration name to { state, message }
@@ -237,6 +357,7 @@ export default function IntegrationCards({ statuses, present, canWrite }) {
             integration={integration}
             status={statuses[integration.name] || { isConfigured: false }}
             present={present}
+            admin={admin}
             values={values}
             onChange={handleChange}
             test={tests[integration.name]}

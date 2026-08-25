@@ -41,7 +41,7 @@ export async function POST(request) {
 
   const errors = []
   for (const [key, value] of Object.entries(values)) {
-    const problem = validateValue(key, value, values)
+    const problem = validateValue(key, value)
     if (problem) errors.push(problem)
   }
 

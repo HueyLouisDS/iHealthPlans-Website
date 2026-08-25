@@ -37,7 +37,7 @@ export async function POST(request) {
   const submitted = body?.values && typeof body.values === 'object' ? body.values : {}
   const errors = []
   for (const [key, value] of Object.entries(submitted)) {
-    const problem = validateValue(key, value, submitted)
+    const problem = validateValue(key, value)
     if (problem) errors.push(problem)
   }
 
@@ -50,7 +50,8 @@ export async function POST(request) {
   if (name === 'admin') {
     return Response.json(
       testAdminAccess({
-        domain: typed.LH_ADMIN_ALLOWED_DOMAIN ?? process.env.LH_ADMIN_ALLOWED_DOMAIN,
+        // Environment only, it is not a writable setting
+        domain: process.env.LH_ADMIN_ALLOWED_DOMAIN,
         emails: typed.LH_ADMIN_ALLOWED_EMAILS ?? process.env.LH_ADMIN_ALLOWED_EMAILS,
       }),
       { headers: { 'Cache-Control': 'no-store' } }

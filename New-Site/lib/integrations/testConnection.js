@@ -4,6 +4,8 @@
 
 import 'server-only'
 
+import { EMAIL_SHAPE } from '@/lib/integrations/fields'
+
 const TIMEOUT_MS = 10000                // longer than the push, a person is watching this one
 
 /*=======================================================
@@ -113,7 +115,9 @@ export function testAdminAccess({ domain, emails }) {
     .map((entry) => entry.trim().toLowerCase())
     .filter(Boolean)
 
-  if (!cleanDomain) return { ok: false, message: 'Set the allowed domain first.' }
+  if (!cleanDomain) {
+    return { ok: false, message: 'LH_ADMIN_ALLOWED_DOMAIN is not set in the environment.' }
+  }
   if (list.length === 0) return { ok: false, message: 'No addresses listed, so nobody can sign in.' }
 
   const wrongDomain = list.filter((email) => email.split('@')[1] !== cleanDomain)
@@ -124,7 +128,7 @@ export function testAdminAccess({ domain, emails }) {
     }
   }
 
-  const malformed = list.filter((email) => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+  const malformed = list.filter((email) => !EMAIL_SHAPE.test(email))
   if (malformed.length > 0) {
     return { ok: false, message: `Not a valid address: ${malformed.join(', ')}` }
   }

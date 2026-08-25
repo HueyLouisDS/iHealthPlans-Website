@@ -23,13 +23,18 @@ export default async function AdminIntegrationsPage() {
   const crm = describe(crmConfig())
   const post = describeVendor(vendorConfig())
 
-  // Both must be set, since either one empty locks everybody out
-  const adminDomain = String(process.env.LH_ADMIN_ALLOWED_DOMAIN || '').trim()
+  /*
+   Both must be set, since either one empty locks everybody out. The domain is
+   environment only, so the card reads it but never offers to change it. The
+   allowlist is not a credential and is passed down in full, which is what the
+   chips render from.
+  */
+  const adminDomain = String(process.env.LH_ADMIN_ALLOWED_DOMAIN || '').trim().toLowerCase()
   const adminEmails = String(process.env.LH_ADMIN_ALLOWED_EMAILS || '').trim()
 
   const adminProblems = []
-  if (!adminDomain) adminProblems.push('LH_ADMIN_ALLOWED_DOMAIN is not set.')
-  if (!adminEmails) adminProblems.push('LH_ADMIN_ALLOWED_EMAILS is not set, so nobody can sign in.')
+  if (!adminDomain) adminProblems.push('LH_ADMIN_ALLOWED_DOMAIN is not set in the environment.')
+  if (!adminEmails) adminProblems.push('No addresses are listed, so nobody can sign in.')
 
   const statuses = {
     admin: { isConfigured: adminProblems.length === 0, problems: adminProblems },
@@ -67,6 +72,7 @@ export default async function AdminIntegrationsPage() {
       <IntegrationCards
         statuses={statuses}
         present={describeWritableKeys()}
+        admin={{ domain: adminDomain, emails: adminEmails }}
         canWrite={canWrite}
       />
     </AdminShell>
