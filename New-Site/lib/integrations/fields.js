@@ -62,8 +62,34 @@ export const WRITABLE_KEYS = new Set(
   INTEGRATIONS.flatMap((integration) => integration.fields.map((field) => field.key))
 )
 
-export function validateValue(key, value) {
+export function validateValue(key, value, all = {}) {
   if (!WRITABLE_KEYS.has(key)) return `${key} is not a writable setting.`
+
+  /*
+   The allowlist can only ever hold addresses on the allowed domain. Enforced
+   here rather than only in the UI, so it holds against a direct POST as well
+   as against the form.
+
+   The break glass address is deliberately outside the domain and is set in
+   the environment, never through this route. See auth.js.
+  */
+  if (key === 'LH_ADMIN_ALLOWED_EMAILS' && value) {
+    const domain = String(all.LH_ADMIN_ALLOWED_DOMAIN || process.env.LH_ADMIN_ALLOWED_DOMAIN || '')
+      .trim()
+      .toLowerCase()
+
+    if (!domain) return 'Set the allowed domain before listing addresses.'
+
+    const offDomain = String(value)
+      .split(',')
+      .map((entry) => entry.trim().toLowerCase())
+      .filter(Boolean)
+      .filter((email) => email.split('@')[1] !== domain)
+
+    if (offDomain.length > 0) {
+      return `Only ${domain} addresses can be listed here. Refused: ${offDomain.join(', ')}`
+    }
+  }
   if (typeof value !== 'string') return `${key} must be a string.`
   if (/[\r\n]/.test(value)) return `${key} cannot contain a line break.`
   if (value.length > 500) return `${key} is too long.`
