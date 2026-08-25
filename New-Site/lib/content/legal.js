@@ -137,7 +137,7 @@ export const LEGAL_PAGES = {
         body: ['If you have a question about these terms, contact us.'],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By email', value: 'contracting@ihealthplans.com' },
           { label: 'By post', value: 'iHealth Plans LLC, 1166 W Newport Center Dr. #312, Deerfield Beach, FL 33442' },
         ],
       },
@@ -255,7 +255,7 @@ export const LEGAL_PAGES = {
         body: ['If you have a question about this policy, or about information we hold, contact us.'],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By email', value: 'contracting@ihealthplans.com' },
           { label: 'By post', value: 'iHealth Plans LLC, 1166 W Newport Center Dr. #312, Deerfield Beach, FL 33442' },
         ],
       },
@@ -307,7 +307,7 @@ export const LEGAL_PAGES = {
         ],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By email', value: 'contracting@ihealthplans.com' },
           { label: 'By post', value: 'iHealth Plans LLC, 1166 W Newport Center Dr. #312, Deerfield Beach, FL 33442' },
         ],
       },
@@ -343,7 +343,7 @@ export const LEGAL_PAGES = {
         body: ['If you need any of the services described above, please contact us.'],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By email', value: 'contracting@ihealthplans.com' },
         ],
       },
       {
@@ -445,7 +445,7 @@ export const LEGAL_PAGES = {
         ],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By email', value: 'contracting@ihealthplans.com' },
           { label: 'By post', value: 'iHealth Plans LLC, 1166 W Newport Center Dr. #312, Deerfield Beach, FL 33442' },
         ],
         afterBody: [
@@ -519,7 +519,7 @@ export const LEGAL_PAGES = {
         body: ['You can make a request using any of the methods below.'],
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
-          { label: 'By email', value: 'admin@ihealthplans.com' },
+          { label: 'By email', value: 'contracting@ihealthplans.com' },
           { label: 'Online', value: 'TO CONFIRM: whether a self service privacy request form will be provided' },
         ],
         afterBody: [
