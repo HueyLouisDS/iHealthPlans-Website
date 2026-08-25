@@ -9,7 +9,7 @@ import { getAdminSession } from '@/lib/admin/session'
 import { validateValue } from '@/lib/integrations/fields'
 import { envWritesEnabled } from '@/lib/integrations/envFile'
 import { crmConfig, vendorConfig } from '@/lib/integrations/config'
-import { testCrm, testVendor } from '@/lib/integrations/testConnection'
+import { testCrm, testVendor, testAdminAccess } from '@/lib/integrations/testConnection'
 import { ERRORS, errorResponse } from '@/lib/errorCodes'
 
 // node rather than edge, the config modules are server-only
@@ -46,6 +46,16 @@ export async function POST(request) {
   }
 
   const typed = envWritesEnabled() ? submitted : {} // ignored outside development
+
+  if (name === 'admin') {
+    return Response.json(
+      testAdminAccess({
+        domain: typed.LH_ADMIN_ALLOWED_DOMAIN ?? process.env.LH_ADMIN_ALLOWED_DOMAIN,
+        emails: typed.LH_ADMIN_ALLOWED_EMAILS ?? process.env.LH_ADMIN_ALLOWED_EMAILS,
+      }),
+      { headers: { 'Cache-Control': 'no-store' } }
+    )
+  }
 
   if (name === 'crm') {
     const stored = crmConfig()

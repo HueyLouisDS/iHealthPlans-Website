@@ -42,6 +42,28 @@ function parseList(value) {
 const allowedDomain = String(process.env.LH_ADMIN_ALLOWED_DOMAIN || '').trim().toLowerCase()
 const allowedEmails = parseList(process.env.LH_ADMIN_ALLOWED_EMAILS)
 
+/*=======================================================
+        BREAK GLASS ACCESS
+========================================================*/
+
+/*
+ One address, outside the client's domain, that gets in when nobody at the
+ client can. An auth problem at a non technical client can sit unresolved for
+ days, and the person who can fix it is the one who built it.
+
+ It skips the domain check and the allowlist. It does not skip Google, so the
+ holder still has to prove they control that account. This is an allowlist
+ entry, not a way past authentication.
+
+ TODO remove LH_DEVELOPER_EMAIL from the deployed environment at handoff. It
+ is a build and support tool. Unset means nobody gets in this way, which is
+ the correct state once the client owns the site.
+
+ Deliberately absent from lib/integrations/fields.js, so it cannot be set or
+ read from the admin UI. Every use is logged, since this reads lead PII.
+*/
+const developerEmail = String(process.env.LH_DEVELOPER_EMAIL || '').trim().toLowerCase()
+
 /**
  * Decides whether an authenticated Google account may enter the admin area.
  * Exported separately so it can be unit tested without standing up an OAuth
@@ -57,6 +79,12 @@ export function isAuthorisedAdmin(profile) {
   // Google tells us whether it has verified the address. An unverified address
   // proves nothing about who controls it.
   if (profile.email_verified === false) return false
+
+  /* Break glass, checked before the domain since it is outside it by design */
+  if (developerEmail && email === developerEmail) {
+    console.warn('[admin] BREAK GLASS ACCESS by %s at %s', email, new Date().toISOString())
+    return true
+  }
 
   // Fail closed. A misconfigured or missing environment variable must deny
   // everyone rather than admit everyone, which is the failure mode that

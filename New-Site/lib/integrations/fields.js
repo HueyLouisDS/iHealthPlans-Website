@@ -9,6 +9,21 @@
 
 export const INTEGRATIONS = [
   {
+    name: 'admin',
+    label: 'Admin Access',
+    hint:
+      'Who can open this area. Both checks must pass, the address must be on the domain and ' +
+      'in the list. Empty list means nobody gets in, which is deliberate.',
+    fields: [
+      { key: 'LH_ADMIN_ALLOWED_DOMAIN', label: 'Allowed domain', placeholder: 'ihealthplans.com' },
+      {
+        key: 'LH_ADMIN_ALLOWED_EMAILS',
+        label: 'Allowed emails, comma separated',
+        placeholder: 'first@ihealthplans.com,second@ihealthplans.com',
+      },
+    ],
+  },
+  {
     name: 'crm',
     label: 'CRM',
     hint:

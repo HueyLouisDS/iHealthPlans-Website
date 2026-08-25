@@ -104,3 +104,30 @@ export async function testVendor({ postUrl, vendorId, postKey }) {
     message: `Unexpected response, code ${raw}. Credentials look accepted but this needs checking.`,
   }
 }
+
+/* checks the admin allowlist is coherent, since a mismatch locks everyone out */
+export function testAdminAccess({ domain, emails }) {
+  const cleanDomain = String(domain || '').trim().toLowerCase()
+  const list = String(emails || '')
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean)
+
+  if (!cleanDomain) return { ok: false, message: 'Set the allowed domain first.' }
+  if (list.length === 0) return { ok: false, message: 'No addresses listed, so nobody can sign in.' }
+
+  const wrongDomain = list.filter((email) => email.split('@')[1] !== cleanDomain)
+  if (wrongDomain.length > 0) {
+    return {
+      ok: false,
+      message: `Not on ${cleanDomain}, so these would be refused: ${wrongDomain.join(', ')}`,
+    }
+  }
+
+  const malformed = list.filter((email) => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+  if (malformed.length > 0) {
+    return { ok: false, message: `Not a valid address: ${malformed.join(', ')}` }
+  }
+
+  return { ok: true, message: `${list.length} ${list.length === 1 ? 'person' : 'people'} can sign in.` }
+}
