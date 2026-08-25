@@ -19,9 +19,19 @@ export default function ComplianceDisclosures() {
 
       <p>
         We do not offer every plan available in your area. Currently we represent {CARRIER_COUNT}{' '}
-        organizations which offer {PRODUCT_COUNT} products in all areas. Please contact
+        organizations which offer {PRODUCT_COUNT} products in your area. Please contact
         medicare.gov, 1-800-MEDICARE, or your State Health Insurance Program (SHIP) to get
         information on all your options.
+      </p>
+
+      <p>
+        Not all plans offer all of these benefits. Benefits may vary by carrier and location.
+        Limitations and exclusions may apply.
+      </p>
+
+      <p>
+        Enrollment in a plan may be limited to certain times of the year unless you qualify for a
+        special enrollment period or you are in your Medicare Initial Election Period.
       </p>
 
       <p>
