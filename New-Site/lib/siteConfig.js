@@ -7,6 +7,14 @@
 // canonical tags. Overridable so a preview deploy does not publish a sitemap
 // pointing at production.
 export const SITE_URL = (process.env.LH_SITE_URL || 'https://ihealthplans.com').replace(/\/$/, '')
+
+/*
+ The only host a search engine may index, and deliberately not overridable the
+ way SITE_URL is. A preview deploy setting its own LH_SITE_URL must not be able
+ to declare itself canonical, which is exactly how a review copy ends up
+ competing with the real site in search results.
+*/
+export const CANONICAL_HOST = 'ihealthplans.com'
 export const PHONE_NUMBER = '1-888-243-8046'
 /*
  711, not 771. The live site says 771 on 528 pages and it reaches nothing.
