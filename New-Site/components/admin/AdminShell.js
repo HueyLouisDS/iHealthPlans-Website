@@ -18,7 +18,7 @@ const ADMIN_NAV = [
   { label: 'Leads', href: '/admin/leads' },
   { label: 'Calls', href: '/admin/calls' },
   { label: 'Attribution', href: '/admin/attribution/source', match: '/admin/attribution' },
-  { label: 'Campaigns', href: '/admin/campaigns/all', match: '/admin/campaigns' },
+  { label: 'Spend', href: '/admin/spend/all', match: '/admin/spend' },
   { label: 'Agents', href: '/admin/agents' },
   { label: 'Integrations', href: '/admin/integrations' },
 ]

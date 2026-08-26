@@ -1,5 +1,5 @@
 /**
- * Campaign spend, /admin/campaigns/[channel].
+ * Campaign spend, /admin/spend/[channel].
  *
  * Attribution says which channel produced the leads. This says what they cost.
  * The all view ranks channels against each other, and each channel is its own
@@ -25,7 +25,7 @@ import {
   PERIODS,
   CAMPAIGN_CHANNELS,
   CAMPAIGN_SORTS,
-  TARGET_CPA,
+  TARGET_COST_PER_LEAD,
   LOW_VOLUME_LEADS,
 } from '@/lib/admin/data'
 
@@ -34,7 +34,7 @@ const PARAM_KEYS = ['period', 'sort']   // filters only, the channel is in the p
 export async function generateMetadata({ params }) {
   const { channel: slug } = await params
   const channel = findChannel(slug)
-  return { title: channel ? `Spend, ${channel.label.toLowerCase()}` : 'Campaigns' }
+  return { title: channel ? `Spend, ${channel.label.toLowerCase()}` : 'Spend' }
 }
 
 /* green under target, red over, plain when there is nothing to compare */
@@ -52,7 +52,7 @@ function TargetPill({ target }) {
   )
 }
 
-export default async function AdminCampaignsPage({ params, searchParams }) {
+export default async function AdminSpendPage({ params, searchParams }) {
   const isFixtures = usingFixtures()
   const session = await getAdminSession()
   if (!session?.user?.isAuthorised) return null
@@ -61,7 +61,7 @@ export default async function AdminCampaignsPage({ params, searchParams }) {
   const channel = findChannel(slug)
   if (!channel) notFound()
 
-  const base = `/admin/campaigns/${channel.slug}`
+  const base = `/admin/spend/${channel.slug}`
 
   const query = await searchParams
   const days = parsePeriod(query?.period)
@@ -81,6 +81,14 @@ export default async function AdminCampaignsPage({ params, searchParams }) {
     { key: 'leads', label: 'Leads', align: 'right', render: (row) => row.leads.toLocaleString() },
     { key: 'costPerLeadLabel', label: 'Cost / lead', align: 'right' },
     {
+      // Next to the figure it judges, or the reader has to hold a number
+      // across four columns to work out what it is being compared against
+      key: 'target',
+      label: `vs $${TARGET_COST_PER_LEAD}`,
+      align: 'right',
+      render: (row) => <TargetPill target={row.target} />,
+    },
+    {
       key: 'conversions',
       label: 'Enrollments',
       align: 'right',
@@ -88,12 +96,6 @@ export default async function AdminCampaignsPage({ params, searchParams }) {
     },
     { key: 'conversionRate', label: 'Rate', align: 'right' },
     { key: 'costPerEnrollmentLabel', label: 'Cost / enrollment', align: 'right' },
-    {
-      key: 'target',
-      label: `vs $${TARGET_CPA}`,
-      align: 'right',
-      render: (row) => <TargetPill target={row.target} />,
-    },
   ]
 
   const tabs = [
@@ -120,15 +122,15 @@ export default async function AdminCampaignsPage({ params, searchParams }) {
   const rowHref = isAll
     ? (row) => {
         const target = CAMPAIGN_CHANNELS.find((one) => one.label === row.value)
-        return target ? buildHref(`/admin/campaigns/${target.slug}`, PARAM_KEYS, filters) : null
+        return target ? buildHref(`/admin/spend/${target.slug}`, PARAM_KEYS, filters) : null
       }
     : undefined
 
   return (
     <AdminShell
       user={session.user}
-      currentPath="/admin/campaigns"
-      title="Campaigns"
+      currentPath="/admin/spend"
+      title="Spend"
       description={`${result.summary.spendLabel} spent, ${result.summary.leads.toLocaleString()} leads, last ${days} days`}
     >
       <DataSourceNotice
@@ -139,20 +141,22 @@ export default async function AdminCampaignsPage({ params, searchParams }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <StatTile label="Media spend" value={result.summary.spendLabel} />
         <StatTile label="Leads" value={result.summary.leads.toLocaleString()} />
-        <StatTile label="Cost per lead" value={result.summary.costPerLeadLabel} />
         <StatTile
-          label="Cost per enrollment"
-          value={result.summary.costPerEnrollmentLabel}
+          label="Cost per lead"
+          value={result.summary.costPerLeadLabel}
           rate={result.summary.target.label}
         />
+        <StatTile label="Cost per enrollment" value={result.summary.costPerEnrollmentLabel} />
       </div>
 
-      {/* Said plainly, because a number labelled cost per enrollment will be
-          read as the real one unless the page refuses to let it be */}
+      {/* Both caveats stated on the page, because a reader who works out
+          either one for themselves stops trusting the rest of it */}
       <p className="mb-6 text-sm text-[#505258] bg-[#f7f7f7] border rounded-lg px-4 py-3">
-        Media spend only. Agent time, dialer minutes, and purchased vendor leads are not counted
-        here, so the true cost per enrollment is higher than every figure on this page. The $
-        {TARGET_CPA} target is the media half of it.
+        The ${TARGET_COST_PER_LEAD} target is on cost per lead, which is what this site produces.
+        Cost per enrollment carries no target, it is the quality check that catches a channel
+        sending leads that never convert, and on a short period it reads badly only because those
+        leads have not been worked yet. Media spend only either way, agent time, dialer minutes,
+        and purchased vendor leads are not in these figures.
       </p>
 
       {/* Real navigation, not a filter. Each channel is its own page. */}
@@ -165,7 +169,7 @@ export default async function AdminCampaignsPage({ params, searchParams }) {
             return (
               <Link
                 key={entry.slug}
-                href={buildHref(`/admin/campaigns/${entry.slug}`, PARAM_KEYS, filters)}
+                href={buildHref(`/admin/spend/${entry.slug}`, PARAM_KEYS, filters)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`h-11 px-4 rounded-md text-sm font-semibold inline-flex items-center transition-colors ${
                   isActive

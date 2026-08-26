@@ -754,8 +754,18 @@ export const LEAD_STATUSES = [
  cost. Same funnel, the only difference is that this one has a denominator.
 */
 
-// The target every paid channel is measured against, cost per enrollment
-export const TARGET_CPA = 100
+/*
+ What a lead is allowed to cost. The target sits on cost per lead rather than
+ on cost per enrollment, because a lead is what this site actually produces.
+ Nobody enrols on the website, an agent does that on a call days later, and
+ measuring a marketing channel against an outcome it does not control makes
+ the number unactionable.
+
+ Cost per enrollment stays on the page with no target attached. It is the
+ quality check, the column that catches a channel sending leads that never
+ convert, and it only settles at 30 days or more.
+*/
+export const TARGET_COST_PER_LEAD = 100
 
 /*
  A channel is a grouping over source and medium, not a column. Google appears
@@ -814,12 +824,12 @@ function costPer(spend, count) {
   return { value, label: `$${value.toFixed(value < 100 ? 2 : 0)}` }
 }
 
-/* how a cost per enrollment reads against the target, and which way it leans */
-function againstTarget(costPerEnrollment) {
-  if (costPerEnrollment === null) return { label: 'n/a', tone: 'neutral' }
+/* how a cost per lead reads against the target, and which way it leans */
+function againstTarget(costPerLead) {
+  if (costPerLead === null) return { label: 'n/a', tone: 'neutral' }
 
-  const difference = costPerEnrollment - TARGET_CPA
-  const percent = Math.round((difference / TARGET_CPA) * 100)
+  const difference = costPerLead - TARGET_COST_PER_LEAD
+  const percent = Math.round((difference / TARGET_COST_PER_LEAD) * 100)
 
   if (Math.abs(percent) < 1) return { label: 'on target', tone: 'neutral' }
   if (difference < 0) return { label: `${Math.abs(percent)}% under`, tone: 'good' }
@@ -843,7 +853,7 @@ function buildSpendRow(value, spend, leads, calls, conversions) {
     costPerLeadLabel: perLead.label,
     costPerEnrollment: perEnrollment.value,
     costPerEnrollmentLabel: perEnrollment.label,
-    target: againstTarget(perEnrollment.value),
+    target: againstTarget(perLead.value),
     conversionRate: leads ? `${((conversions / leads) * 100).toFixed(1)}%` : '0.0%',
     lowVolume: leads < LOW_VOLUME_LEADS,
   }
@@ -965,7 +975,7 @@ export async function getCampaignSpend({ channel: slug = 'all', days = 30, sort 
 
   const totalLeads = leads.length
   const totalConversions = leads.filter((lead) => lead.status === 'enrolled').length
-  const summaryPerEnrollment = costPer(totalSpend, totalConversions)
+  const summaryPerLead = costPer(totalSpend, totalLeads)
 
   return {
     channel,
@@ -976,9 +986,9 @@ export async function getCampaignSpend({ channel: slug = 'all', days = 30, sort 
       spendLabel: totalSpend > 0 ? money(totalSpend) : 'n/a',
       leads: totalLeads,
       conversions: totalConversions,
-      costPerLeadLabel: costPer(totalSpend, totalLeads).label,
-      costPerEnrollmentLabel: summaryPerEnrollment.label,
-      target: againstTarget(summaryPerEnrollment.value),
+      costPerLeadLabel: summaryPerLead.label,
+      costPerEnrollmentLabel: costPer(totalSpend, totalConversions).label,
+      target: againstTarget(summaryPerLead.value),
     },
     isEmpty: totalLeads === 0 && totalSpend === 0,
   }

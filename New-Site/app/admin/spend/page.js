@@ -1,5 +1,5 @@
-// /admin/campaigns, a redirect rather than a page. The channel views live at
-// /admin/campaigns/[channel]. Carries the query string across so a bookmarked
+// /admin/spend, a redirect rather than a page. The channel views live at
+// /admin/spend/[channel]. Carries the query string across so a bookmarked
 // period or sort survives the hop.
 
 import { redirect } from 'next/navigation'
@@ -14,5 +14,5 @@ export default async function AdminCampaignsIndex({ searchParams }) {
   }
 
   const search = carried.toString()
-  redirect(`/admin/campaigns/${DEFAULT_CHANNEL.slug}${search ? `?${search}` : ''}`)
+  redirect(`/admin/spend/${DEFAULT_CHANNEL.slug}${search ? `?${search}` : ''}`)
 }
