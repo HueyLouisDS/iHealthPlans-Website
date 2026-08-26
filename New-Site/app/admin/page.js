@@ -1,10 +1,11 @@
 // Admin dashboard, /admin.
-// The funnel the client asked for, traffic through to conversions, plus where
-// the leads came from and what has just come in.
+// The funnel the client asked for, traffic through to conversions, plus what
+// it cost, where the leads came from, and what has just come in.
 //
-// Laid out so the page answers 3 questions in order. Is the business up or
-// down, where is the funnel leaking, and what happened today. Everything else
-// in the admin area is a drill down from one of those.
+// Laid out so the page answers 4 questions in order. Is the business up or
+// down, what are we paying for it, where is the funnel leaking, and what
+// happened today. Everything else in the admin area is a drill down from one
+// of those.
 
 import Link from 'next/link'
 import { getAdminSession } from '@/lib/admin/session'
@@ -19,14 +20,61 @@ import {
   getFunnelTrend,
   getTopSources,
   getRecentLeads,
+  getCampaignSpend,
   usingFixtures,
   parsePeriod,
   parseStage,
   PERIODS,
   FUNNEL_STAGES,
+  TARGET_COST_PER_LEAD,
 } from '@/lib/admin/data'
 
 const FOCUS_ID = 'stage-focus'
+
+/*
+ Spend as a band rather than as more tiles. The tiles above are funnel stages
+ and clicking one filters the page, so putting a cost in among them would put
+ a figure that filters nothing into a row where everything else does.
+*/
+function SpendBand({ summary, days }) {
+  const tones = {
+    good: 'text-green-900',
+    bad: 'text-red-900',
+    neutral: 'text-[#6C7381]',
+  }
+
+  return (
+    <div className="mb-6 bg-white border rounded-lg px-5 py-4 flex items-center justify-between gap-6 flex-wrap">
+      <div className="flex items-center gap-8 flex-wrap">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[1.2px] text-[#505258]">Media spend</p>
+          <p className="text-2xl font-bold text-ihealthBlue tabular-nums">{summary.spendLabel}</p>
+        </div>
+
+        {/* The target sits in the label, so the figure beside the number is
+            just the variance and reads as a sentence either way */}
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[1.2px] text-[#505258]">
+            Cost per lead, target ${TARGET_COST_PER_LEAD}
+          </p>
+          <p className="text-2xl font-bold text-ihealthBlue tabular-nums">
+            {summary.costPerLeadLabel}{' '}
+            <span className={`text-base font-semibold ${tones[summary.target.tone]}`}>
+              {summary.target.label !== 'n/a' && summary.target.label}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <Link
+        href={`/admin/spend/all?period=${days}`}
+        className="text-sm font-semibold text-[#105fa8] hover:underline"
+      >
+        Spend by channel
+      </Link>
+    </div>
+  )
+}
 
 function dashboardHref(days, stageSlug, { snap = true } = {}) {
   const params = new URLSearchParams()
@@ -146,11 +194,12 @@ export default async function AdminDashboardPage({ searchParams }) {
   const days = parsePeriod(params?.period)
   const stage = parseStage(params?.stage)
 
-  const [summary, trend, sources, recent] = await Promise.all([
+  const [summary, trend, sources, recent, spend] = await Promise.all([
     getFunnelSummary({ days }),
     getFunnelTrend({ days }),
     getTopSources({ days }),
     getRecentLeads(),
+    getCampaignSpend({ channel: 'all', days }),
   ])
 
   return (
@@ -162,7 +211,7 @@ export default async function AdminDashboardPage({ searchParams }) {
     >
       <DataSourceNotice
         isFixtures={isFixtures}
-        needs="a session and page view record for traffic, /api/call/click for call clicks, a phone system webhook for calls, and the lead and conversion tables"
+        needs="a session and page view record for traffic, /api/call/click for call clicks, a phone system webhook for calls, the lead and conversion tables, and ad platform spend for the cost figures"
       />
 
       <div className="mb-6">
@@ -194,6 +243,8 @@ export default async function AdminDashboardPage({ searchParams }) {
           )
         })}
       </div>
+
+      {!spend.isEmpty && <SpendBand summary={spend.summary} days={days} />}
 
       {stage && !summary.isEmpty && (
         <>
