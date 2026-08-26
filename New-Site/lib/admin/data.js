@@ -755,17 +755,24 @@ export const LEAD_STATUSES = [
 */
 
 /*
- What a lead is allowed to cost. The target sits on cost per lead rather than
- on cost per enrollment, because a lead is what this site actually produces.
- Nobody enrols on the website, an agent does that on a call days later, and
- measuring a marketing channel against an outcome it does not control makes
- the number unactionable.
+ What a lead is allowed to cost. Deliberately unset.
 
- Cost per enrollment stays on the page with no target attached. It is the
- quality check, the column that catches a channel sending leads that never
- convert, and it only settles at 30 days or more.
+ A target is a claim about what is acceptable, and nobody here yet knows what
+ a Medicare lead costs on Facebook against organic search, so any number put
+ here would make every row on the page pass or fail against a guess.
+
+ It is not a benchmark to look up, it is derived from this business:
+
+   lead value  =  commission per enrollment  x  share of leads that enrol
+   target      =  lead value  x  the margin worth keeping
+
+ Commission is known. The conversion rate is the missing half, and it is
+ exactly what this site is being built to measure, so the number arrives on
+ its own once there is real data behind the enrollment column.
+
+ Set it to a number and the target column appears everywhere at once.
 */
-export const TARGET_COST_PER_LEAD = 100
+export const TARGET_COST_PER_LEAD = null
 
 /*
  A channel is a grouping over source and medium, not a column. Google appears
@@ -826,6 +833,8 @@ function costPer(spend, count) {
 
 /* how a cost per lead reads against the target, and which way it leans */
 function againstTarget(costPerLead) {
+  // No target set, so there is nothing to be under or over
+  if (TARGET_COST_PER_LEAD === null) return null
   if (costPerLead === null) return { label: 'n/a', tone: 'neutral' }
 
   const difference = costPerLead - TARGET_COST_PER_LEAD

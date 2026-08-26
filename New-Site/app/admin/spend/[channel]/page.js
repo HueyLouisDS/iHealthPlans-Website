@@ -80,9 +80,9 @@ export default async function AdminSpendPage({ params, searchParams }) {
     { key: 'spendLabel', label: 'Spend', align: 'right' },
     { key: 'leads', label: 'Leads', align: 'right', render: (row) => row.leads.toLocaleString() },
     { key: 'costPerLeadLabel', label: 'Cost / lead', align: 'right' },
-    {
-      // Next to the figure it judges, or the reader has to hold a number
-      // across four columns to work out what it is being compared against
+    // Only when a target exists. Next to the figure it judges, or the reader
+    // has to hold a number across four columns to know what it is measured on.
+    TARGET_COST_PER_LEAD !== null && {
       key: 'target',
       label: `vs $${TARGET_COST_PER_LEAD}`,
       align: 'right',
@@ -96,7 +96,7 @@ export default async function AdminSpendPage({ params, searchParams }) {
     },
     { key: 'conversionRate', label: 'Rate', align: 'right' },
     { key: 'costPerEnrollmentLabel', label: 'Cost / enrollment', align: 'right' },
-  ]
+  ].filter(Boolean)
 
   const tabs = [
     {
@@ -144,19 +144,31 @@ export default async function AdminSpendPage({ params, searchParams }) {
         <StatTile
           label="Cost per lead"
           value={result.summary.costPerLeadLabel}
-          rate={result.summary.target.label}
+          rate={result.summary.target?.label}
         />
         <StatTile label="Cost per enrollment" value={result.summary.costPerEnrollmentLabel} />
       </div>
 
-      {/* Both caveats stated on the page, because a reader who works out
-          either one for themselves stops trusting the rest of it */}
+      {/* Stated on the page, because a reader who works any of this out for
+          themselves stops trusting the rest of it */}
       <p className="mb-6 text-sm text-[#505258] bg-[#f7f7f7] border rounded-lg px-4 py-3">
-        The ${TARGET_COST_PER_LEAD} target is on cost per lead, which is what this site produces.
-        Cost per enrollment carries no target, it is the quality check that catches a channel
-        sending leads that never convert, and on a short period it reads badly only because those
-        leads have not been worked yet. Media spend only either way, agent time, dialer minutes,
-        and purchased vendor leads are not in these figures.
+        {TARGET_COST_PER_LEAD === null ? (
+          <>
+            No cost per lead target is set, so nothing here passes or fails. A target is worked out
+            from what an enrollment pays and what share of leads reach one, not from what other
+            people pay for ads, and the second half of that only becomes real once the enrollment
+            column has live data behind it.
+          </>
+        ) : (
+          <>
+            The ${TARGET_COST_PER_LEAD} target is on cost per lead, which is what this site
+            produces. Cost per enrollment carries no target, it is the quality check that catches a
+            channel sending leads that never convert.
+          </>
+        )}{' '}
+        Media spend either way. Agent time, dialer minutes, and purchased vendor leads are not in
+        these figures, and on a short period the enrollment columns read low simply because those
+        leads have not been worked yet.
       </p>
 
       {/* Real navigation, not a filter. Each channel is its own page. */}

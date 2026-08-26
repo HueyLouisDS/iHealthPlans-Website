@@ -55,13 +55,15 @@ function SpendBand({ summary, days }) {
             just the variance and reads as a sentence either way */}
         <div>
           <p className="text-sm font-bold uppercase tracking-[1.2px] text-[#505258]">
-            Cost per lead, target ${TARGET_COST_PER_LEAD}
+            Cost per lead{TARGET_COST_PER_LEAD !== null && `, target $${TARGET_COST_PER_LEAD}`}
           </p>
           <p className="text-2xl font-bold text-ihealthBlue tabular-nums">
             {summary.costPerLeadLabel}{' '}
-            <span className={`text-base font-semibold ${tones[summary.target.tone]}`}>
-              {summary.target.label !== 'n/a' && summary.target.label}
-            </span>
+            {summary.target && summary.target.label !== 'n/a' && (
+              <span className={`text-base font-semibold ${tones[summary.target.tone]}`}>
+                {summary.target.label}
+              </span>
+            )}
           </p>
         </div>
       </div>
