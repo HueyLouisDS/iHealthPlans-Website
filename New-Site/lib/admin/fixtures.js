@@ -33,22 +33,33 @@ function daysAgo(days, hour = 12, minute = 0) {
   return date
 }
 
+/*
+ dailySpend is what the channel costs per day. Organic is not free, SEO
+ carries a content retainer, so it has a figure too. Direct and referral are
+ the only genuinely unpaid rows.
+*/
 const SOURCES = [
-  { source: 'google', medium: 'cpc', label: 'google / cpc', weight: 34 },
-  { source: 'google', medium: 'organic', label: 'google / organic', weight: 26 },
-  { source: 'bing', medium: 'cpc', label: 'bing / cpc', weight: 11 },
-  { source: 'facebook', medium: 'paid_social', label: 'facebook / paid', weight: 13 },
-  { source: '(direct)', medium: '(none)', label: '(direct)', weight: 10 },
-  { source: 'medicare.gov', medium: 'referral', label: 'medicare.gov / referral', weight: 6 },
+  { source: 'google', medium: 'cpc', label: 'google / cpc', weight: 34, dailySpend: 68 },
+  { source: 'google', medium: 'organic', label: 'google / organic', weight: 26, dailySpend: 30 },
+  { source: 'bing', medium: 'cpc', label: 'bing / cpc', weight: 11, dailySpend: 14 },
+  { source: 'facebook', medium: 'paid_social', label: 'facebook / paid', weight: 13, dailySpend: 38 },
+  { source: '(direct)', medium: '(none)', label: '(direct)', weight: 10, dailySpend: 0 },
+  { source: 'medicare.gov', medium: 'referral', label: 'medicare.gov / referral', weight: 6, dailySpend: 0 },
 ]
 
+/*
+ spendWeight is deliberately not the same shape as weight. If spend tracked
+ lead volume exactly then every campaign would show an identical cost per
+ lead and the table would say nothing. Brand converts cheaply, conquest does
+ not, and that spread is the reason anyone opens this page.
+*/
 const CAMPAIGNS = [
-  { name: 'aep-brand', weight: 24 },
-  { name: 'aep-generic-ma', weight: 30 },
-  { name: 'dsnp-always-on', weight: 14 },
-  { name: 'part-d-generic', weight: 12 },
-  { name: 'competitor-conquest', weight: 8 },
-  { name: '(not set)', weight: 12 },
+  { name: 'aep-brand', weight: 24, spendWeight: 14 },
+  { name: 'aep-generic-ma', weight: 30, spendWeight: 38 },
+  { name: 'dsnp-always-on', weight: 14, spendWeight: 12 },
+  { name: 'part-d-generic', weight: 12, spendWeight: 18 },
+  { name: 'competitor-conquest', weight: 8, spendWeight: 18 },
+  { name: '(not set)', weight: 12, spendWeight: 0 },
 ]
 
 const LANDING_PAGES = [
@@ -211,12 +222,36 @@ function buildDataset() {
     })
   }
 
+  /*
+   One spend row per paid source per day. Held by day rather than as a single
+   monthly figure so a 7 day view and a 30 day view do not have to divide a
+   total and pretend the result means something.
+  */
+  const spend = []
+  for (let day = DAYS - 1; day >= 0; day -= 1) {
+    const date = daysAgo(day)
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6
+
+    for (const source of SOURCES) {
+      if (source.dailySpend === 0) continue
+
+      // Weekends pace down, the way most ad accounts actually run
+      const pacing = isWeekend ? 0.62 : 1
+      const wobble = 0.85 + rng() * 0.3
+      spend.push({
+        date,
+        source: source.label,
+        amount: Math.round(source.dailySpend * pacing * wobble * 100) / 100,
+      })
+    }
+  }
+
   leads.sort((a, b) => b.createdAt - a.createdAt)
   calls.sort((a, b) => b.startedAt - a.startedAt)
 
   const conversions = leads.filter((lead) => lead.status === 'enrolled').length
 
-  return { leads, calls, daily, conversions, days: DAYS }
+  return { leads, calls, daily, spend, conversions, days: DAYS }
 }
 
 let cached = null

@@ -14,7 +14,14 @@
 // TODO replace each body with a query once lib/db/client.js and the migrations
 // in db/migrations exist, and delete the fixtures branch.
 
-import { getDataset, AGENTS, formatDuration, formatDateTime } from '@/lib/admin/fixtures'
+import {
+  getDataset,
+  AGENTS,
+  CAMPAIGNS,
+  SOURCES,
+  formatDuration,
+  formatDateTime,
+} from '@/lib/admin/fixtures'
 
 export function usingFixtures() {
   return process.env.LH_ADMIN_USE_FIXTURES === 'true'
@@ -737,3 +744,242 @@ export const LEAD_STATUSES = [
   { value: 'enrolled', label: 'Enrolled' },
   { value: 'lost', label: 'Lost' },
 ]
+
+/*=======================================================
+        CAMPAIGN SPEND
+========================================================*/
+
+/*
+ Attribution answers which channel produced the leads. This answers what they
+ cost. Same funnel, the only difference is that this one has a denominator.
+*/
+
+// The target every paid channel is measured against, cost per enrollment
+export const TARGET_CPA = 100
+
+/*
+ A channel is a grouping over source and medium, not a column. Google appears
+ twice in the data, once paid and once organic, and reporting them as a single
+ row called google would hide the only comparison on the page that matters.
+
+ match is checked field by field, so an entry naming only medium matches on
+ medium alone.
+*/
+export const CAMPAIGN_CHANNELS = [
+  { slug: 'all', label: 'All channels', match: null, isPaid: true },
+  { slug: 'google-ads', label: 'Google Ads', match: { source: 'google', medium: 'cpc' }, isPaid: true },
+  { slug: 'facebook', label: 'Facebook', match: { source: 'facebook', medium: 'paid_social' }, isPaid: true },
+  { slug: 'bing-ads', label: 'Bing Ads', match: { source: 'bing', medium: 'cpc' }, isPaid: true },
+  { slug: 'seo', label: 'SEO', match: { source: 'google', medium: 'organic' }, isPaid: true },
+  { slug: 'direct', label: 'Direct', match: { source: '(direct)' }, isPaid: false },
+  { slug: 'referral', label: 'Referral', match: { medium: 'referral' }, isPaid: false },
+]
+
+export const DEFAULT_CHANNEL = CAMPAIGN_CHANNELS[0]
+
+export const CAMPAIGN_SORTS = [
+  { value: 'spend', label: 'Most spend' },
+  { value: 'leads', label: 'Most leads' },
+  { value: 'cpa', label: 'Best cost per enrollment' },
+  { value: 'cpl', label: 'Best cost per lead' },
+]
+
+// Spend rows carry the source label, the channel test needs the parts
+const SOURCE_BY_LABEL = new Map(SOURCES.map((source) => [source.label, source]))
+
+export function findChannel(slug) {
+  return CAMPAIGN_CHANNELS.find((channel) => channel.slug === slug) || null
+}
+
+function matchesChannel(channel, sourceRaw) {
+  if (!channel?.match) return true
+  return Object.entries(channel.match).every(([field, value]) => sourceRaw?.[field] === value)
+}
+
+// Whole dollars. Cents on an ad spend total are noise nobody acts on.
+function money(amount) {
+  return `$${Math.round(amount).toLocaleString('en-US')}`
+}
+
+/*
+ A dash rather than $0.00 when nothing was spent. Direct and referral produce
+ leads at no media cost, and printing a zero there reads as free leads worth
+ chasing rather than as a channel with no dial on it.
+*/
+function costPer(spend, count) {
+  if (spend <= 0) return { value: null, label: 'n/a' }
+  if (count <= 0) return { value: null, label: 'no result' }
+
+  const value = spend / count
+  return { value, label: `$${value.toFixed(value < 100 ? 2 : 0)}` }
+}
+
+/* how a cost per enrollment reads against the target, and which way it leans */
+function againstTarget(costPerEnrollment) {
+  if (costPerEnrollment === null) return { label: 'n/a', tone: 'neutral' }
+
+  const difference = costPerEnrollment - TARGET_CPA
+  const percent = Math.round((difference / TARGET_CPA) * 100)
+
+  if (Math.abs(percent) < 1) return { label: 'on target', tone: 'neutral' }
+  if (difference < 0) return { label: `${Math.abs(percent)}% under`, tone: 'good' }
+
+  return { label: `${percent}% over`, tone: 'bad' }
+}
+
+/* one aggregated row, whether it groups a channel or a campaign inside one */
+function buildSpendRow(value, spend, leads, calls, conversions) {
+  const perLead = costPer(spend, leads)
+  const perEnrollment = costPer(spend, conversions)
+
+  return {
+    value,
+    spend,
+    spendLabel: spend > 0 ? money(spend) : 'n/a',
+    leads,
+    calls,
+    conversions,
+    costPerLead: perLead.value,
+    costPerLeadLabel: perLead.label,
+    costPerEnrollment: perEnrollment.value,
+    costPerEnrollmentLabel: perEnrollment.label,
+    target: againstTarget(perEnrollment.value),
+    conversionRate: leads ? `${((conversions / leads) * 100).toFixed(1)}%` : '0.0%',
+    lowVolume: leads < LOW_VOLUME_LEADS,
+  }
+}
+
+/*
+ Spend against the funnel, grouped by channel on the all view and by campaign
+ inside a single channel.
+
+ Campaign level spend is apportioned from the channel total by spendWeight
+ rather than by lead count. Splitting it by leads would give every campaign an
+ identical cost per lead, which is a table that cannot be wrong and cannot be
+ useful either.
+*/
+export async function getCampaignSpend({ channel: slug = 'all', days = 30, sort = 'spend' } = {}) {
+  const channel = findChannel(slug) || DEFAULT_CHANNEL
+
+  const empty = {
+    channel,
+    days,
+    rows: [],
+    summary: {
+      spend: 0,
+      spendLabel: 'n/a',
+      leads: 0,
+      conversions: 0,
+      costPerLeadLabel: 'n/a',
+      costPerEnrollmentLabel: 'n/a',
+      target: { label: 'n/a', tone: 'neutral' },
+    },
+    isEmpty: true,
+  }
+
+  if (!usingFixtures()) return empty
+
+  const data = getDataset()
+  const from = startOfDaysAgo(days)
+
+  const leads = data.leads.filter(
+    (lead) => lead.createdAt >= from && matchesChannel(channel, lead.sourceRaw)
+  )
+
+  const spendRows = data.spend.filter(
+    (row) => row.date >= from && matchesChannel(channel, SOURCE_BY_LABEL.get(row.source))
+  )
+
+  const groups = new Map()
+
+  /*
+   The all view groups by channel, so every lead has to be placed into one.
+   Anything matching no channel falls into (other) rather than being dropped,
+   since a silently missing row is how a reporting page starts lying.
+  */
+  const groupKey = (lead) =>
+    channel.slug === 'all'
+      ? CAMPAIGN_CHANNELS.find(
+          (one) => one.slug !== 'all' && matchesChannel(one, lead.sourceRaw)
+        )?.label || '(other)'
+      : lead.campaign || '(not set)'
+
+  for (const lead of leads) {
+    const key = groupKey(lead)
+    if (!groups.has(key)) groups.set(key, { leads: 0, calls: 0, conversions: 0, spend: 0 })
+
+    const group = groups.get(key)
+    group.leads += 1
+    group.calls += lead.callCount
+    if (lead.status === 'enrolled') group.conversions += 1
+  }
+
+  const totalSpend = spendRows.reduce((sum, row) => sum + row.amount, 0)
+
+  if (channel.slug === 'all') {
+    // Spend already belongs to a source, so it lands on that source's channel
+    for (const row of spendRows) {
+      const source = SOURCE_BY_LABEL.get(row.source)
+      const key =
+        CAMPAIGN_CHANNELS.find((one) => one.slug !== 'all' && matchesChannel(one, source))?.label ||
+        '(other)'
+
+      if (!groups.has(key)) groups.set(key, { leads: 0, calls: 0, conversions: 0, spend: 0 })
+      groups.get(key).spend += row.amount
+    }
+  } else {
+    const weights = new Map(CAMPAIGNS.map((one) => [one.name, one.spendWeight]))
+    const totalWeight = [...groups.keys()].reduce((sum, key) => sum + (weights.get(key) || 0), 0)
+
+    for (const [key, group] of groups) {
+      group.spend = totalWeight > 0 ? (totalSpend * (weights.get(key) || 0)) / totalWeight : 0
+    }
+  }
+
+  const rows = assignGroupIds(
+    [...groups.entries()].map(([value, group]) =>
+      buildSpendRow(value, group.spend, group.leads, group.calls, group.conversions)
+    )
+  )
+
+  /*
+   Cost sorts put the rows with no cost last rather than first. A null cost
+   per lead is not the cheapest row on the page, it is a row the question does
+   not apply to.
+  */
+  const byCost = (key) => (a, b) => {
+    if (a[key] === null && b[key] === null) return b.leads - a.leads
+    if (a[key] === null) return 1
+    if (b[key] === null) return -1
+    return a[key] - b[key]
+  }
+
+  const sorters = {
+    spend: (a, b) => b.spend - a.spend,
+    leads: (a, b) => b.leads - a.leads,
+    cpa: byCost('costPerEnrollment'),
+    cpl: byCost('costPerLead'),
+  }
+
+  rows.sort(sorters[sort] || sorters.spend)
+
+  const totalLeads = leads.length
+  const totalConversions = leads.filter((lead) => lead.status === 'enrolled').length
+  const summaryPerEnrollment = costPer(totalSpend, totalConversions)
+
+  return {
+    channel,
+    days,
+    rows,
+    summary: {
+      spend: totalSpend,
+      spendLabel: totalSpend > 0 ? money(totalSpend) : 'n/a',
+      leads: totalLeads,
+      conversions: totalConversions,
+      costPerLeadLabel: costPer(totalSpend, totalLeads).label,
+      costPerEnrollmentLabel: summaryPerEnrollment.label,
+      target: againstTarget(summaryPerEnrollment.value),
+    },
+    isEmpty: totalLeads === 0 && totalSpend === 0,
+  }
+}
