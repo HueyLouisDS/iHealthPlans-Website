@@ -240,7 +240,9 @@ export const LEGAL_PAGES = {
       {
         heading: 'How long we keep it',
         body: [
-          'TO CONFIRM: retention periods, stated separately for lead records, call recordings, enrollment records, and do not call records. Medicare marketing and enrollment records carry their own retention requirements, so this cannot be a single number and it should not be guessed at.',
+          'Lead records, call recordings and enrollment records are kept for 10 years. Medicare rules set that period for enrollment records, and we hold the rest for the same length of time.',
+          'Do not call records are kept for as long as we are in business. The point of that record is that we never contact you again, so it is not something we let expire.',
+          'We also hold a second copy of lead records in our own reporting system, which is how we measure which advertising brings people to us. Your name, telephone number and email address are removed from that copy after 24 months. What is left is the timing, the campaign and the ZIP code, which is what the measurement actually needs.',
         ],
       },
       {
@@ -502,7 +504,9 @@ export const LEGAL_PAGES = {
         heading: 'Records we keep',
         body: [
           'When you ask us to stop, we keep a record of the request so that we can honor it. That means we retain enough information to recognise your number or email and avoid contacting it again.',
-          'TO CONFIRM: retention period for do not call records, and confirm this section is consistent with the privacy policy.',
+          'The record is the number itself, not your lead record, so asking us to delete your information does not undo your do not call request. The number stays on the list.',
+          'We keep that list for as long as we are in business. There is no point at which a number comes off it unless you ask us to take it off.',
+          'A do not call request stops us from calling you. It does not stop you from calling us if you want to.',
         ],
       },
     ],
@@ -539,7 +543,7 @@ export const LEGAL_PAGES = {
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
           { label: 'By email', value: 'contracting@ihealthplans.com' },
-          { label: 'Online', value: 'TO CONFIRM: whether a self service privacy request form will be provided' },
+          { label: 'Online', value: 'TO CONFIRM: the privacy request form is approved but not built yet. It produces the dated written request the dialer vendor requires before it will delete anything, so it is not optional. Needs copy before it can ship.' },
         ],
         afterBody: [
           'TO CONFIRM: several state laws require a specific intake method, and California requires a toll free number for businesses that collect personal information. Confirm the methods offered here satisfy every state you operate in.',
@@ -564,7 +568,8 @@ export const LEGAL_PAGES = {
         heading: 'How we verify a request',
         body: [
           'Before we act on a request we need to be reasonably sure you are who you say you are. What we ask for depends on the sensitivity of the information and the type of request.',
-          'TO CONFIRM: the specific verification steps, and the response timeframe including any permitted extension.',
+          'For most requests we verify you by the telephone number we hold for you, since that is the identifier your records are filed under. Where someone is acting for you, we confirm their authority first, as described above.',
+          'We respond within 30 days. If a request is complicated and we need longer, we will tell you inside those 30 days and explain why.',
         ],
       },
       {
