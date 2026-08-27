@@ -1,2 +1,5 @@
 # Local only, not shared with the repo. The file explains itself at the top.
 CLAUDE.md
+
+# Local only, same reason as CLAUDE.md above.
+.claude/
