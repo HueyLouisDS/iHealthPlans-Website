@@ -5,14 +5,12 @@ import { resolveDbConfig, databaseConfigured as configured } from '@/lib/db/dsn'
 /*================================================================================
     POOL SIZE IS DELIBERATELY TINY, AND SERVERLESS IS THE REASON
 ==================================================================================*/
-
 const POOL_SIZE = 2                     // per instance, not in total. Serverless multiplies this.
 const globalForDb = globalThis
 
 /*================================================================================
     QUERIES ARE WRITTEN WITH ?, POSTGRES WANTS $1
 ==================================================================================*/
-
 /*
  Translated here rather than by rewriting every query in the codebase. The
  scan tracks quoting so a ? inside a string literal is left alone, which a
