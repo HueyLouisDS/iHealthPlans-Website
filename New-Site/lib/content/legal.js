@@ -234,7 +234,7 @@ export const LEGAL_PAGES = {
       {
         heading: 'Selling or sharing your information',
         body: [
-          'TO CONFIRM: this is the most important open question in this policy and it needs counsel. Lead generation businesses frequently transfer personal information in ways that meet the statutory definition of a sale or a share under state privacy law, even when no money changes hands. Whether iHealth Plans does so decides what this section says, and whether a Do Not Sell or Share My Personal Information link is legally required in the site footer.',
+          'We do not sell your personal information, and we do not share it for cross context behavioral advertising. Both of those terms carry a specific meaning under state privacy law, and neither one describes what we do.',
         ],
       },
       {
@@ -441,7 +441,6 @@ export const LEGAL_PAGES = {
           'The people you speak to are licensed insurance agents. Whether an agent can discuss plans in your state depends on where they hold a license.',
           'You can check the license of any agent yourself. The Department of Insurance in your state holds the record, and the NIPR Consumer Portal and the SBS License Manager both let you search nationally. Each of these will tell you whether a license is active, what lines of authority it covers, and whether there is any disciplinary history against it.',
           'We keep a complete internal register of the licenses this agency holds, and we will provide our license information on request.',
-          'TO CONFIRM: whether iHealth Plans wants to publish its own agency license numbers by state. The answer returned said it may choose to as a transparency measure, which leaves the decision open. Confirm also that nothing was lost from the end of that answer, which arrived cut off mid sentence.',
         ],
       },
     ],
@@ -482,7 +481,8 @@ export const LEGAL_PAGES = {
         heading: 'How long it takes',
         body: [
           'We add your request to our internal do not call list. Once it is recorded we stop making marketing contact.',
-          'TO CONFIRM: state the maximum time to honour a request, and make sure the number stated matches the operational reality and the current FCC rule on revocation. Do not publish a timeframe the business cannot meet, because the published figure becomes the standard you are held to.',
+          'A request made through this website takes effect immediately. It is sent to our calling system the moment you submit it, so nobody has to enter it by hand.',
+          'TO CONFIRM: the immediate timeframe above holds only for the opt out form on this page, which is not built yet and needs the dialer endpoint to post to. Until it is live a request arrives by email and is entered by a person, so this section overstates what happens. Decide also whether to state the FCC backstop of 10 business days for requests that arrive any other way.',
         ],
       },
       {
@@ -501,7 +501,7 @@ export const LEGAL_PAGES = {
       {
         heading: 'Records we keep',
         body: [
-          'When you ask us to stop, we keep a record of the request so that we can honour it. That means we retain enough information to recognise your number or email and avoid contacting it again.',
+          'When you ask us to stop, we keep a record of the request so that we can honor it. That means we retain enough information to recognise your number or email and avoid contacting it again.',
           'TO CONFIRM: retention period for do not call records, and confirm this section is consistent with the privacy policy.',
         ],
       },
@@ -548,15 +548,16 @@ export const LEGAL_PAGES = {
       {
         heading: 'Opting out of sale or sharing',
         body: [
-          'If we sell or share personal information as those terms are defined in your state, you can tell us to stop.',
-          'TO CONFIRM: this is the question that matters most on this page. Lead generation businesses frequently transfer personal information in ways that meet the statutory definition of a sale or a share even when no money changes hands. Counsel must determine whether iHealth Plans sells or shares, because the answer decides whether a Do Not Sell or Share My Personal Information link is legally required in the site footer.',
+          'We do not sell your personal information, and we do not share it for cross context behavioral advertising.',
+          'You can still ask us to opt you out. We will honor that request even though there is nothing here that it applies to.',
         ],
       },
       {
         heading: 'Someone acting on your behalf',
         body: [
-          'An authorised agent can make a request for you, and a person with power of attorney can act on behalf of the person they represent. We may need to verify both their authority and the identity of the person the request concerns.',
-          'TO CONFIRM: the verification process for authorised agents and for holders of power of attorney. This matters more here than for most businesses, because a significant share of enquiries come from adult children and appointed representatives rather than from the beneficiary.',
+          'An authorized agent can make a request for you, and a person with power of attorney can act on behalf of the person they represent. We verify their authority and the identity of the person the request concerns before we act on it.',
+          'Before anything specific to you is discussed, the agent asks the person contacting us to confirm what authority they hold, and records that statement on the call.',
+          'Acceptable proof is a power of attorney document, a court order, or a CMS approved representative form. After an enrollment the carrier may also ask for that documentation to be sent in.',
         ],
       },
       {
