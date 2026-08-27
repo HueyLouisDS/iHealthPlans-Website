@@ -87,6 +87,20 @@ const AGENTS = [
   { id: 'ag-08', name: 'T. Oyelaran' },
 ]
 
+/*
+ Post sale rates, taken from the sister agency's operating model. Replace with
+ measured values once there is enough history to measure them.
+*/
+const EFFECTUATION_RATE = 0.9           // submitted enrollments that start coverage
+const RETENTION_RATE = 0.9              // effectuated members still on at 90 days
+export const RETENTION_DAYS = 90        // the window retention is judged over
+const DAY_MS = 86_400_000
+
+// Coverage starts on the 1st of a later month, never on the signing date
+function firstOfMonthAfter(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 1)
+}
+
 const STATUSES = [
   { value: 'new', weight: 18 },
   { value: 'contacted', weight: 30 },
@@ -160,8 +174,26 @@ function buildDataset() {
       })
     }
 
+    /*
+     What happens to an enrollment after it is submitted, on the sister
+     agency's observed rates, 90% effectuate and 90% of those survive 90 days.
+
+     Both are dated rather than boolean because both lag. Coverage starts on
+     the 1st of a later month, and retention cannot be known until 90 days
+     after that, so a recent enrollment is unresolved rather than failed.
+    */
+    const isSubmitted = status.value === 'enrolled'
+    const effectiveDate = isSubmitted ? firstOfMonthAfter(createdAt) : null
+    const didEffectuate = isSubmitted && rng() < EFFECTUATION_RATE
+
     leads.push({
       id,
+      effectiveDate: didEffectuate ? effectiveDate : null,
+      // Set only when it actually lapsed, inside the 90 day window
+      disenrolledAt:
+        didEffectuate && rng() > RETENTION_RATE
+          ? new Date(effectiveDate.getTime() + Math.floor(rng() * RETENTION_DAYS) * DAY_MS)
+          : null,
       name: `${firstName} ${lastName}`,
       phone,
       email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`,

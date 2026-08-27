@@ -5,7 +5,9 @@
 
 import Link from 'next/link'
 
-export function StatTile({ label, value, rate, delta, isMuted = false, href, isSelected = false, selectedLabel }) {
+// note is free text under the figure. rate is not reusable for it, that one
+// hardcodes "from previous stage" and only makes sense on a funnel tile.
+export function StatTile({ label, value, rate, note, delta, isMuted = false, href, isSelected = false, selectedLabel }) {
   const className = `bg-white border rounded-lg p-5 flex flex-col gap-1 transition-[box-shadow,opacity,border-color] ${
     isMuted ? 'opacity-60' : ''
   } ${
@@ -34,6 +36,8 @@ export function StatTile({ label, value, rate, delta, isMuted = false, href, isS
       {rate !== null && rate !== undefined && (
         <p className="text-sm text-[#505258]">{rate} from previous stage</p>
       )}
+
+      {note && <p className="text-sm text-amber-900">{note}</p>}
     </>
   )
 

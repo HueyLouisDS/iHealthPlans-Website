@@ -6,12 +6,15 @@ const SERIES = [
   { key: 'calls', label: 'Connected', colour: 'bg-ihealthGreen' },
 ]
 
+// Green above the sale, blue at and below it, so the eye reads the split
 const STAGE_COLOURS = {
   sessions: 'bg-ihealthGreen',
   callClicks: 'bg-ihealthGreen',
   calls: 'bg-ihealthGreen',
   leads: 'bg-ihealthBlue',
-  conversions: 'bg-ihealthBlue',
+  submitted: 'bg-ihealthBlue',
+  effectuated: 'bg-ihealthBlue',
+  retained: 'bg-ihealthBlue',
 }
 
 function LegendToggle({ series, isVisible, onToggle }) {

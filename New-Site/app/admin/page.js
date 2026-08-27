@@ -220,7 +220,9 @@ export default async function AdminDashboardPage({ searchParams }) {
         <PeriodPicker days={days} stageSlug={stage?.slug || null} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      {/* 7 stages now, so 4 then 3 rather than a 7 across row that squeezes
+          every number to nothing on a laptop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {summary.stages.map((entry) => {
           const definition = FUNNEL_STAGES.find((item) => item.key === entry.key)
           const isSelected = stage?.key === entry.key
@@ -231,6 +233,16 @@ export default async function AdminDashboardPage({ searchParams }) {
               label={entry.label}
               value={entry.count.toLocaleString()}
               delta={entry.delta}
+              /*
+               Said on the tile, because a period shorter than the lag shows
+               these stages near zero and that reads as a collapse rather than
+               as an outcome nobody could know yet
+              */
+              note={
+                entry.unresolved > 0
+                  ? `${entry.unresolved.toLocaleString()} too recent to know`
+                  : undefined
+              }
               isMuted={summary.isEmpty}
               href={
                 summary.isEmpty || !definition

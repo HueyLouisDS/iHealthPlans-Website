@@ -19,6 +19,7 @@ import {
   AGENTS,
   CAMPAIGNS,
   SOURCES,
+  RETENTION_DAYS,
   formatDuration,
   formatDateTime,
 } from '@/lib/admin/fixtures'
@@ -77,11 +78,16 @@ function rate(count, previous) {
 }
 
 export async function getFunnelSummary({ days = 30 } = {}) {
-  const blank = ['Sessions', 'Call clicks', 'Calls connected', 'Leads', 'Conversions']
   if (!usingFixtures()) {
     return {
       days,
-      stages: blank.map((label) => ({ key: label, label, count: 0, rateFromPrevious: null, delta: null })),
+      stages: FUNNEL_STAGES.map((stage) => ({
+        key: stage.key,
+        label: stage.label,
+        count: 0,
+        rateFromPrevious: null,
+        delta: null,
+      })),
       isEmpty: true,
     }
   }
@@ -93,48 +99,94 @@ export async function getFunnelSummary({ days = 30 } = {}) {
 
   const sum = (rows, key) => rows.reduce((total, row) => total + row[key], 0)
   const connected = (rows) => rows.filter((call) => call.disposition === 'connected').length
-  const enrolled = (rows) => rows.filter((lead) => lead.status === 'enrolled').length
+  const submitted = (rows) => rows.filter((lead) => lead.status === 'enrolled')
 
-  const now = {
-    sessions: sum(daily.current, 'sessions'),
-    callClicks: sum(daily.current, 'callClicks'),
-    calls: connected(calls.current),
-    leads: leads.current.length,
-    conversions: enrolled(leads.current),
+  /*-------- Both of these test a date, not a flag --------*/
+
+  /*
+   An enrollment written today has a coverage start date on the 1st of a later
+   month. It is going to effectuate, it has not effectuated. Counting the
+   intent rather than the event is how a funnel ends up reporting more
+   effectuated members than could physically exist yet.
+  */
+  const today = new Date()
+  const hasStarted = (lead) => lead.effectiveDate !== null && lead.effectiveDate <= today
+  const effectuated = (rows) => rows.filter(hasStarted)
+
+  /*
+   Retained means started, past the 90 day mark, and never lapsed. A lead with
+   no disenrolledAt has not lapsed, which is the same test the policies mirror
+   applies against disenrolled_at.
+  */
+  const pastRetentionMark = (lead) =>
+    hasStarted(lead) && lead.effectiveDate.getTime() + RETENTION_DAYS * 86_400_000 <= today
+  const retained = (rows) => rows.filter((lead) => pastRetentionMark(lead) && lead.disenrolledAt === null)
+
+  const counts = (rows, dailyRows, callRows) => ({
+    sessions: sum(dailyRows, 'sessions'),
+    callClicks: sum(dailyRows, 'callClicks'),
+    calls: connected(callRows),
+    leads: rows.length,
+    submitted: submitted(rows).length,
+    effectuated: effectuated(rows).length,
+    retained: retained(rows).length,
+  })
+
+  const now = counts(leads.current, daily.current, calls.current)
+  const before = counts(leads.previous, daily.previous, calls.previous)
+
+  // Which stage each one is a share of, for the drop off rate
+  const previousKey = {
+    callClicks: 'sessions',
+    calls: 'callClicks',
+    leads: 'calls',
+    submitted: 'leads',
+    effectuated: 'submitted',
+    retained: 'effectuated',
   }
 
-  const before = {
-    sessions: sum(daily.previous, 'sessions'),
-    callClicks: sum(daily.previous, 'callClicks'),
-    calls: connected(calls.previous),
-    leads: leads.previous.length,
-    conversions: enrolled(leads.previous),
+  /*
+   What each lagging stage is still waiting on. Computed from the dates rather
+   than from a lagDays approximation, so the figure is exact, and it counts
+   only rows that reached the stage above and have not yet reached this one.
+  */
+  const waitingOn = {
+    effectuated: submitted(leads.current).filter((lead) => !hasStarted(lead)),
+    retained: effectuated(leads.current).filter((lead) => !pastRetentionMark(lead)),
   }
-
-  const order = [
-    ['sessions', 'Sessions', null],
-    ['callClicks', 'Call clicks', 'sessions'],
-    ['calls', 'Calls connected', 'callClicks'],
-    ['leads', 'Leads', 'calls'],
-    ['conversions', 'Conversions', 'leads'],
-  ]
 
   return {
     days,
-    stages: order.map(([key, label, from]) => ({
-      key,
-      label,
-      count: now[key],
-      rateFromPrevious: from ? rate(now[key], now[from]) : null,
-      // Share of the first stage, which is what gives the funnel its shape
-      shareOfTop: now.sessions ? now[key] / now.sessions : 0,
-      dropFromPrevious: from && now[from] ? now[from] - now[key] : null,
-      delta: delta(now[key], before[key]),
-    })),
+    stages: FUNNEL_STAGES.map((stage) => {
+      const from = previousKey[stage.key] || null
+
+      return {
+        key: stage.key,
+        label: stage.label,
+        count: now[stage.key],
+        rateFromPrevious: from ? rate(now[stage.key], now[from]) : null,
+        // Share of the first stage, which is what gives the funnel its shape
+        shareOfTop: now.sessions ? now[stage.key] / now.sessions : 0,
+        dropFromPrevious: from && now[from] ? now[from] - now[stage.key] : null,
+        delta: delta(now[stage.key], before[stage.key]),
+        unresolved: (waitingOn[stage.key] || []).length,
+      }
+    }),
     isEmpty: false,
   }
 }
 
+/*
+ The funnel used to stop at the sale. It now runs to the money, because a
+ submitted enrollment that never starts pays nothing, and one that lapses
+ inside 90 days is clawed back.
+
+ The last 2 lag. Coverage starts on the 1st of a later month, so effectuation
+ is up to 2 months behind the sale, and retention is 90 days behind that
+ again. Anything inside those windows is unresolved rather than failed, and
+ the summary counts it separately so a recent period does not read as a
+ collapse.
+*/
 export const FUNNEL_STAGES = [
   { key: 'sessions', slug: 'sessions', label: 'Sessions', noun: 'sessions', onward: null },
   { key: 'callClicks', slug: 'call-clicks', label: 'Call clicks', noun: 'call clicks', onward: null },
@@ -153,11 +205,25 @@ export const FUNNEL_STAGES = [
     onward: { href: '/admin/leads', label: 'Open the lead list' },
   },
   {
-    key: 'conversions',
-    slug: 'conversions',
-    label: 'Conversions',
-    noun: 'enrollments',
+    key: 'submitted',
+    slug: 'submitted',
+    label: 'Submitted',
+    noun: 'submitted enrollments',
     onward: { href: '/admin/leads?status=enrolled', label: 'Open the enrolled leads' },
+  },
+  {
+    key: 'effectuated',
+    slug: 'effectuated',
+    label: 'Effectuated',
+    noun: 'effectuated members',
+    onward: null,
+  },
+  {
+    key: 'retained',
+    slug: 'retained-90-day',
+    label: '90 day retained',
+    noun: 'members still on at 90 days',
+    onward: null,
   },
 ]
 
@@ -180,7 +246,9 @@ export async function getFunnelTrend({ days = 30 } = {}) {
       callClicks: 0,
       calls: 0,
       leads: 0,
-      conversions: 0,
+      submitted: 0,
+      effectuated: 0,
+      retained: 0,
     })
   }
 
@@ -191,11 +259,20 @@ export async function getFunnelTrend({ days = 30 } = {}) {
     bucket.callClicks += row.callClicks
   }
 
+  /*
+   All 3 post sale stages are bucketed by the day the lead arrived, not by the
+   day coverage started. The question the trend answers is which days produced
+   business, and dating an effectuation to the 1st of the following month would
+   pile every enrollment onto 12 spikes a year.
+  */
   for (const lead of data.leads) {
     const bucket = buckets.get(lead.createdAt.toDateString())
     if (!bucket) continue
+
     bucket.leads += 1
-    if (lead.status === 'enrolled') bucket.conversions += 1
+    if (lead.status === 'enrolled') bucket.submitted += 1
+    if (lead.effectiveDate) bucket.effectuated += 1
+    if (lead.effectiveDate && lead.disenrolledAt === null) bucket.retained += 1
   }
 
   for (const call of data.calls) {

@@ -1,9 +1,8 @@
 // /sitemap.xml
-//
+
 // Built from the content modules rather than a hand kept list, so an article
 // added or pulled is in or out of the sitemap without anybody remembering to
 // edit this file. A sitemap that lists a 404 is worse than no sitemap.
-
 import { SHORT_NOTICE } from '@/lib/authorship'
 import { SITE_URL } from '@/lib/siteConfig'
 import { getAllArticles, getCategories } from '@/lib/content/education'

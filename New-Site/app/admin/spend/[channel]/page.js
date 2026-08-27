@@ -144,7 +144,7 @@ export default async function AdminSpendPage({ params, searchParams }) {
         <StatTile
           label="Cost per lead"
           value={result.summary.costPerLeadLabel}
-          rate={result.summary.target?.label}
+          note={result.summary.target?.label}
         />
         <StatTile label="Cost per enrollment" value={result.summary.costPerEnrollmentLabel} />
       </div>

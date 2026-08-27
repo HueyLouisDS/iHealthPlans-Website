@@ -17,17 +17,13 @@ import {
 /*=======================================================
         THE SHRINK GUARD
 ========================================================*/
-
 const SHRINK_TOLERANCE = 0.9            // a full pull may lose up to 10% before it is refused
-
 const INITIAL_LOOKBACK_DAYS = 90        // first pull reach, when there is no cursor
-
 const CURSOR_OVERLAP_MINUTES = 30       // rewind, so a row written mid run is not missed
 
 /*=======================================================
         TLD SENDS EASTERN, THE DATABASE STORES UTC
 ========================================================*/
-
 const TLD_TIMEZONE = 'America/New_York' // what a naive TLD datetime means
 
 // A datetime with no trailing Z and no numeric offset
@@ -89,7 +85,6 @@ function toMysqlDateTime(value) {
 /*=======================================================
         AN UNREADABLE DNC FLAG MEANS DO NOT CALL
 ========================================================*/
-
 const TRUE_VALUES = new Set(['1', 'y', 'yes', 'true', 't'])
 const FALSE_VALUES = new Set(['0', 'n', 'no', 'false', 'f'])
 
