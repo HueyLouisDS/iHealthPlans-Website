@@ -71,21 +71,7 @@ export function pool() {
       // Idle connections are closed so a quiet instance stops holding one
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
-      /*
-       The zone name, never the abbreviation. EST is a fixed UTC-5 with no
-       daylight saving, so pinning to it puts every timestamp between March
-       and November an hour out.
-
-       TIMESTAMPTZ stores an instant either way, so this does not change what
-       is written. It decides what a date means when one is derived from a
-       timestamp, so date_trunc, ::date, and any grouping by day land on the
-       Eastern business day rather than splitting it across 2 UTC days.
-
-       Same zone as TLD_TIMEZONE in lib/tld/sync.js. Both are here because the
-       business runs Eastern, and if that ever stops being true they change
-       together.
-      */
-      options: '-c timezone=America/New_York',
+      // ssl and the session timezone arrive with the config, see lib/db/dsn.js
     })
   }
 

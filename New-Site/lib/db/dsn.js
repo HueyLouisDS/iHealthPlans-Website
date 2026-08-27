@@ -18,13 +18,41 @@
 const DEFAULT_PORT = 5432
 
 /*
- Neon and Supabase both require TLS and neither presents a certificate that
- chains to a root node ships with, so verification is off while encryption
- stays on. Set LH_DB_SSL=false for a local server that speaks plaintext.
+ The zone name, never the abbreviation. EST is a fixed UTC-5 with no daylight
+ saving, so pinning to it puts every timestamp between March and November an
+ hour out.
+
+ TIMESTAMPTZ stores an instant either way, so this changes nothing about what
+ is written. It decides what a date means when one is derived from a
+ timestamp, so date_trunc, ::date, and any grouping by day land on the Eastern
+ business day rather than splitting it across 2 UTC days.
+
+ Set here rather than on the pool, because scripts/migrate.mjs and anything
+ else holding a plain Client would otherwise silently run in the server's own
+ zone. Same value as TLD_TIMEZONE in lib/tld/sync.js, both because the
+ business runs Eastern.
+*/
+const SESSION_OPTIONS = '-c timezone=America/New_York'
+
+/*
+ TLS on, certificate verified. Neon and Supabase both present publicly trusted
+ certificates, so there is no reason to turn verification off, and turning it
+ off means an attacker who can reach the connection can present any
+ certificate at all and be believed.
+
+ LH_DB_SSL takes 3 values:
+   unset or 'verify'  encrypted and verified, the default
+   'no-verify'        encrypted, certificate not checked. Only for a server
+                      using a self signed certificate, and it is a downgrade.
+   'false'            no TLS. Local plaintext server only, never over a network.
 */
 function sslSetting(env) {
-  if (String(env.LH_DB_SSL || '').toLowerCase() === 'false') return false
-  return { rejectUnauthorized: false }
+  const mode = String(env.LH_DB_SSL || '').toLowerCase()
+
+  if (mode === 'false') return false
+  if (mode === 'no-verify') return { rejectUnauthorized: false }
+
+  return { rejectUnauthorized: true }
 }
 
 export function resolveDbConfig(env = process.env) {
@@ -49,6 +77,7 @@ export function resolveDbConfig(env = process.env) {
             password: env.LH_DB_PASSWORD ?? '',
             database: env.LH_DB_NAME,
             ssl: sslSetting(env),
+            options: SESSION_OPTIONS,
           },
     }
   }
@@ -78,6 +107,7 @@ export function resolveDbConfig(env = process.env) {
             password: decodeURIComponent(url.password),
             database,
             ssl: sslSetting(env),
+            options: SESSION_OPTIONS,
           },
     }
   }
