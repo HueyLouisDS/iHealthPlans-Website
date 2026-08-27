@@ -6,162 +6,98 @@
  * Two independent checks must both pass, and neither is sufficient alone.
  *
  * 1. The account's email domain must match LH_ADMIN_ALLOWED_DOMAIN, and it must
- *    be verified by Google. This is checked here on the server, against the
- *    profile Google returns. The `hd` parameter sent in the authorization
- *    request is only a hint to Google's account chooser, it is trivially
- *    altered by the caller, and it must never be treated as a control.
+ *    be verified by Google. This is checked on the server, against the profile
+ *    Google returns. The `hd` parameter sent in the authorization request is
+ *    only a hint to Google's account chooser, it is trivially altered by the
+ *    caller, and it must never be treated as a control.
  *
- * 2. The email address must appear in LH_ADMIN_ALLOWED_EMAILS. The domain check
- *    alone would admit all 150 licensed agents, and this area is for the
- *    management team. An allowlist is crude but it is auditable, it fails
- *    closed, and it needs no Directory API access to maintain.
- *
- * TODO when the management list becomes tedious to maintain by hand, move to a
- * Google Group membership check via the Admin SDK. That needs a service
- * account with domain wide delegation, which is a bigger setup than a single
- * client at this size currently justifies.
+ * 2. The address must be an active row in admin_users. The domain check alone
+ *    would admit all 150 licensed agents, and this area is for the management
+ *    team.
  */
-
-import NextAuth from 'next-auth'
-import Google from 'next-auth/providers/google'
-
-/**
- * Parses a comma separated environment variable into a lowercase set.
- * Lowercasing matters because email comparison must not be case sensitive,
- * and a case mismatch here would lock out a legitimate administrator.
- */
-function parseList(value) {
-  return new Set(
-    String(value || '')
-      .split(',')
-      .map((entry) => entry.trim().toLowerCase())
-      .filter(Boolean)
-  )
-}
-
-const allowedDomain = String(process.env.LH_ADMIN_ALLOWED_DOMAIN || '').trim().toLowerCase()
-const allowedEmails = parseList(process.env.LH_ADMIN_ALLOWED_EMAILS)
 
 /*=======================================================
-        BREAK GLASS ACCESS
+        THE EDGE CANNOT REACH THE DATABASE
 ========================================================*/
 
 /*
- One address, outside the client's domain, that gets in when nobody at the
- client can. An auth problem at a non technical client can sit unresolved for
- days, and the person who can fix it is the one who built it.
+ middleware.js runs on the edge runtime, where pg cannot load. It imports
+ auth.config.js and never this file, which is what keeps the edge bundle
+ clean. The split is not stylistic, importing this file from middleware fails
+ the build.
 
- It skips the domain check and the allowlist. It does not skip Google, so the
- holder still has to prove they control that account. This is an allowlist
- entry, not a way past authentication.
+   signIn           node, once per login. The gate. Queries the table.
+   the token        carries the answer, so session() needs no database
+   getAdminSession  node, every admin page. Re-checks, so a revoke lands.
 
- TODO remove LH_DEVELOPER_EMAIL from the deployed environment at handoff. It
- is a build and support tool. Unset means nobody gets in this way, which is
- the correct state once the client owns the site.
-
- Deliberately absent from lib/integrations/fields.js, so it cannot be set or
- read from the admin UI. Every use is logged, since this reads lead PII.
+ A revoked account keeps a valid token until it expires. Middleware lets them
+ past, the page then refuses, which is why the page checks at all.
 */
-const developerEmail = String(process.env.LH_DEVELOPER_EMAIL || '').trim().toLowerCase()
+
+import NextAuth from 'next-auth'
+import { authConfig, preCheck, allowedEmails } from '@/auth.config'
+
+export { preCheck } from '@/auth.config'
+
+/*
+ The environment allowlist, kept only until admin_users has rows in it. An
+ empty table would otherwise lock out everybody including whoever was about to
+ populate it.
+
+ Every use logs, because this is a changeover measure and a warning appearing
+ months from now means the table was never filled in and the deployed site is
+ still governed by a comma separated string.
+*/
+function envFallback(email) {
+  if (allowedEmails.size === 0) return false
+  if (!allowedEmails.has(email)) return false
+
+  console.warn(
+    '[admin] LH_ADMIN_ALLOWED_EMAILS fallback admitted %s. admin_users is empty, seed it.',
+    email
+  )
+
+  return true
+}
+
+/*-------- This is critical --------*/
 
 /**
  * Decides whether an authenticated Google account may enter the admin area.
- * Exported separately so it can be unit tested without standing up an OAuth
- * flow, and so route handlers can re-check rather than trusting a session
- * that was issued before the allowlist changed.
+ * Node only, it reads the database. Exported so route handlers can re-check
+ * rather than trusting a token issued before somebody was revoked.
  */
-export function isAuthorisedAdmin(profile) {
-  if (!profile) return false
+export async function isAuthorisedAdmin(profile) {
+  const early = preCheck(profile)
+  if (early !== null) return early
 
   const email = String(profile.email || '').trim().toLowerCase()
-  if (!email) return false
+  const { isActiveAdmin, adminTableSeeded } = await import('@/lib/db/queries/adminUsers')
 
-  // Google tells us whether it has verified the address. An unverified address
-  // proves nothing about who controls it.
-  if (profile.email_verified === false) return false
+  if (await isActiveAdmin(email)) return true
+  if (await adminTableSeeded()) return false
 
-  /* Break glass, checked before the domain since it is outside it by design */
-  if (developerEmail && email === developerEmail) {
-    console.warn('[admin] BREAK GLASS ACCESS by %s at %s', email, new Date().toISOString())
-    return true
-  }
-
-  // Fail closed. A misconfigured or missing environment variable must deny
-  // everyone rather than admit everyone, which is the failure mode that
-  // matters here.
-  if (!allowedDomain || allowedEmails.size === 0) return false
-
-  const domain = email.split('@')[1]
-  if (domain !== allowedDomain) return false
-
-  return allowedEmails.has(email)
+  return envFallback(email)
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [
-    Google({
-      // A hint only. It pre-filters Google's account chooser so a personal
-      // account is not offered, which is a usability nicety. The real check
-      // is isAuthorisedAdmin below.
-      authorization: { params: { hd: allowedDomain, prompt: 'select_account' } },
-    }),
-  ],
-
-  pages: {
-    signIn: '/admin/signin',
-    error: '/admin/signin',
-  },
-
-  session: {
-    strategy: 'jwt',
-    // Short by ordinary standards. This session opens lead PII and call
-    // recordings, so an unattended laptop should stop being a way in within a
-    // working day rather than a month.
-    maxAge: 8 * 60 * 60,
-  },
+  ...authConfig,
 
   callbacks: {
+    ...authConfig.callbacks,
+
     /**
-     * The gate. Returning false here aborts the sign in and Google's account
-     * is never issued a session.
+     * The gate. Runs on node, so this is where the database is asked.
+     * Returning false aborts the sign in and no session is ever issued.
      */
-    signIn({ profile }) {
+    async signIn({ profile }) {
       return isAuthorisedAdmin(profile)
-    },
-
-    /**
-     * Copies the fields the admin UI needs onto the token, and nothing else.
-     * The Google profile carries more than we need and none of the rest
-     * should end up in a cookie.
-     */
-    jwt({ token, profile }) {
-      if (profile) {
-        token.email = profile.email
-        token.name = profile.name
-        token.picture = profile.picture
-      }
-      return token
-    },
-
-    /**
-     * Re-checks authorisation on every session read rather than trusting the
-     * token alone. Removing someone from LH_ADMIN_ALLOWED_EMAILS then takes
-     * effect on their next request instead of whenever their session happens
-     * to expire.
-     */
-    session({ session, token }) {
-      session.user.email = token.email
-      session.user.name = token.name
-      session.user.image = token.picture
-      session.user.isAuthorised = isAuthorisedAdmin({ email: token.email, email_verified: true })
-      return session
     },
   },
 
-  // TODO route these to a real audit log once the database exists. Who signed
-  // in, and when, is the minimum record to keep for a system holding this
-  // data, and it is also the first thing anyone will ask for after an
-  // incident.
+  // TODO route these to audit_log. Who signed in, and when, is the minimum
+  // record to keep for a system holding this data, and it is the first thing
+  // anyone will ask for after an incident.
   events: {
     signIn({ user }) {
       console.info('[admin] sign in', { email: user?.email, at: new Date().toISOString() })

@@ -13,6 +13,7 @@ import AdminShell from '@/components/admin/AdminShell'
 import IntegrationCards from '@/components/admin/IntegrationCard'
 import { crmConfig, vendorConfig, describe, describeVendor } from '@/lib/integrations/config'
 import { describeWritableKeys, envWritesEnabled } from '@/lib/integrations/envFile'
+import { listAdminUsers } from '@/lib/db/queries/adminUsers'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,11 +31,25 @@ export default async function AdminIntegrationsPage() {
    chips render from.
   */
   const adminDomain = String(process.env.LH_ADMIN_ALLOWED_DOMAIN || '').trim().toLowerCase()
-  const adminEmails = String(process.env.LH_ADMIN_ALLOWED_EMAILS || '').trim()
+
+  /*
+   admin_users is the list. LH_ADMIN_ALLOWED_EMAILS is only read while that
+   table is empty, so the page shows whichever one is actually governing
+   access rather than always showing the environment variable.
+  */
+  const accounts = await listAdminUsers()
+  const adminEmails = accounts.length
+    ? accounts.map((row) => row.email).join(',')
+    : String(process.env.LH_ADMIN_ALLOWED_EMAILS || '').trim()
+
+  const adminStatuses = Object.fromEntries(accounts.map((row) => [row.email, row.status]))
 
   const adminProblems = []
   if (!adminDomain) adminProblems.push('LH_ADMIN_ALLOWED_DOMAIN is not set in the environment.')
   if (!adminEmails) adminProblems.push('No addresses are listed, so nobody can sign in.')
+  if (accounts.length === 0 && adminEmails) {
+    adminProblems.push('Still running on the environment list. Invite these people to move them into the database.')
+  }
 
   const statuses = {
     admin: { isConfigured: adminProblems.length === 0, problems: adminProblems },
@@ -72,12 +87,7 @@ export default async function AdminIntegrationsPage() {
       <IntegrationCards
         statuses={statuses}
         present={describeWritableKeys()}
-        /*
-         statuses is empty until admin_users exists, so every address renders
-         as unverified. Being on the list is permission, verification is proof
-         the person completed a Google sign in, and the two are not the same.
-        */
-        admin={{ domain: adminDomain, emails: adminEmails, statuses: {} }}
+        admin={{ domain: adminDomain, emails: adminEmails, statuses: adminStatuses }}
         canWrite={canWrite}
       />
     </AdminShell>

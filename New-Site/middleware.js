@@ -8,10 +8,25 @@
  */
 
 import { NextResponse } from 'next/server'
-import { auth } from '@/auth'
-import { devAuthBypassEnabled } from '@/lib/admin/session'
+import NextAuth from 'next-auth'
+import { authConfig } from '@/auth.config'
 import { SHORT_NOTICE } from '@/lib/authorship'
 import { CANONICAL_HOST } from '@/lib/siteConfig'
+
+/*
+ Built from the edge safe half of the config. Importing auth.js here would
+ pull lib/db and pg into the edge bundle and fail the build, which is what the
+ split exists to prevent.
+*/
+const { auth } = NextAuth(authConfig)
+
+/*
+ Repeated rather than imported from lib/admin/session.js for the same reason.
+ That module reads the database, so it cannot be loaded here.
+*/
+function devAuthBypassEnabled() {
+  return process.env.NODE_ENV !== 'production' && process.env.LH_ADMIN_DEV_BYPASS_AUTH === 'true'
+}
 
 /*
  * X-Author on every response, per ~/.claude/rules/attribution.md.

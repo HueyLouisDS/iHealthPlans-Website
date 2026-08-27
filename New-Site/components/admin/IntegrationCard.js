@@ -81,30 +81,35 @@ function parseList(value) {
     .filter(Boolean)
 }
 
-const VERIFIED = 'verified'
+const ACTIVE = 'active'
 
 /*
  Whether this person has actually completed a Google sign in, or is only on
- the list. Being listed is permission, verification is proof they can use it,
- and an address that is listed but never verified is usually a typo nobody
+ the list. Being listed is permission, verified means they proved the account
+ is theirs, and an address listed but never verified is usually a typo nobody
  noticed rather than somebody who has not got round to it.
 
- Sending the invite needs somewhere to keep a token, which is admin_users and
- admin_invites in migration 003. Rendered disabled rather than hidden so the
- flow is visible and it is obvious why it does not fire yet.
+ Verify mints an invite and returns the link. The link is shown once and is
+ not recoverable, only the hash is stored, so it has to be copied before the
+ row is left.
 */
-function VerifyState({ email, status }) {
-  if (status === VERIFIED) {
+function VerifyState({ email, status, onVerify, invite }) {
+  if (status === ACTIVE) {
     return <span className="text-sm font-semibold text-green-900">Verified</span>
   }
 
+  if (invite?.isSending) {
+    return <span className="text-sm font-semibold text-[#6C7381]">Sending</span>
+  }
+
   return (
-    <span
-      className="text-sm font-semibold text-[#6C7381] cursor-not-allowed"
-      title={`Sending an invite to ${email} needs the admin_users table, migration 003`}
+    <button
+      type="button"
+      onClick={() => onVerify(email)}
+      className="text-sm font-semibold text-[#105fa8] hover:underline"
     >
-      Verify
-    </span>
+      {invite?.link ? 'Reissue' : 'Verify'}
+    </button>
   )
 }
 
@@ -116,7 +121,7 @@ function VerifyState({ email, status }) {
  Shown open rather than behind the key name like the credential fields, since
  the list is not a secret and hiding it makes the remove buttons unfindable.
 */
-function EmailListField({ field, domain, saved, statuses, value, onChange }) {
+function EmailListField({ field, domain, saved, statuses, invites, onVerify, value, onChange }) {
   const [draft, setDraft] = useState('')     // the address being typed, not yet a chip
   const [problem, setProblem] = useState(null)
 
@@ -175,22 +180,50 @@ function EmailListField({ field, domain, saved, statuses, value, onChange }) {
           {emails.map((email) => (
             <li
               key={email}
-              className="flex items-center justify-between gap-3 bg-amber-100 text-amber-900 border border-amber-300 rounded px-3 py-2"
+              className="bg-amber-100 text-amber-900 border border-amber-300 rounded px-3 py-2"
             >
-              <span className="font-mono text-sm truncate">{email}</span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-mono text-sm truncate">{email}</span>
 
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <VerifyState email={email} status={statuses[email]} />
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <VerifyState
+                    email={email}
+                    status={statuses[email]}
+                    invite={invites[email]}
+                    onVerify={onVerify}
+                  />
 
-                <button
-                  type="button"
-                  onClick={() => removeEmail(email)}
-                  aria-label={`Remove ${email}`}
-                  className="text-amber-900 hover:text-red-900 font-bold leading-none text-lg"
-                >
-                  &times;
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => removeEmail(email)}
+                    aria-label={`Remove ${email}`}
+                    className="text-amber-900 hover:text-red-900 font-bold leading-none text-lg"
+                  >
+                    &times;
+                  </button>
+                </div>
               </div>
+
+              {/* Shown once and not recoverable, only the hash is stored, so
+                  it stays on screen until the page is left */}
+              {invites[email]?.link && (
+                <div className="mt-2 pt-2 border-t border-amber-300 flex flex-col gap-1">
+                  <p className="text-sm">
+                    Send this to {email}. It expires in {invites[email].expiresInDays} days and
+                    will not be shown again.
+                  </p>
+                  <input
+                    readOnly
+                    value={invites[email].link}
+                    onFocus={(event) => event.target.select()}
+                    className="font-mono text-sm bg-white border border-amber-300 rounded px-2 py-1 w-full"
+                  />
+                </div>
+              )}
+
+              {invites[email]?.error && (
+                <p className="mt-2 text-sm text-red-900">{invites[email].error}</p>
+              )}
             </li>
           ))}
         </ul>
@@ -245,7 +278,7 @@ function Badge({ className, children }) {
   )
 }
 
-function Card({ integration, status, present, admin, values, onChange, test, onTest, onSave, save, canWrite }) {
+function Card({ integration, status, present, admin, values, onChange, test, onTest, onSave, save, canWrite, invites, onVerify }) {
   const state = test?.state || UNTESTED
 
   // This card's own pending edits. Saving one card must not carry another's.
@@ -277,6 +310,8 @@ function Card({ integration, status, present, admin, values, onChange, test, onT
               domain={admin.domain}
               saved={admin.emails}
               statuses={admin.statuses || {}}
+              invites={invites}
+              onVerify={onVerify}
               value={values[field.key]}
               onChange={onChange}
             />
@@ -344,6 +379,7 @@ export default function IntegrationCards({ statuses, present, admin, canWrite })
   const [values, setValues] = useState({})  // pending edits, key to typed value
   const [tests, setTests] = useState({})    // integration name to { state, message }
   const [saves, setSaves] = useState({})    // integration name to { isSaving, result }
+  const [invites, setInvites] = useState({}) // email to { isSending, link, expiresInDays, error }
 
   function handleChange(key, value) {
     const owner = INTEGRATIONS.find((one) => one.fields.some((field) => field.key === key))
@@ -386,6 +422,42 @@ export default function IntegrationCards({ statuses, present, admin, canWrite })
         ...current,
         [name]: { state: FAILED, message: 'Could not reach the server.' },
       }))
+    }
+  }
+
+  /*
+   Mints an invite for one address. The link comes back in the response and is
+   held in state rather than refetched, because it is not stored anywhere and
+   the server cannot produce it again.
+  */
+  async function handleVerify(email) {
+    setInvites((current) => ({ ...current, [email]: { isSending: true } }))
+
+    try {
+      const response = await fetch('/api/admin/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+
+      const body = await response.json()
+
+      if (!response.ok) {
+        setInvites((current) => ({
+          ...current,
+          [email]: { error: body.error || 'Could not create an invite.' },
+        }))
+        return
+      }
+
+      setInvites((current) => ({
+        ...current,
+        [email]: { link: body.link, expiresInDays: body.expiresInDays },
+      }))
+
+      router.refresh()
+    } catch {
+      setInvites((current) => ({ ...current, [email]: { error: 'Could not reach the server.' } }))
     }
   }
 
@@ -452,6 +524,8 @@ export default function IntegrationCards({ statuses, present, admin, canWrite })
           status={statuses[integration.name] || { isConfigured: false }}
           present={present}
           admin={admin}
+          invites={invites}
+          onVerify={handleVerify}
           values={values}
           onChange={handleChange}
           test={tests[integration.name]}
