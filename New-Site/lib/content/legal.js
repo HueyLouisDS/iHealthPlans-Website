@@ -438,7 +438,7 @@ export const LEGAL_PAGES = {
       {
         heading: 'Licensed insurance agents',
         body: [
-          'The people you speak to are licensed insurance agents. Whether an agent can discuss plans in your state depends on where they hold a licence.',
+          'The people you speak to are licensed insurance agents. Whether an agent can discuss plans in your state depends on where they hold a license.',
           'You can check the license of any agent yourself. The Department of Insurance in your state holds the record, and the NIPR Consumer Portal and the SBS License Manager both let you search nationally. Each of these will tell you whether a license is active, what lines of authority it covers, and whether there is any disciplinary history against it.',
           'We keep a complete internal register of the licenses this agency holds, and we will provide our license information on request.',
           'TO CONFIRM: whether iHealth Plans wants to publish its own agency license numbers by state. The answer returned said it may choose to as a transparency measure, which leaves the decision open. Confirm also that nothing was lost from the end of that answer, which arrived cut off mid sentence.',

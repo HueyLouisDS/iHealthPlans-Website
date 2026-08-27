@@ -37,8 +37,8 @@ export const SMID = 'MULTIPLAN_IHP_WEB2025_C'
 /*
  Quoted in the Federal Contracting Statement, which CMS requires to be
  accurate. Counted from Spark's Plan Counts DKB 2026 catalog across the 36
- states on the NIPR licence, FL resident plus 35 non resident. Recount when a
- licence or a carrier contract changes.
+ states on the NIPR license, FL resident plus 35 non resident. Recount when a
+ license or a carrier contract changes.
 */
 export const CARRIER_COUNT = 8          // carriers iHealth Plans is ready to sell
 export const PRODUCT_COUNT = 3459       // their plans across all licensed states
