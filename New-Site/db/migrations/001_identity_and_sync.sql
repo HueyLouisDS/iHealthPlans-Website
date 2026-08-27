@@ -7,8 +7,9 @@
  * This migration builds everything the site originates itself. The TLD
  * mirrors come next, once the sync exists, and they join onto these.
  *
- * Every timestamp is UTC. The driver is configured with timezone Z and
- * dateStrings, so nothing here is ever parsed in a local timezone.
+ * Every timestamp is TIMESTAMPTZ, which stores an absolute instant. The
+ * connection is pinned to UTC in lib/db/client.js, so a value written on a
+ * server in another region reads back the same either way.
  */
 
 -- ---------------------------------------------------------------------------
@@ -16,9 +17,9 @@
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE visitors (
-  visitor_id      CHAR(36)     NOT NULL,
-  first_seen_at   DATETIME(3)  NOT NULL,
-  last_seen_at    DATETIME(3)  NOT NULL,
+  visitor_id      CHAR(36)        NOT NULL,
+  first_seen_at   TIMESTAMPTZ(3)  NOT NULL,
+  last_seen_at    TIMESTAMPTZ(3)  NOT NULL,
 
   /*
    * First touch, held on the visitor rather than the session, because the
@@ -36,16 +37,17 @@ CREATE TABLE visitors (
   first_fbclid        VARCHAR(255)  NULL,
   first_msclkid       VARCHAR(255)  NULL,
 
-  PRIMARY KEY (visitor_id),
-  KEY idx_visitors_first_seen (first_seen_at),
-  KEY idx_visitors_first_source (first_source, first_campaign)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  PRIMARY KEY (visitor_id)
+);
+
+CREATE INDEX idx_visitors_first_seen ON visitors (first_seen_at);
+CREATE INDEX idx_visitors_first_source ON visitors (first_source, first_campaign);
 
 CREATE TABLE sessions (
-  session_id      CHAR(36)     NOT NULL,
-  visitor_id      CHAR(36)     NOT NULL,
-  started_at      DATETIME(3)  NOT NULL,
-  last_active_at  DATETIME(3)  NOT NULL,
+  session_id      CHAR(36)        NOT NULL,
+  visitor_id      CHAR(36)        NOT NULL,
+  started_at      TIMESTAMPTZ(3)  NOT NULL,
+  last_active_at  TIMESTAMPTZ(3)  NOT NULL,
 
   /*
    * Last touch, which is what the session itself arrived on. Kept alongside
@@ -72,12 +74,13 @@ CREATE TABLE sessions (
   user_agent      VARCHAR(500)  NULL,
 
   PRIMARY KEY (session_id),
-  KEY idx_sessions_visitor (visitor_id),
-  KEY idx_sessions_started (started_at),
-  KEY idx_sessions_source (source, campaign),
   CONSTRAINT fk_sessions_visitor FOREIGN KEY (visitor_id)
     REFERENCES visitors (visitor_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
+
+CREATE INDEX idx_sessions_visitor ON sessions (visitor_id);
+CREATE INDEX idx_sessions_started ON sessions (started_at);
+CREATE INDEX idx_sessions_source ON sessions (source, campaign);
 
 -- ---------------------------------------------------------------------------
 -- Click to call
@@ -89,10 +92,10 @@ CREATE TABLE sessions (
  * click time and matched afterwards against the call log.
  */
 CREATE TABLE call_clicks (
-  click_id        CHAR(36)     NOT NULL,
-  session_id      CHAR(36)     NOT NULL,
-  visitor_id      CHAR(36)     NOT NULL,
-  clicked_at      DATETIME(3)  NOT NULL,
+  click_id        CHAR(36)        NOT NULL,
+  session_id      CHAR(36)        NOT NULL,
+  visitor_id      CHAR(36)        NOT NULL,
+  clicked_at      TIMESTAMPTZ(3)  NOT NULL,
 
   /*
    * Where on the page it was clicked. A header click and a hero click are
@@ -111,26 +114,27 @@ CREATE TABLE call_clicks (
    * Filled by the matcher once a call is found. Null means unmatched, which
    * is the metric that says whether any of this is working.
    */
-  matched_call_id  VARCHAR(64)  NULL,
-  matched_at       DATETIME(3)  NULL,
-  match_method     VARCHAR(40)  NULL,
+  matched_call_id  VARCHAR(64)     NULL,
+  matched_at       TIMESTAMPTZ(3)  NULL,
+  match_method     VARCHAR(40)     NULL,
 
   PRIMARY KEY (click_id),
-  KEY idx_clicks_session (session_id),
-  KEY idx_clicks_clicked (clicked_at),
-  KEY idx_clicks_unmatched (matched_call_id, clicked_at),
-  KEY idx_clicks_number_time (presented_number, clicked_at),
   CONSTRAINT fk_clicks_session FOREIGN KEY (session_id)
     REFERENCES sessions (session_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
+
+CREATE INDEX idx_clicks_session ON call_clicks (session_id);
+CREATE INDEX idx_clicks_clicked ON call_clicks (clicked_at);
+CREATE INDEX idx_clicks_unmatched ON call_clicks (matched_call_id, clicked_at);
+CREATE INDEX idx_clicks_number_time ON call_clicks (presented_number, clicked_at);
 
 -- ---------------------------------------------------------------------------
 -- Leads the site originates
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE leads (
-  lead_id         CHAR(36)      NOT NULL,
-  received_at     DATETIME(3)   NOT NULL,
+  lead_id         CHAR(36)        NOT NULL,
+  received_at     TIMESTAMPTZ(3)  NOT NULL,
 
   /*
    * Null for a lead that arrived without a session, which is every vendor
@@ -160,19 +164,25 @@ CREATE TABLE leads (
    * Set once the lead has been pushed to TLD, so a failed push is visible
    * rather than silently dropping the lead.
    */
-  tld_lead_id     VARCHAR(64)   NULL,
-  pushed_at       DATETIME(3)   NULL,
-  push_error      VARCHAR(500)  NULL,
+  tld_lead_id     VARCHAR(64)     NULL,
+  pushed_at       TIMESTAMPTZ(3)  NULL,
+  push_error      VARCHAR(500)    NULL,
 
   PRIMARY KEY (lead_id),
-  UNIQUE KEY uq_leads_vendor_external (vendor_id, external_id),
-  KEY idx_leads_received (received_at),
-  KEY idx_leads_phone (phone),
-  KEY idx_leads_source (source, received_at),
-  KEY idx_leads_unpushed (pushed_at, received_at),
   CONSTRAINT fk_leads_session FOREIGN KEY (session_id)
     REFERENCES sessions (session_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
+
+/*
+ * Nulls are distinct in Postgres by default, same as MySQL, so a lead with no
+ * vendor and no external id does not collide with the next one.
+ */
+CREATE UNIQUE INDEX uq_leads_vendor_external ON leads (vendor_id, external_id);
+
+CREATE INDEX idx_leads_received ON leads (received_at);
+CREATE INDEX idx_leads_phone ON leads (phone);
+CREATE INDEX idx_leads_source ON leads (source, received_at);
+CREATE INDEX idx_leads_unpushed ON leads (pushed_at, received_at);
 
 -- ---------------------------------------------------------------------------
 -- Consent
@@ -186,9 +196,9 @@ CREATE TABLE leads (
  * on this date", never "are they currently opted in".
  */
 CREATE TABLE lead_consents (
-  consent_id      CHAR(36)      NOT NULL,
-  lead_id         CHAR(36)      NOT NULL,
-  captured_at     DATETIME(3)   NOT NULL,
+  consent_id      CHAR(36)        NOT NULL,
+  lead_id         CHAR(36)        NOT NULL,
+  captured_at     TIMESTAMPTZ(3)  NOT NULL,
 
   /*
    * The exact wording shown, stored verbatim and never summarised. A hash of
@@ -204,15 +214,16 @@ CREATE TABLE lead_consents (
   -- One to one consent names the agent. Null until that is settled.
   agent_name      VARCHAR(120)  NULL,
 
-  withdrawn_at    DATETIME(3)   NULL,
-  withdrawn_via   VARCHAR(60)   NULL,
+  withdrawn_at    TIMESTAMPTZ(3)  NULL,
+  withdrawn_via   VARCHAR(60)     NULL,
 
   PRIMARY KEY (consent_id),
-  KEY idx_consents_lead (lead_id, captured_at),
-  KEY idx_consents_hash (consent_hash),
   CONSTRAINT fk_consents_lead FOREIGN KEY (lead_id)
     REFERENCES leads (lead_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
+
+CREATE INDEX idx_consents_lead ON lead_consents (lead_id, captured_at);
+CREATE INDEX idx_consents_hash ON lead_consents (consent_hash);
 
 -- ---------------------------------------------------------------------------
 -- Sync state
@@ -224,24 +235,24 @@ CREATE TABLE lead_consents (
  * first time somebody spots a discrepancy.
  */
 CREATE TABLE sync_state (
-  resource        VARCHAR(60)   NOT NULL,
-  last_run_at     DATETIME(3)   NULL,
-  last_success_at DATETIME(3)   NULL,
+  resource        VARCHAR(60)     NOT NULL,
+  last_run_at     TIMESTAMPTZ(3)  NULL,
+  last_success_at TIMESTAMPTZ(3)  NULL,
   -- Where the next incremental pull resumes from
   cursor_value    VARCHAR(255)  NULL,
-  rows_last_run   INT           NULL,
+  rows_last_run   INTEGER       NULL,
   /*
    * Compared against the previous run. A pull that comes back materially
    * smaller is refused rather than written, because silent shrinkage looks
    * exactly like good news.
    */
-  rows_total      INT           NULL,
+  rows_total      INTEGER       NULL,
   status          VARCHAR(20)   NOT NULL DEFAULT 'idle',
   last_error      VARCHAR(1000) NULL,
-  duration_ms     INT           NULL,
+  duration_ms     INTEGER       NULL,
 
   PRIMARY KEY (resource)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
 
 -- ---------------------------------------------------------------------------
 -- Audit
@@ -253,20 +264,21 @@ CREATE TABLE sync_state (
  * data out of the system and when.
  */
 CREATE TABLE audit_log (
-  audit_id        BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  occurred_at     DATETIME(3)   NOT NULL,
+  audit_id        BIGINT GENERATED ALWAYS AS IDENTITY,
+  occurred_at     TIMESTAMPTZ(3)  NOT NULL,
   actor_email     VARCHAR(255)  NOT NULL,
   action          VARCHAR(60)   NOT NULL,
   resource        VARCHAR(60)   NOT NULL,
-  record_count    INT           NULL,
+  record_count    INTEGER       NULL,
   -- The filters that selected the records, so an export can be reproduced
-  filters_json    JSON          NULL,
+  filters_json    JSONB         NULL,
   -- Explicit id selection, when there was one
-  selection_json  JSON          NULL,
+  selection_json  JSONB         NULL,
   ip_prefix       VARCHAR(45)   NULL,
 
-  PRIMARY KEY (audit_id),
-  KEY idx_audit_occurred (occurred_at),
-  KEY idx_audit_actor (actor_email, occurred_at),
-  KEY idx_audit_action (action, occurred_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  PRIMARY KEY (audit_id)
+);
+
+CREATE INDEX idx_audit_occurred ON audit_log (occurred_at);
+CREATE INDEX idx_audit_actor ON audit_log (actor_email, occurred_at);
+CREATE INDEX idx_audit_action ON audit_log (action, occurred_at);

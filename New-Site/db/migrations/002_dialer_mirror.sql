@@ -12,8 +12,9 @@
  * Nothing in this file is ever the authority on its own contents, and nothing
  * in this file should ever be edited by the website.
  *
- * Every timestamp is UTC. The driver is configured with timezone Z and
- * dateStrings, so nothing here is ever parsed in a local timezone.
+ * Every timestamp is TIMESTAMPTZ and the connection is pinned to UTC, so a
+ * naive Eastern datetime from TLD is converted once in lib/tld/sync.js and
+ * never re-interpreted after that.
  */
 
 /*=======================================================
@@ -63,7 +64,7 @@ CREATE TABLE dispositions (
    * from category, because a transfer to a licensed agent is a conversion for
    * the marketing and is not a sale in the dialer.
    */
-  counts_as_conversion TINYINT(1) NOT NULL DEFAULT 0,
+  counts_as_conversion BOOLEAN NOT NULL DEFAULT FALSE,
 
   /*
    * Do-not-call is NOT a disposition, it is a flag on the record, and the two
@@ -72,14 +73,15 @@ CREATE TABLE dispositions (
    * Conflating them either suppresses contactable leads or, far worse, keeps
    * dialing somebody who asked not to be.
    */
-  is_dnc           TINYINT(1)    NOT NULL DEFAULT 0,
+  is_dnc           BOOLEAN         NOT NULL DEFAULT FALSE,
 
-  sort_order       INT           NOT NULL DEFAULT 0,
-  synced_at        DATETIME(3)   NOT NULL,
+  sort_order       INTEGER         NOT NULL DEFAULT 0,
+  synced_at        TIMESTAMPTZ(3)  NOT NULL,
 
-  PRIMARY KEY (disposition_code),
-  KEY idx_dispositions_category (category)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  PRIMARY KEY (disposition_code)
+);
+
+CREATE INDEX idx_dispositions_category ON dispositions (category);
 
 -- ---------------------------------------------------------------------------
 -- Agents
@@ -108,14 +110,15 @@ CREATE TABLE agents (
    */
   npn             VARCHAR(20)   NULL,
 
-  is_active       TINYINT(1)    NOT NULL DEFAULT 1,
-  first_seen_at   DATETIME(3)   NOT NULL,
-  synced_at       DATETIME(3)   NOT NULL,
+  is_active       BOOLEAN         NOT NULL DEFAULT TRUE,
+  first_seen_at   TIMESTAMPTZ(3)  NOT NULL,
+  synced_at       TIMESTAMPTZ(3)  NOT NULL,
 
-  PRIMARY KEY (agent_id),
-  UNIQUE KEY uq_agents_dialer_user (dialer_user),
-  KEY idx_agents_active (is_active, full_name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  PRIMARY KEY (agent_id)
+);
+
+CREATE UNIQUE INDEX uq_agents_dialer_user ON agents (dialer_user);
+CREATE INDEX idx_agents_active ON agents (is_active, full_name);
 
 -- ---------------------------------------------------------------------------
 -- Leads that exist only in the dialer
@@ -153,9 +156,9 @@ CREATE TABLE dialer_leads (
    * Set by our own matcher when a dialer lead turns out to be one the site
    * originated. Null is the normal state, not an error.
    */
-  lead_id         CHAR(36)      NULL,
+  lead_id         CHAR(36)        NULL,
 
-  created_at      DATETIME(3)   NULL,
+  created_at      TIMESTAMPTZ(3)  NULL,
   phone           VARCHAR(20)   NOT NULL,
   first_name      VARCHAR(120)  NULL,
   last_name       VARCHAR(120)  NULL,
@@ -177,17 +180,18 @@ CREATE TABLE dialer_leads (
    * The record level do-not-call flag, mirrored from TLD. Separate from any
    * call disposition, for the reason spelled out on the dispositions table.
    */
-  is_dnc          TINYINT(1)    NOT NULL DEFAULT 0,
+  is_dnc          BOOLEAN         NOT NULL DEFAULT FALSE,
 
-  synced_at       DATETIME(3)   NOT NULL,
+  synced_at       TIMESTAMPTZ(3)  NOT NULL,
 
   PRIMARY KEY (tld_lead_id),
-  KEY idx_dialer_leads_phone (phone),
-  KEY idx_dialer_leads_created (created_at),
-  KEY idx_dialer_leads_our_lead (lead_id),
   CONSTRAINT fk_dialer_leads_lead FOREIGN KEY (lead_id)
     REFERENCES leads (lead_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
+
+CREATE INDEX idx_dialer_leads_phone ON dialer_leads (phone);
+CREATE INDEX idx_dialer_leads_created ON dialer_leads (created_at);
+CREATE INDEX idx_dialer_leads_our_lead ON dialer_leads (lead_id);
 
 -- ---------------------------------------------------------------------------
 -- Calls
@@ -232,9 +236,9 @@ CREATE TABLE calls (
 
   direction       VARCHAR(10)   NOT NULL DEFAULT 'inbound',
 
-  started_at      DATETIME(3)   NOT NULL,
-  answered_at     DATETIME(3)   NULL,
-  ended_at        DATETIME(3)   NULL,
+  started_at      TIMESTAMPTZ(3)  NOT NULL,
+  answered_at     TIMESTAMPTZ(3)  NULL,
+  ended_at        TIMESTAMPTZ(3)  NULL,
 
   /*
    * Three separate durations, because they answer three different questions.
@@ -242,9 +246,9 @@ CREATE TABLE calls (
    * A single duration column collapses all three, and /admin/agents needs talk
    * alone or the ranking rewards whoever sat on hold longest.
    */
-  queue_seconds   INT           NULL,
-  talk_seconds    INT           NULL,
-  wrap_seconds    INT           NULL,
+  queue_seconds   INTEGER       NULL,
+  talk_seconds    INTEGER       NULL,
+  wrap_seconds    INTEGER       NULL,
 
   -- The beneficiary's number, and the number they dialed.
   customer_number VARCHAR(20)   NULL,
@@ -262,26 +266,29 @@ CREATE TABLE calls (
    * TODO confirm the actual TTL against TLD once credentials exist. If the
    * links turn out to be permanent this column stays null and costs nothing.
    */
-  recording_url        VARCHAR(1000) NULL,
-  recording_expires_at DATETIME(3)   NULL,
+  recording_url        VARCHAR(1000)   NULL,
+  recording_expires_at TIMESTAMPTZ(3)  NULL,
 
-  synced_at       DATETIME(3)   NOT NULL,
+  synced_at       TIMESTAMPTZ(3)  NOT NULL,
 
   PRIMARY KEY (call_id),
-  KEY idx_calls_started (started_at),
-  /*
-   * The match query, both directions. Kept narrow and leading with the number,
-   * because it runs once per unmatched click and the time window is small.
-   */
-  KEY idx_calls_did_time (did_number, started_at),
-  KEY idx_calls_customer_time (customer_number, started_at),
-  KEY idx_calls_agent_time (agent_id, started_at),
-  KEY idx_calls_disposition (disposition_code, started_at),
-  KEY idx_calls_tld_lead (tld_lead_id),
-  KEY idx_calls_unmatched (lead_id, started_at),
   CONSTRAINT fk_calls_lead FOREIGN KEY (lead_id)
     REFERENCES leads (lead_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
+
+CREATE INDEX idx_calls_started ON calls (started_at);
+
+/*
+ * The match query, both directions. Kept narrow and leading with the number,
+ * because it runs once per unmatched click and the time window is small.
+ */
+CREATE INDEX idx_calls_did_time ON calls (did_number, started_at);
+CREATE INDEX idx_calls_customer_time ON calls (customer_number, started_at);
+
+CREATE INDEX idx_calls_agent_time ON calls (agent_id, started_at);
+CREATE INDEX idx_calls_disposition ON calls (disposition_code, started_at);
+CREATE INDEX idx_calls_tld_lead ON calls (tld_lead_id);
+CREATE INDEX idx_calls_unmatched ON calls (lead_id, started_at);
 
 -- ---------------------------------------------------------------------------
 -- Policies
@@ -334,11 +341,11 @@ CREATE TABLE policies (
   -- submitted, pending, approved, rejected, withdrawn, disenrolled.
   policy_status   VARCHAR(40)   NOT NULL DEFAULT 'submitted',
 
-  submitted_at    DATETIME(3)   NULL,
-  effective_date  DATE          NULL,
-  disenrolled_at  DATETIME(3)   NULL,
+  submitted_at    TIMESTAMPTZ(3)  NULL,
+  effective_date  DATE            NULL,
+  disenrolled_at  TIMESTAMPTZ(3)  NULL,
 
-  premium         DECIMAL(8,2)  NULL,
+  premium         NUMERIC(8,2)  NULL,
 
   /*
    * A rejected or cancelled application can be deleted outright in TLD rather
@@ -346,21 +353,22 @@ CREATE TABLE policies (
    * reported numbers, so instead the sync stamps this when a policy it has
    * seen before stops coming back. Nothing is ever hard deleted here.
    */
-  missing_since   DATETIME(3)   NULL,
+  missing_since   TIMESTAMPTZ(3)  NULL,
 
-  synced_at       DATETIME(3)   NOT NULL,
+  synced_at       TIMESTAMPTZ(3)  NOT NULL,
 
   PRIMARY KEY (policy_id),
-  KEY idx_policies_submitted (submitted_at),
-  KEY idx_policies_effective (effective_date),
-  KEY idx_policies_status (policy_status, submitted_at),
-  KEY idx_policies_agent (agent_id, submitted_at),
-  KEY idx_policies_tld_lead (tld_lead_id),
-  KEY idx_policies_lead (lead_id),
-  KEY idx_policies_plan (contract_id, plan_id, segment_id),
   CONSTRAINT fk_policies_lead FOREIGN KEY (lead_id)
     REFERENCES leads (lead_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
+
+CREATE INDEX idx_policies_submitted ON policies (submitted_at);
+CREATE INDEX idx_policies_effective ON policies (effective_date);
+CREATE INDEX idx_policies_status ON policies (policy_status, submitted_at);
+CREATE INDEX idx_policies_agent ON policies (agent_id, submitted_at);
+CREATE INDEX idx_policies_tld_lead ON policies (tld_lead_id);
+CREATE INDEX idx_policies_lead ON policies (lead_id);
+CREATE INDEX idx_policies_plan ON policies (contract_id, plan_id, segment_id);
 
 -- ---------------------------------------------------------------------------
 -- Sync bookkeeping for the resources this migration adds
