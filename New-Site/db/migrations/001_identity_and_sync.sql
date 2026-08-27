@@ -7,9 +7,14 @@
  * This migration builds everything the site originates itself. The TLD
  * mirrors come next, once the sync exists, and they join onto these.
  *
- * Every timestamp is TIMESTAMPTZ, which stores an absolute instant. The
- * connection is pinned to UTC in lib/db/client.js, so a value written on a
- * server in another region reads back the same either way.
+ * Every timestamp is TIMESTAMPTZ, which stores an absolute instant. Storage is
+ * UTC regardless of any session setting, so a value written from a server in
+ * another region reads back as the same moment.
+ *
+ * The session is pinned to America/New_York in lib/db/client.js. That does not
+ * change what is stored, it decides what a date means when one is derived from
+ * a timestamp, so a report grouped by day lands on the Eastern business day
+ * rather than splitting it across 2 UTC days.
  */
 
 -- ---------------------------------------------------------------------------

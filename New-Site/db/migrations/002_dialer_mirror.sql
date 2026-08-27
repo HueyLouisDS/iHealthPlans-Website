@@ -12,9 +12,10 @@
  * Nothing in this file is ever the authority on its own contents, and nothing
  * in this file should ever be edited by the website.
  *
- * Every timestamp is TIMESTAMPTZ and the connection is pinned to UTC, so a
- * naive Eastern datetime from TLD is converted once in lib/tld/sync.js and
- * never re-interpreted after that.
+ * Every timestamp is TIMESTAMPTZ, so a naive Eastern datetime from TLD is
+ * converted to an instant once in lib/tld/sync.js and never re-interpreted
+ * after that. The session is pinned to America/New_York, same zone TLD sends,
+ * so a call grouped by day falls on the day the agent worked it.
  */
 
 /*=======================================================
