@@ -1,18 +1,28 @@
 // Data access for the admin area, and the definition of what the reporting
 // layer actually needs.
 //
-// There is no database yet. Every function below has 2 paths.
+// Every function below dispatches between 2 sources.
 //
-//   LH_ADMIN_USE_FIXTURES=true   returns fabricated demo data from fixtures.js,
-//                             so the UI can be built and reviewed. Local only.
-//   otherwise                 returns an empty result of the correct shape,
-//                             which is the truth until tracking exists.
+//   LH_ADMIN_USE_FIXTURES=true   fabricated demo data from fixtures.js, so the
+//                                UI can be reviewed with something in it.
+//                                Local only, every page shows a banner.
+//   otherwise                    lib/db/queries/reporting.js, the real thing.
 //
-// The contracts are the same either way, so swapping in real queries later
-// should not change a single signature.
-//
-// TODO replace each body with a query once lib/db/client.js and the migrations
-// in db/migrations exist, and delete the fixtures branch.
+// The shapes are identical either way. A page cannot tell which it received,
+// which is the point, and it is also what makes the fixture branch safe to
+// delete once there is enough real data to review against.
+import {
+  funnelSummary,
+  funnelTrend,
+  topSources,
+  recentLeads,
+  leadList,
+  leadDetail,
+  callList,
+  callDetail,
+  attribution,
+  agentPerformance,
+} from '@/lib/db/queries/reporting'
 
 import {
   getDataset,
@@ -78,19 +88,7 @@ function rate(count, previous) {
 }
 
 export async function getFunnelSummary({ days = 30 } = {}) {
-  if (!usingFixtures()) {
-    return {
-      days,
-      stages: FUNNEL_STAGES.map((stage) => ({
-        key: stage.key,
-        label: stage.label,
-        count: 0,
-        rateFromPrevious: null,
-        delta: null,
-      })),
-      isEmpty: true,
-    }
-  }
+  if (!usingFixtures()) return funnelSummary({ days, stages: FUNNEL_STAGES })
 
   const data = getDataset()
   const daily = splitByPeriod(data.daily, 'date', days)
@@ -232,7 +230,7 @@ export function parseStage(slug) {
 }
 
 export async function getFunnelTrend({ days = 30 } = {}) {
-  if (!usingFixtures()) return { days: [], isEmpty: true }
+  if (!usingFixtures()) return funnelTrend({ days })
 
   const data = getDataset()
   const buckets = new Map()
@@ -290,8 +288,7 @@ export async function getFunnelTrend({ days = 30 } = {}) {
 }
 
 export async function getTopSources({ days = 30, limit = 5 } = {}) {
-  const empty = { measures: { leads: [], conversions: [] }, isEmpty: true }
-  if (!usingFixtures()) return empty
+  if (!usingFixtures()) return topSources({ days, limit })
 
   const { current } = splitByPeriod(getDataset().leads, 'createdAt', days)
   const groups = new Map()
@@ -322,7 +319,7 @@ export async function getTopSources({ days = 30, limit = 5 } = {}) {
 }
 
 export async function getRecentLeads({ limit = 6 } = {}) {
-  if (!usingFixtures()) return { rows: [], isEmpty: true }
+  if (!usingFixtures()) return recentLeads({ limit })
 
   const rows = getDataset().leads.slice(0, limit).map((lead) => ({
     ...lead,
@@ -357,7 +354,7 @@ export async function getLeads({
     isEmpty: true,
   }
 
-  if (!usingFixtures()) return empty
+  if (!usingFixtures()) return leadList({ days, page, perPage, source, status, audience, hasCall, search: query, sort })
 
   const { current } = splitByPeriod(getDataset().leads, 'createdAt', days)
 
@@ -436,7 +433,7 @@ export async function getLeadsForExport(filters = {}, ids = null) {
 }
 
 export async function getLead(leadId) {
-  if (!usingFixtures()) return null
+  if (!usingFixtures()) return leadDetail(leadId)
 
   const data = getDataset()
   const lead = data.leads.find((entry) => entry.id === leadId)
@@ -497,7 +494,7 @@ export async function getCalls({
     isEmpty: true,
   }
 
-  if (!usingFixtures()) return empty
+  if (!usingFixtures()) return callList({ days, page, perPage, disposition, agent: agentId, matched, hasRecording, sort })
 
   const { current } = splitByPeriod(getDataset().calls, 'startedAt', days)
   const connected = current.filter((call) => call.disposition === 'connected')
@@ -569,7 +566,7 @@ export async function getCallsForExport(filters = {}, ids = null) {
 }
 
 export async function getCall(callId) {
-  if (!usingFixtures()) return null
+  if (!usingFixtures()) return callDetail(callId)
 
   const data = getDataset()
   const call = data.calls.find((entry) => entry.id === callId)
@@ -654,7 +651,7 @@ export async function getAttribution({ groupBy = 'source', days = 30, device, on
     isEmpty: true,
   }
 
-  if (!usingFixtures()) return empty
+  if (!usingFixtures()) return attribution({ groupBy, days, device, onBehalfOf, sort, lowVolume: LOW_VOLUME_LEADS })
 
   const data = getDataset()
   const from = startOfDaysAgo(days)
@@ -751,7 +748,7 @@ export async function getAgentPerformance({ days = 30, sort = 'conversions' } = 
     isEmpty: true,
   }
 
-  if (!usingFixtures()) return empty
+  if (!usingFixtures()) return agentPerformance({ days, sort })
 
   const data = getDataset()
   const from = startOfDaysAgo(days)
@@ -973,6 +970,15 @@ export async function getCampaignSpend({ channel: slug = 'all', days = 30, sort 
     isEmpty: true,
   }
 
+  /*
+   The only function here with no real query behind it. Nothing in migrations
+   001 to 003 stores ad spend, so there is nowhere to read it from and an
+   empty result is the honest answer.
+
+   TODO migration 004, a campaign_spend table keyed on source, medium, and
+   campaign, once it is settled whether anybody buys ads pointing at this site
+   or whether all paid acquisition happens through the lead vendor.
+  */
   if (!usingFixtures()) return empty
 
   const data = getDataset()

@@ -4,7 +4,6 @@
 /*=============================================
     THIS IS FABRICATED DATA, NOT MEASUREMENT
 =============================================*/
-
 function makeRng(seed) {
   let a = seed >>> 0
   return function next() {
@@ -116,14 +115,7 @@ const DISPOSITIONS = [
   { value: 'abandoned', weight: 8 },
 ]
 
-export function formatDuration(seconds) {
-  const minutes = Math.floor(seconds / 60)
-  return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
-}
 
-export function formatDateTime(date) {
-  return date.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false })
-}
 
 function buildDataset() {
   const rng = makeRng(20260820)
@@ -292,5 +284,7 @@ export function getDataset() {
   if (!cached) cached = buildDataset()
   return cached
 }
+
+export { formatDuration, formatDateTime } from '@/lib/admin/format'
 
 export { AGENTS, SOURCES, CAMPAIGNS, LANDING_PAGES, CALL_LOCATIONS, daysAgo }
