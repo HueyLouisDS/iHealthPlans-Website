@@ -11,7 +11,6 @@
 
 // One stage. Width is its share of the top of the funnel, so the taper is
 // proportional to real volume rather than decorative.
-
 function Stage({ stage, isLast, isSelected, isDimmed }) {
   const width = Math.max(stage.shareOfTop * 100, 2)
 

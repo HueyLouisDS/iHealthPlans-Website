@@ -15,6 +15,9 @@ export const SITE_URL = (process.env.LH_SITE_URL || 'https://ihealthplans.com').
  competing with the real site in search results.
 */
 export const CANONICAL_HOST = 'ihealthplans.com'
+
+// The trading name, for anywhere the business is addressed rather than linked
+export const SITE_NAME = 'iHealth Plans'
 export const PHONE_NUMBER = '1-888-243-8046'
 /*
  711, not 771. The live site says 771 on 528 pages and it reaches nothing.

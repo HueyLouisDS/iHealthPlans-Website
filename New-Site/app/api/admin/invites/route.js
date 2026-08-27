@@ -8,7 +8,8 @@ import { getAdminSession } from '@/lib/admin/session'
 import { allowedDomain } from '@/auth.config'
 import { addAdminUser, createInvite, revokeAdminUser } from '@/lib/db/queries/adminUsers'
 import { databaseConfigured } from '@/lib/db/client'
-import { SITE_URL } from '@/lib/siteConfig'
+import { SITE_URL, SITE_NAME } from '@/lib/siteConfig'
+import { sendMail, mailFrom, inviteMessage } from '@/lib/mail/mailer'
 import { ERRORS, errorResponse } from '@/lib/errorCodes'
 
 // node rather than edge, this reads the database
@@ -69,8 +70,23 @@ export async function POST(request) {
 
   const user = await addAdminUser(email, session.user.email)
   const invite = await createInvite(email, session.user.email)
+  const link = `${SITE_URL}/admin/invite/${invite.token}`
 
   console.warn('[admin] invite issued for %s by %s', email, session.user.email)
+
+  /*
+   Mailed after the invite exists, never instead of it. A mail failure is a
+   delivery problem, and the link still comes back in this response so it can
+   be sent by hand.
+  */
+  const message = inviteMessage({
+    link,
+    expiresInDays: invite.expiresInDays,
+    siteName: SITE_NAME,
+    invitedBy: session.user.email,
+  })
+
+  const delivery = await sendMail({ to: email, ...message })
 
   return Response.json(
     {
@@ -78,8 +94,16 @@ export async function POST(request) {
       email,
       accountStatus: user?.status ?? 'invited',
       // Shown once. Not stored, and not recoverable from the database.
-      link: `${SITE_URL}/admin/invite/${invite.token}`,
+      link,
       expiresInDays: invite.expiresInDays,
+      sent: delivery.sent,
+      /*
+       Named so the page can say why nothing arrived. not-configured is a
+       setup gap, failed is a live problem, and they need different fixes.
+      */
+      deliveryReason: delivery.sent ? null : delivery.reason,
+      deliveryError: delivery.message ?? null,
+      sentFrom: delivery.sent ? mailFrom() : null,
     },
     { headers: { 'Cache-Control': 'no-store' } }
   )

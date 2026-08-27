@@ -204,14 +204,25 @@ function EmailListField({ field, domain, saved, statuses, invites, onVerify, val
                 </div>
               </div>
 
-              {/* Shown once and not recoverable, only the hash is stored, so
-                  it stays on screen until the page is left */}
+              {/*
+               The link is shown either way. Only the hash is stored, so it
+               cannot be produced again, and hiding it on a successful send
+               would leave nothing to fall back on if the mail never arrives.
+              */}
               {invites[email]?.link && (
                 <div className="mt-2 pt-2 border-t border-amber-300 flex flex-col gap-1">
                   <p className="text-sm">
-                    Send this to {email}. It expires in {invites[email].expiresInDays} days and
-                    will not be shown again.
+                    {invites[email].sent
+                      ? `Emailed to ${email} from ${invites[email].sentFrom}. Expires in ${invites[email].expiresInDays} days, single use.`
+                      : invites[email].deliveryReason === 'not-configured'
+                        ? `Not emailed, no mail server is configured. Send this to ${email} yourself. Expires in ${invites[email].expiresInDays} days, single use.`
+                        : `Sending failed, so send this to ${email} yourself. Expires in ${invites[email].expiresInDays} days, single use.`}
                   </p>
+
+                  {invites[email].deliveryError && (
+                    <p className="text-sm text-red-900">{invites[email].deliveryError}</p>
+                  )}
+
                   <input
                     readOnly
                     value={invites[email].link}
@@ -452,7 +463,14 @@ export default function IntegrationCards({ statuses, present, admin, canWrite })
 
       setInvites((current) => ({
         ...current,
-        [email]: { link: body.link, expiresInDays: body.expiresInDays },
+        [email]: {
+          link: body.link,
+          expiresInDays: body.expiresInDays,
+          sent: body.sent,
+          sentFrom: body.sentFrom,
+          deliveryReason: body.deliveryReason,
+          deliveryError: body.deliveryError,
+        },
       }))
 
       router.refresh()
