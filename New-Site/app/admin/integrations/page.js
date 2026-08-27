@@ -72,7 +72,12 @@ export default async function AdminIntegrationsPage() {
       <IntegrationCards
         statuses={statuses}
         present={describeWritableKeys()}
-        admin={{ domain: adminDomain, emails: adminEmails }}
+        /*
+         statuses is empty until admin_users exists, so every address renders
+         as unverified. Being on the list is permission, verification is proof
+         the person completed a Google sign in, and the two are not the same.
+        */
+        admin={{ domain: adminDomain, emails: adminEmails, statuses: {} }}
         canWrite={canWrite}
       />
     </AdminShell>

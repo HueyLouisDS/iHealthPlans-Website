@@ -1,9 +1,13 @@
 'use client'
 
-// The editable integration cards on /admin/integrations, their Test Connection
-// buttons, and the Configure button that saves them. Client side because the
-// fields open on click. Receives the described shape from the server page,
-// never a config object, so no credential crosses the boundary.
+// The editable integration cards on /admin/integrations, with a Test
+// Connection and a Save on each. Client side because the fields open on click.
+// Receives the described shape from the server page, never a config object, so
+// no credential crosses the boundary.
+//
+// Save is per card on purpose. A single page level button gated on every card
+// being connected meant the admin allowlist could not be saved without working
+// CRM and vendor credentials, which have nothing to do with who may sign in.
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -77,15 +81,42 @@ function parseList(value) {
     .filter(Boolean)
 }
 
+const VERIFIED = 'verified'
+
 /*
- The allowlist as removable chips, one address per Enter. Stored as the same
+ Whether this person has actually completed a Google sign in, or is only on
+ the list. Being listed is permission, verification is proof they can use it,
+ and an address that is listed but never verified is usually a typo nobody
+ noticed rather than somebody who has not got round to it.
+
+ Sending the invite needs somewhere to keep a token, which is admin_users and
+ admin_invites in migration 003. Rendered disabled rather than hidden so the
+ flow is visible and it is obvious why it does not fire yet.
+*/
+function VerifyState({ email, status }) {
+  if (status === VERIFIED) {
+    return <span className="text-sm font-semibold text-green-900">Verified</span>
+  }
+
+  return (
+    <span
+      className="text-sm font-semibold text-[#6C7381] cursor-not-allowed"
+      title={`Sending an invite to ${email} needs the admin_users table, migration 003`}
+    >
+      Verify
+    </span>
+  )
+}
+
+/*
+ The allowlist as removable rows, one address per Enter. Stored as the same
  comma separated string the environment holds, so the save and test routes are
  unchanged, the joining just happens here instead of in the user's head.
 
  Shown open rather than behind the key name like the credential fields, since
  the list is not a secret and hiding it makes the remove buttons unfindable.
 */
-function EmailListField({ field, domain, saved, value, onChange }) {
+function EmailListField({ field, domain, saved, statuses, value, onChange }) {
   const [draft, setDraft] = useState('')     // the address being typed, not yet a chip
   const [problem, setProblem] = useState(null)
 
@@ -137,25 +168,32 @@ function EmailListField({ field, domain, saved, value, onChange }) {
         )}
       </div>
 
+      {/* One per row rather than wrapped. These are a list of people, and a
+          wrapped run reads as tags on a thing rather than as an access list. */}
       {emails.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <ul className="flex flex-col gap-2">
           {emails.map((email) => (
-            <span
+            <li
               key={email}
-              className="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 rounded px-2 py-1 font-mono text-sm"
+              className="flex items-center justify-between gap-3 bg-amber-100 text-amber-900 border border-amber-300 rounded px-3 py-2"
             >
-              {email}
-              <button
-                type="button"
-                onClick={() => removeEmail(email)}
-                aria-label={`Remove ${email}`}
-                className="text-amber-900 hover:text-red-900 font-bold leading-none text-base"
-              >
-                &times;
-              </button>
-            </span>
+              <span className="font-mono text-sm truncate">{email}</span>
+
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <VerifyState email={email} status={statuses[email]} />
+
+                <button
+                  type="button"
+                  onClick={() => removeEmail(email)}
+                  aria-label={`Remove ${email}`}
+                  className="text-amber-900 hover:text-red-900 font-bold leading-none text-lg"
+                >
+                  &times;
+                </button>
+              </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       <input
@@ -207,8 +245,19 @@ function Badge({ className, children }) {
   )
 }
 
-function Card({ integration, status, present, admin, values, onChange, test, onTest }) {
+function Card({ integration, status, present, admin, values, onChange, test, onTest, onSave, save, canWrite }) {
   const state = test?.state || UNTESTED
+
+  // This card's own pending edits. Saving one card must not carry another's.
+  const changed = integration.fields.filter((field) => values[field.key] !== undefined)
+
+  const blocked = !canWrite
+    ? 'Read only here, set these on the host.'
+    : changed.length === 0
+      ? null
+      : state !== CONNECTED
+        ? 'Test the connection first.'
+        : null
 
   return (
     <div className="bg-white border rounded-lg p-5 flex flex-col gap-4">
@@ -227,6 +276,7 @@ function Card({ integration, status, present, admin, values, onChange, test, onT
               field={field}
               domain={admin.domain}
               saved={admin.emails}
+              statuses={admin.statuses || {}}
               value={values[field.key]}
               onChange={onChange}
             />
@@ -242,14 +292,21 @@ function Card({ integration, status, present, admin, values, onChange, test, onT
         )}
       </div>
 
+      {/*
+       Save is per card, not per page. A single Configure button gated on all
+       3 cards being connected meant the admin list could not be saved without
+       working CRM and vendor credentials, which are unrelated to who is
+       allowed to sign in.
+      */}
       <div className="border-t pt-4 flex items-center justify-between gap-3 flex-wrap">
-        {test?.message ? (
-          <p className={`text-sm ${state === CONNECTED ? 'text-green-900' : 'text-red-900'}`}>
-            {test.message}
-          </p>
-        ) : (
-          <span className="text-sm text-[#6C7381]">Connection not set</span>
-        )}
+        <button
+          type="button"
+          onClick={() => onSave(integration.name)}
+          disabled={changed.length === 0 || Boolean(blocked) || save?.isSaving}
+          className="bg-ihealthGreen text-white font-bold text-sm px-5 py-2 rounded hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          {save?.isSaving ? 'Saving' : changed.length > 0 ? `Save (${changed.length})` : 'Save'}
+        </button>
 
         <button
           type="button"
@@ -260,6 +317,24 @@ function Card({ integration, status, present, admin, values, onChange, test, onT
           {state === TESTING ? 'Testing' : 'Test Connection'}
         </button>
       </div>
+
+      {/* One line under the buttons, so a save result and a test result never
+          fight for the same slot */}
+      <p
+        className={`text-sm ${
+          save?.result
+            ? save.result.ok
+              ? 'text-green-900'
+              : 'text-red-900'
+            : state === CONNECTED
+              ? 'text-green-900'
+              : test?.message
+                ? 'text-red-900'
+                : 'text-[#6C7381]'
+        }`}
+      >
+        {save?.result?.message || blocked || test?.message || 'Connection not set'}
+      </p>
     </div>
   )
 }
@@ -268,20 +343,21 @@ export default function IntegrationCards({ statuses, present, admin, canWrite })
   const router = useRouter()
   const [values, setValues] = useState({})  // pending edits, key to typed value
   const [tests, setTests] = useState({})    // integration name to { state, message }
-  const [saving, setSaving] = useState(false)
-  const [result, setResult] = useState(null)
-
-  const changedCount = Object.keys(values).length
-  const allConnected = INTEGRATIONS.every((one) => tests[one.name]?.state === CONNECTED)
+  const [saves, setSaves] = useState({})    // integration name to { isSaving, result }
 
   function handleChange(key, value) {
     const owner = INTEGRATIONS.find((one) => one.fields.some((field) => field.key === key))
 
     setValues((current) => ({ ...current, [key]: value }))
-    setResult(null)
 
+    /*
+     An edit invalidates that card's test and clears its last save message.
+     Leaving either up would show a green Connected against a credential
+     nobody has tried yet.
+    */
     if (owner) {
       setTests((current) => ({ ...current, [owner.name]: undefined }))
+      setSaves((current) => ({ ...current, [owner.name]: undefined }))
     }
   }
 
@@ -313,79 +389,78 @@ export default function IntegrationCards({ statuses, present, admin, canWrite })
     }
   }
 
-  async function handleSave() {
-    setSaving(true)
-    setResult(null)
+  /* saves one card's fields, never the whole form */
+  async function handleSave(name) {
+    const integration = INTEGRATIONS.find((one) => one.name === name)
+    if (!integration) return
+
+    // Only this card's keys, so an untested card's edits cannot ride along
+    const payload = {}
+    for (const field of integration.fields) {
+      if (values[field.key] !== undefined) payload[field.key] = values[field.key]
+    }
+
+    setSaves((current) => ({ ...current, [name]: { isSaving: true, result: null } }))
 
     try {
       const response = await fetch('/api/admin/integrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values }),
+        body: JSON.stringify({ values: payload }),
       })
 
       const body = await response.json()
 
       if (!response.ok) {
-        setResult({ ok: false, message: body.errors?.join(' ') || body.error || 'Save failed.' })
+        setSaves((current) => ({
+          ...current,
+          [name]: {
+            isSaving: false,
+            result: { ok: false, message: body.errors?.join(' ') || body.error || 'Save failed.' },
+          },
+        }))
         return
       }
-      setValues({})
-      setResult({ ok: true, message: body.note || 'Saved.' })
+
+      // Clear only what was saved, so another card keeps its pending edits
+      setValues((current) => {
+        const next = { ...current }
+        for (const key of Object.keys(payload)) delete next[key]
+        return next
+      })
+
+      setSaves((current) => ({
+        ...current,
+        [name]: { isSaving: false, result: { ok: true, message: body.note || 'Saved.' } },
+      }))
+
       router.refresh()
     } catch {
-      setResult({ ok: false, message: 'Could not reach the server.' })
-    } finally {
-      setSaving(false)
+      setSaves((current) => ({
+        ...current,
+        [name]: { isSaving: false, result: { ok: false, message: 'Could not reach the server.' } },
+      }))
     }
   }
 
-  const blockedReason = !canWrite       // why the button is disabled, shown to the user
-    ? 'Read only. Set these on the host in a deployed environment.'
-    : changedCount === 0
-      ? 'Nothing to save.'
-      : !allConnected
-        ? 'Test both connections first.'
-        : null
-
   return (
-    <>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {INTEGRATIONS.map((integration) => (
-          <Card
-            key={integration.name}
-            integration={integration}
-            status={statuses[integration.name] || { isConfigured: false }}
-            present={present}
-            admin={admin}
-            values={values}
-            onChange={handleChange}
-            test={tests[integration.name]}
-            onTest={handleTest}
-          />
-        ))}
-      </div>
-
-      <div className="mt-6 flex items-center justify-end gap-4 flex-wrap">
-        {result && (
-          <p className={`text-base ${result.ok ? 'text-green-900' : 'text-amber-900'}`}>
-            {result.message}
-          </p>
-        )}
-
-        {!result && blockedReason && (
-          <p className="text-base text-[#6C7381]">{blockedReason}</p>
-        )}
-
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={Boolean(blockedReason) || saving}
-          className="bg-ihealthGreen text-white font-bold px-6 py-2.5 rounded hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition"
-        >
-          {saving ? 'Saving' : changedCount > 0 ? `Configure (${changedCount})` : 'Configure'}
-        </button>
-      </div>
-    </>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {INTEGRATIONS.map((integration) => (
+        <Card
+          key={integration.name}
+          integration={integration}
+          status={statuses[integration.name] || { isConfigured: false }}
+          present={present}
+          admin={admin}
+          values={values}
+          onChange={handleChange}
+          test={tests[integration.name]}
+          onTest={handleTest}
+          save={saves[integration.name]}
+          onSave={handleSave}
+          canWrite={canWrite}
+        />
+      ))}
+    </div>
   )
 }
