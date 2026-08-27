@@ -36,7 +36,20 @@ const productCount = PRODUCT_COUNT.toLocaleString('en-US')
  Rendered on every notice. A legal page with no date is not much use to
  anyone trying to work out which version they agreed to.
 */
-export const LEGAL_LAST_UPDATED = 'TO CONFIRM: effective date, set when counsel signs off'
+export const LEGAL_LAST_UPDATED = 'December 1, 2026'
+
+/*
+ The TPMO disclosure and the privacy policy both have to describe call
+ recording, and they were answered with one set of facts, so they share one
+ block. Two copies would drift, and two legal pages disagreeing about a
+ retention period is worse than either page being silent.
+*/
+export const CALL_RECORDING_BODY = [
+  'You are told at the start of every call that it is being recorded, and the other disclosures CMS requires are given at the same time.',
+  'Some states require every person on a call to agree before it can be recorded. Where that applies the agent will ask you out loud for that agreement before going any further, and if you do not give it the call cannot continue. The federal recording requirement does not override the consent law of your state.',
+  'Recordings are held securely and are not altered. They are kept in a system that allows them to be retrieved when CMS, an insurance carrier, or another regulator asks for them as part of an audit.',
+  'Marketing and sales calls are kept for 6 years, as audio for the first 3 years and as either audio or a written transcript for years 4 through 6. Calls that involve an enrollment are kept for 10 years, which is required by 42 CFR 422.504(d).',
+]
 
 export const LEGAL_PAGES = {
   'terms-of-service': {
@@ -185,7 +198,7 @@ export const LEGAL_PAGES = {
         body: [
           'Calls between you and a licensed insurance agent are recorded, including any enrollment discussion. Recording is a requirement placed on Third Party Marketing Organizations, not a choice we make call by call.',
           'Recordings, and any transcript made from them, are treated as personal information under this policy.',
-          'TO CONFIRM: how recordings are stored, for how long, who can access them, and the notice given at the start of a call. Also confirm the position on state consent laws, since some states require every party to consent and that has to sit alongside the federal recording requirement.',
+          ...CALL_RECORDING_BODY,
         ],
       },
       {
@@ -419,14 +432,16 @@ export const LEGAL_PAGES = {
         heading: 'Recording of calls',
         body: [
           'Calls with beneficiaries are recorded. Recording is a requirement placed on Third Party Marketing Organizations, and it applies to the entire call, including any enrollment discussion.',
-          'TO CONFIRM: how recordings are stored, for how long, who can access them, and the notice given at the start of a call. Also confirm the position on state consent laws, since some states require all parties to consent and that interacts with the federal recording requirement.',
+          ...CALL_RECORDING_BODY,
         ],
       },
       {
         heading: 'Licensed insurance agents',
         body: [
           'The people you speak to are licensed insurance agents. Whether an agent can discuss plans in your state depends on where they hold a licence.',
-          'TO CONFIRM: how a consumer can verify an agent licence, and whether iHealth Plans wants to publish its own agency licence numbers by state.',
+          'You can check the license of any agent yourself. The Department of Insurance in your state holds the record, and the NIPR Consumer Portal and the SBS License Manager both let you search nationally. Each of these will tell you whether a license is active, what lines of authority it covers, and whether there is any disciplinary history against it.',
+          'We keep a complete internal register of the licenses this agency holds, and we will provide our license information on request.',
+          'TO CONFIRM: whether iHealth Plans wants to publish its own agency license numbers by state. The answer returned said it may choose to as a transparency measure, which leaves the decision open. Confirm also that nothing was lost from the end of that answer, which arrived cut off mid sentence.',
         ],
       },
     ],
