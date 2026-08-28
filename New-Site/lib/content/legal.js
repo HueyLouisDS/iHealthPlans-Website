@@ -8,7 +8,7 @@ import { CARRIER_COUNT, PRODUCT_COUNT } from '@/lib/siteConfig'
 // server in another region cannot render it with a different separator.
 const productCount = PRODUCT_COUNT.toLocaleString('en-US')
 
-/*=============================================
+/*==================================================================================
     READ THIS BEFORE PUBLISHING ANY OF THESE PAGES.
 
     This is DRAFT text. It follows the standard structure for each notice and
@@ -30,7 +30,7 @@ const productCount = PRODUCT_COUNT.toLocaleString('en-US')
        their leads are and on volume thresholds.
     4. Call recording consent, which varies by state and interacts with the CMS
        requirement that TPMOs record calls with beneficiaries in their entirety.
-=============================================*/
+====================================================================================*/
 
 /*
  Rendered on every notice. A legal page with no date is not much use to
@@ -299,7 +299,7 @@ export const LEGAL_PAGES = {
         heading: 'The standard we work to',
         body: [
           'We aim to conform to the Web Content Accessibility Guidelines (WCAG) version 2.1 at level AA. These guidelines explain how to make web content more accessible to people with a wide range of disabilities, including visual, hearing, cognitive, and motor impairments.',
-          'TO CONFIRM: whether iHealth Plans wants to state conformance as "fully conformant", "partially conformant", or "aiming to conform". Only claim full conformance after an audit supports it, because the claim itself carries risk.',
+          'This site is partially conformant with those guidelines. Partially conformant means most of the standard is met, but some parts are not. The parts that are not are listed under Known limitations below.',
         ],
       },
       {
@@ -308,7 +308,6 @@ export const LEGAL_PAGES = {
           'Accessibility is considered as part of how the site is built rather than added afterwards. Practical measures include the following.',
         ],
         list: [
-          'Text and background colours are chosen to meet contrast requirements.',
           'Every form field has a visible label that is programmatically associated with it.',
           'The site can be operated with a keyboard alone, and no function depends on hovering a mouse.',
           'Images that carry meaning have text alternatives, and decorative images are hidden from assistive technology.',
@@ -320,7 +319,11 @@ export const LEGAL_PAGES = {
         heading: 'Known limitations',
         body: [
           'We are aware of the following and are working on them.',
-          'TO CONFIRM: this section must list real, current issues. An accessibility statement that claims no known limitations is rarely accurate and undermines the rest of the page. Populate it from an audit.',
+          'Some text and buttons do not stand out enough from what is behind them. Our green is the main cause and it affects every page. We measured it at 3.3 to 1 where the standard asks for 4.5 to 1. Two greys used for smaller text fall short in the same way.',
+          'There is no skip link, so somebody using a keyboard has to move through the links in the header on every page before reaching the main content.',
+          'On some pages the headings are not in a strict order, which makes navigating by heading with a screen reader more confusing than it should be.',
+          'On the quote page a link inside a paragraph is marked out only by its colour, so it is easy to miss if you do not see colour well.',
+          'We have not designed a focus outline of our own. Keyboard users see whatever their browser draws, which varies between browsers and is not always easy to see.',
         ],
       },
       {
@@ -337,7 +340,9 @@ export const LEGAL_PAGES = {
       {
         heading: 'How we assess this site',
         body: [
-          'TO CONFIRM: how accessibility is evaluated, for example self assessment, an external audit, or both, and how often. Name the evaluator if an external audit was carried out.',
+          'We assessed this site ourselves on August 28, 2026. We ran axe-core, an automated accessibility testing tool, across 17 pages, and checked keyboard operation, heading structure and the layout at small screen sizes by hand.',
+          'No external audit has been carried out. Automated tools find roughly a third of accessibility problems, so a clean automated result is not the same as a page that works for everybody, and we do not present it as one.',
+          'TO CONFIRM: how often this assessment is repeated. Stating a cadence commits to it, so the number should be one that will actually happen.',
         ],
       },
     ],
