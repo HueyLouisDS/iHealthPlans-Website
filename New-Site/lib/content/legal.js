@@ -141,7 +141,8 @@ export const LEGAL_PAGES = {
       {
         heading: 'Which law applies',
         body: [
-          'TO CONFIRM: name the state. The previous version said the laws of the state in which iHealth Plans is headquartered, without saying which state that is, so a reader could not tell which law governed the agreement they were being asked to accept. Insurance is also regulated state by state, and nothing in these terms limits any right you have under the law of your own state.',
+          'These terms are governed by the law of the State of Florida, where iHealth Plans is based and holds its resident insurance license.',
+          'Insurance is regulated state by state, and nothing in these terms limits any right you have under the law of your own state.',
         ],
       },
       {
@@ -183,7 +184,8 @@ export const LEGAL_PAGES = {
           'Anything you tell an agent during a call, which may include the medications you take, the providers you see, and your eligibility for Medicare or Medicaid, because those determine which plans are available to you.',
         ],
         afterBody: [
-          'TO CONFIRM: the previous version of this policy claimed to collect treatment plans and medical history. An insurance agency generally holds neither. Confirm exactly what is collected, and whether any of it is health information as defined by HIPAA, because that answer changes the obligations attached to it.',
+          'The medications you take and the doctors you see are health information, and we treat them as protected health information under HIPAA. We ask for them because they decide which plans are worth putting in front of you, and for no other reason.',
+          'None of that is collected by this website. There is no field on any form here that asks for it. It is given to an agent on a call, and it is held in the systems described under How we protect it.',
         ],
       },
       {
@@ -395,8 +397,7 @@ export const LEGAL_PAGES = {
       {
         heading: 'Language assistance',
         body: [
-          'Language assistance services are available free of charge. The taglines below tell speakers of other languages how to get help in their own language.',
-          'TO CONFIRM: the required tagline list is set per state, commonly the top 15 languages spoken in the states where you operate. Supply the correct list and the translated tagline text for each. Do not machine translate these.',
+          'Language assistance is available free of charge. We have agents who speak Spanish and Haitian Creole, so help in either language can be arranged at no cost to you.',
         ],
       },
     ],
@@ -543,7 +544,7 @@ export const LEGAL_PAGES = {
         contacts: [
           { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
           { label: 'By email', value: 'contracting@ihealthplans.com' },
-          { label: 'Online', value: 'TO CONFIRM: the privacy request form is approved but not built yet. It produces the dated written request the dialer vendor requires before it will delete anything, so it is not optional. Needs copy before it can ship.' },
+          { label: 'Online', value: 'TO CONFIRM: the form is built and wired at /privacy-request, but none of its wording is written, so the page is hidden and noindex. Fill in lib/content/privacyRequest.js and set COPY_PENDING to false, then replace this row with the link.' },
         ],
         afterBody: [
           'TO CONFIRM: several state laws require a specific intake method, and California requires a toll free number for businesses that collect personal information. Confirm the methods offered here satisfy every state you operate in.',

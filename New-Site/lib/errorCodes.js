@@ -17,6 +17,13 @@ export const ERRORS = {
   methodNotAllowed: { code: 'LH-4051', status: 405, reason: 'method_not_allowed' },
   tooLarge:         { code: 'LH-4131', status: 413, reason: 'too_large' },
   ingestionOff:     { code: 'LH-5031', status: 503, reason: 'ingestion_disabled' },
+  /*
+   Only for writes where nothing else holds a copy. A lead that fails to store
+   still reaches TLD, so it does not use this. A privacy request does, because
+   a failed write means the deadline is running against a record that does not
+   exist and the person has to be told to try another way.
+  */
+  notStored:        { code: 'LH-5001', status: 500, reason: 'not_stored' },
 }
 
 export function errorResponse(error, extra = {}) {
