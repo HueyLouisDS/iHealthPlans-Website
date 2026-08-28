@@ -378,7 +378,10 @@ export const LEGAL_PAGES = {
         heading: 'Filing a grievance with us',
         body: [
           'If you believe we have failed to provide these services or discriminated in another way on the basis of race, color, national origin, age, disability, or sex, you can file a grievance with us.',
-          'TO CONFIRM: the named civil rights coordinator, their address, phone, fax, and email, and the process and timeframe for handling a grievance. A grievance procedure that does not name a responsible person is not a procedure.',
+        ],
+        contacts: [
+          { label: 'By phone', value: 'PHONE_NUMBER_WITH_TTY' },
+          { label: 'By email', value: 'contracting@ihealthplans.com' },
         ],
       },
       {
