@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import FloatingLabelInput from '@/components/forms/FloatingLabelInput'
-import TcpaConsent from '@/components/compliance/TcpaConsent'
+import TcpaConsent from '@/components/compliance/tcpaConsent'
 import { BUSINESS_HOURS } from '@/lib/siteConfig'
 
 const EMPTY = { zip: '', firstName: '', lastName: '', phone: '', bestTime: '', onBehalfOf: '' }
