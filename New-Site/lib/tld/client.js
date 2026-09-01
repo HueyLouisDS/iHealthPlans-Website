@@ -60,7 +60,16 @@ export async function fetchPage(path, params = {}) {
     return { rows: null, error: `${path} did not return JSON.` }
   }
 
-  const rows = Array.isArray(body) ? body : body?.results   // TLD wraps in .results
+  /*
+   Confirmed against the live api. The envelope is response.results, with a
+   sibling debug object carrying timing and the http code:
+
+     { "response": { "results": [...] }, "debug": { "code": 200 } }
+
+   The flatter body.results is kept as a fallback rather than removed, since
+   it costs one comparison and covers an endpoint that does not nest.
+  */
+  const rows = Array.isArray(body) ? body : (body?.response?.results ?? body?.results)
 
   if (!Array.isArray(rows)) {
     return { rows: null, error: `${path} returned no results array.` }

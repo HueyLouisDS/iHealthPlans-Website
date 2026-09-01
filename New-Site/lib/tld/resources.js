@@ -3,18 +3,41 @@
 // dispositions and a call arriving first would have nothing to point at.
 
 /*=======================================================
-        EVERY PATH AND FIELD NAME BELOW IS UNCONFIRMED
+        PATHS CONFIRMED, FIELD NAMES STILL UNCONFIRMED
 ========================================================*/
+
+/*
+ Paths checked against /api/egress/endpoints and
+ /api/egress/tldialer/endpoints on the live api. There are 2 families under
+ one base url and one credential, the CRM at /api/egress/ and the dialer at
+ /api/egress/tldialer/.
+
+ Field names are still guesses. Every endpoint answers {path}/docs with its
+ real column list, so each map below can be settled without asking anybody.
+
+ Filtering is TQL. There is no generic date_start parameter. Each column
+ generates its own keys, so a modified-since filter is the column name with a
+ comparison suffix, date_created_greater_equal rather than date_start. The
+ suffix set is confirmed from tags/docs, the column names per endpoint are not.
+*/
 const VICIDIAL_OPTION = { vicidial: 1 }
 
 export const RESOURCES = [
   {
     name: 'dispositions',
-    path: '/api/egress/statuses',
+    /*
+     Dialer side, not CRM. There is no /api/egress/statuses at all, which is
+     what the original guess asked for.
+
+     vicidial_statuses is the raw table and carries the fields this map wants.
+     join_statuses also exists and may already resolve the category, so check
+     both with /docs before settling. vicidial_status_categories and
+     vicidial_status_groups are the lookups behind it.
+    */
+    path: '/api/egress/tldialer/vicidial_statuses',
     table: 'dispositions',
     key: 'disposition_code',
     incremental: false,
-    tag: 'db:calls',
     map: {
       disposition_code: 'status',
       label: 'status_name',
@@ -30,14 +53,40 @@ export const RESOURCES = [
     table: 'agents',
     key: 'agent_id',
     incremental: false,
-    tag: 'db:agents',
+
+    /*-------- This is critical --------*/
+    /*
+     Never pull this endpoint without naming columns. The users table carries
+     cms_password, healthsherpa_password, cms_username, healthsherpa_username,
+     personal_address, personal_email and personal_phone, confirmed from the
+     column list returned by /docs/column.
+
+     A default pull mirrors agent credentials and home addresses into our
+     database, where nothing needs them, nothing reads them, and the retention
+     purge does not know to strip them. The 6 columns below are the whole of
+     what the reporting layer uses.
+
+     TODO send these as the columns parameter once the selector syntax is
+     confirmed. Until then this map is the only thing keeping the rest out,
+     and it filters after the payload has already crossed the wire.
+    */
+    columns: ['user_id', 'vicidial_user', 'full_name', 'email', 'npn', 'status_id'],
+
     map: {
       agent_id: 'user_id',
-      dialer_user: 'user',
-      full_name: 'name',
+      // Confirmed. There is no plain `user` column, the dialer login is this
+      dialer_user: 'vicidial_user',
+      // Both name and full_name exist. full_name is the assembled one
+      full_name: 'full_name',
       email: 'email',
       npn: 'npn',
-      is_active: 'active',
+      /*
+       TODO there is no `active` column. The table has status_id, plus
+       date_activated and date_deactivated. Confirm which status_id means
+       active before mapping, since guessing here silently hides agents from
+       /admin/agents or shows leavers as current staff.
+      */
+      is_active: 'status_id',
     },
   },
   {
@@ -50,7 +99,6 @@ export const RESOURCES = [
     cursorParam: 'date_start',
     // The leads endpoint refuses a request with no range, unlike the others
     requiresRange: true,
-    tag: 'db:leads',
     map: {
       tld_lead_id: 'lead_id',
       created_at: 'date_created',
@@ -69,14 +117,28 @@ export const RESOURCES = [
   },
   {
     name: 'calls',
-    path: '/api/egress/calls',
+    /*
+     TODO not settled. There is no /api/egress/calls, which is what the
+     original guess asked for, and the dialer side offers 4 candidates:
+
+       call_log            the likely one, reads as the unified log
+       agency_call_log     possibly scoped to the agency rather than a user
+       tldialer_call_log   possibly the raw table behind call_log
+       user_call_log       almost certainly per agent, too narrow
+
+     Underneath those, vicidial_log holds outbound and vicidial_closer_log
+     holds inbound and transfers. This site needs both directions in one
+     resource, so a merged log is preferred over stitching those two.
+
+     Compare with /docs on each before settling.
+    */
+    path: '/api/egress/tldialer/call_log',
     table: 'calls',
     key: 'call_id',
     incremental: true,
     cursorColumn: 'started_at',
     cursorParam: 'date_start',
     params: VICIDIAL_OPTION,
-    tag: 'db:calls',
     // Smaller pages, the rows are wide once the vicidial columns are on
     pageSize: 2000,
     map: {
@@ -107,7 +169,6 @@ export const RESOURCES = [
     incremental: true,
     cursorColumn: 'synced_at',
     cursorParam: 'date_modified_start',
-    tag: 'db:policies',
     // Rows that stop coming back get stamped rather than deleted 
     tracksMissing: true,
     map: {
