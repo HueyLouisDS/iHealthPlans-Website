@@ -1,11 +1,11 @@
 // Root layout. Loads the brand font and sets the shared metadata for every
 // route, public and admin alike.
 // The header and footer live in app/(site)/layout.js so the admin area does
-// not inherit them. Analytics and attribution providers will mount here, since
+// not inherit them. The tracking beacon mounts here rather than there, since
 // session identity has to be established on every route.
-
 import { Source_Sans_3 } from 'next/font/google'
 import './globals.css'
+import Beacon from '@/components/tracking/Beacon'
 import { authorshipMetadata, authorshipJsonLd, BUNDLER_BANNER } from '@/lib/authorship'
 
 const sourceSans = Source_Sans_3({
@@ -37,6 +37,10 @@ export default function RootLayout({ children }) {
     <html lang="en" className={sourceSans.variable}>
       <body className="font-sans">
         {children}
+
+        {/* Establishes the visitor and session identity. Renders nothing, and
+            skips the admin area itself. See components/tracking/Beacon.js */}
+        <Beacon />
 
         {/* Machine readable only, renders nothing. See lib/authorship.js */}
         <script
