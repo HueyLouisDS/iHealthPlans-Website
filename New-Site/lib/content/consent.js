@@ -1,14 +1,13 @@
 // The TCPA and TPMO consent wording, defined once as data.
-// components/compliance/tcpaConsent.js renders it and the quote form sends the
+// components/compliance/TcpaConsent.js renders it and the quote form sends the
 // flattened text with the submission, so what is stored is what was on screen.
-
 import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS, SMID, SITE_URL } from '@/lib/siteConfig'
 
 const DO_NOT_CALL_PATH = '/do-not-call'
 
-/*=======================================================
+/*===============================================================
         ONE DEFINITION, RENDERED AND STORED FROM THE SAME PLACE
-========================================================*/
+===============================================================*/
 
 /*
  The consent record is evidence. A version stored as a pointer to current page
@@ -38,8 +37,7 @@ export function consentParagraphs() {
 /*
  A link is flattened with its destination spelled out, because the stored text
  has to stand on its own in a complaint. "our Do Not Call page" read back from
- a database says nothing about where that page was.
-*/
+ a database says nothing about where that page was.*/
 function flattenSegment(segment) {
   if (typeof segment === 'string') return segment
   if (segment.strong) return segment.strong

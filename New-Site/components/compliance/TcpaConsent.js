@@ -5,31 +5,44 @@
     WHY THIS IS A COMPONENT AND NOT PASTED INTO THE FORM
 =============================================*/
 
-import { PHONE_NUMBER, PHONE_TTY, BUSINESS_HOURS, SMID } from '@/lib/siteConfig'
+/*
+ The wording itself moved to lib/content/consent.js and this renders it. The
+ form sends the same definition flattened to text, and that string is what
+ lead_consents stores as the record of what somebody agreed to.
+
+ Do not reword anything here. A sentence edited in this file and not in the
+ module would put one thing on screen and a different thing in the evidence,
+ which is the exact failure the verbatim capture exists to prevent.
+*/
+
+import { consentParagraphs } from '@/lib/content/consent'
+
+function Segment({ segment }) {
+  if (typeof segment === 'string') return segment
+  if (segment.strong) return <span className="font-semibold">{segment.strong}</span>
+
+  return (
+    <a href={segment.href} className="text-[#105fa8] hover:underline">
+      {segment.link}
+    </a>
+  )
+}
 
 export default function TcpaConsent() {
+  const paragraphs = consentParagraphs()
+
+  // The SMID line is the last paragraph and is set quieter than the rest
+  const lastIndex = paragraphs.length - 1
+
   return (
     <div className="w-full text-sm text-[#505258] leading-relaxed flex flex-col gap-3">
-      <p>
-        <span className="font-semibold">This is a solicitation for insurance.</span> By submitting
-        this form, you understand that your contact information will be provided to a licensed
-        sales agent who can enroll you into a Medicare Advantage or Prescription Drug (Part D)
-        plan, and you agree to receive marketing messages by email, autodialer, text, or
-        prerecorded call. Cellular charges may apply.
-      </p>
-
-      <p>
-        Your consent to connect with a licensed insurance agent does not affect your eligibility to
-        enroll or the provision of services, and it is not a condition of purchase. You can
-        withdraw it at any time by calling iHealth Plans at {PHONE_NUMBER} ({PHONE_TTY}),{' '}
-        {BUSINESS_HOURS}, or through our{' '}
-        <a href="/do-not-call" className="text-[#105fa8] hover:underline">
-          Do Not Call page
-        </a>
-        .
-      </p>
-
-      <p className="text-[#6C7381]">SMID: {SMID}</p>
+      {paragraphs.map((paragraph, index) => (
+        <p key={index} className={index === lastIndex ? 'text-[#6C7381]' : undefined}>
+          {paragraph.map((segment, position) => (
+            <Segment key={position} segment={segment} />
+          ))}
+        </p>
+      ))}
     </div>
   )
 }

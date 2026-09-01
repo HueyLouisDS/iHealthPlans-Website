@@ -31,11 +31,21 @@ function text(value) {
   return String(value ?? '').trim().slice(0, MAX_TEXT)
 }
 
-function validateConsent(consent, { required }) {
+/*-------- This is critical --------*/
+/*
+ Required on every lead, from the site and from a vendor alike. It was vendor
+ only while the site form sent nothing, which had the agency holding a vendor
+ to a standard its own form did not meet.
+
+ A site submission arrives carrying only the wording. capturedAt, url and
+ ipAddress are filled in by /api/lead from the request before this runs, so
+ the browser is never the source of any of them.
+*/
+function validateConsent(consent) {
   const errors = {}
 
   if (!consent || typeof consent !== 'object') {
-    return required ? { consent: 'A consent record is required.' } : {}
+    return { consent: 'A consent record is required.' }
   }
 
   if (!String(consent.text || '').trim()) {
@@ -99,7 +109,7 @@ export function validateLead(body, { origin = 'site' } = {}) {
     }
   }
 
-  Object.assign(errors, validateConsent(body.consent, { required: isVendor }))
+  Object.assign(errors, validateConsent(body.consent))
 
   return errors
 }
@@ -120,10 +130,19 @@ export function normaliseLead(body, { origin, source, vendorId = null }) {
     bestTime: text(body.bestTime) || 'anytime',
     consent: body.consent
       ? {
+          // Not clamped to MAX_TEXT. consent_text is a TEXT column precisely
+          // so the wording is stored whole rather than cut off mid sentence.
           text: String(body.consent.text).trim(),
           capturedAt: new Date(body.consent.capturedAt).toISOString(),
-          url: text(body.consent.url),
+          url: String(body.consent.url ?? '').trim().slice(0, 500),
           ipAddress: text(body.consent.ipAddress),
+          /*
+           Both of these are read by insertLead and were never produced here,
+           so every consent row was written with a null version and a null
+           user agent regardless of what arrived.
+          */
+          version: text(body.consent.version) || null,
+          userAgent: String(body.consent.userAgent ?? '').trim().slice(0, 500) || null,
           agent: text(body.consent.agent) || null,
         }
       : null,

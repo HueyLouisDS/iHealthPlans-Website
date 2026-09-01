@@ -15,16 +15,13 @@ import { query, transaction, databaseConfigured } from '@/lib/db/client'
 
 /*
  The foreign key runs from lead_consents to leads, not the other way, so the
- database does not require a lead to have consent. Only the route does, and
- only /api/leads/inbound currently enforces it.
+ database does not require a lead to have consent. Both routes do, since
+ validateLead now requires a consent record whatever the origin, so in
+ practice a lead row without one cannot be written through either path.
 
- The site's own form does not capture consent yet, so leads written here can
- land without a row in lead_consents. Until the form sends it, do not read
- "row in leads" as "consent on file".
-
- TODO capture consent on the site form and make it mandatory here too. Until
- that lands the agency is holding a vendor to a standard its own form does
- not meet.
+ The constraint is left as it is rather than tightened. A lead that reached
+ TLD but failed its consent insert should still be recoverable from our own
+ table, and a NOT NULL relationship here would discard it instead.
 */
 
 /*-------- This is critical --------*/

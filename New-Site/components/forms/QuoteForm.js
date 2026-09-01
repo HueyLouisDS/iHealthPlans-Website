@@ -2,7 +2,8 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import FloatingLabelInput from '@/components/forms/FloatingLabelInput'
-import TcpaConsent from '@/components/compliance/tcpaConsent'
+import TcpaConsent from '@/components/compliance/TcpaConsent'
+import { consentText } from '@/lib/content/consent'
 import { BUSINESS_HOURS } from '@/lib/siteConfig'
 
 const EMPTY = { zip: '', firstName: '', lastName: '', phone: '', bestTime: '', onBehalfOf: '' }
@@ -100,7 +101,22 @@ export default function QuoteForm({ isCallback = false, initialZip = '' }) {
       const response = await fetch('/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, requestedCallback: isCallback }),
+        /*
+         The consent text is read here, in the browser, at the moment of
+         submission. That is deliberate. The server has the same definition
+         and could generate it, but somebody on a cached page saw whatever
+         wording that older bundle carried, and the record has to say what
+         they actually read rather than what is current.
+
+         Everything else on the consent record, when it was captured, the
+         page, the address, is filled in by the route from the request. The
+         browser is not asked for any of it.
+        */
+        body: JSON.stringify({
+          ...values,
+          requestedCallback: isCallback,
+          consent: { text: consentText() },
+        }),
       })
 
       if (!response.ok) throw new Error(`Request failed with ${response.status}`)

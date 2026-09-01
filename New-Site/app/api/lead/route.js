@@ -13,10 +13,54 @@ import { validateLead, normaliseLead, redactLead } from '@/lib/leads/schema'
 import { insertLead, recordPushOutcome } from '@/lib/db/queries/leads'
 import { pushLead, OUTCOMES } from '@/lib/integrations/tldPost'
 import { ERRORS, errorResponse } from '@/lib/errorCodes'
+import { SITE_URL } from '@/lib/siteConfig'
 
 // node rather than edge, the database driver and node:crypto both need it
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+/*
+ lead_consents.ip_address is NOT NULL, so an unknown address needs a value
+ rather than a null. Deliberately not 0.0.0.0, which scripts/purge.mjs writes
+ as its redaction marker. Using it here would make a consent that simply had
+ no address look like one whose address was deliberately destroyed.
+
+ In production the header is always set by the platform. This is for a local
+ request with no proxy in front of it.
+*/
+const IP_UNKNOWN = 'unknown'
+
+// First entry of x-forwarded-for is the client, the rest are proxies
+function clientIp(request) {
+  const forwarded = request.headers.get('x-forwarded-for') || ''
+  return forwarded.split(',')[0].trim() || request.headers.get('x-real-ip') || IP_UNKNOWN
+}
+
+/*=============================================
+    THE BROWSER SENDS THE WORDING AND NOTHING ELSE
+=============================================*/
+
+/*
+ Everything a consent record is evidence of, when it happened, where, and who
+ from, is taken off the request rather than the payload. A page can be asked
+ what it displayed. It cannot be asked to certify its own address or clock.
+
+ capturedAt is stamped here rather than at the click for that reason and one
+ other. A browser with a wrong system clock would fail the future and 30 day
+ checks in validateConsent and lose the lead, and the gap between the click
+ and this line is under a second.
+*/
+function withRequestFacts(consent, request) {
+  if (!consent || typeof consent !== 'object') return consent
+
+  return {
+    ...consent,
+    capturedAt: new Date().toISOString(),
+    url: request.headers.get('referer') || SITE_URL,
+    ipAddress: clientIp(request),
+    userAgent: request.headers.get('user-agent'),
+  }
+}
 
 export async function POST(request) {
   let body
@@ -26,6 +70,8 @@ export async function POST(request) {
   } catch {
     return errorResponse(ERRORS.malformedJson, { error: 'Expected a JSON body.' })
   }
+
+  body = { ...body, consent: withRequestFacts(body.consent, request) }
 
   const errors = validateLead(body, { origin: 'site' })
   if (Object.keys(errors).length > 0) {
