@@ -27,6 +27,25 @@ import { query, transaction, databaseConfigured } from '@/lib/db/client'
  not meet.
 */
 
+/*-------- This is critical --------*/
+/*
+ Timestamps go in exactly as they arrive, as ISO 8601 strings carrying their
+ trailing Z. Do not reformat them.
+
+ They were previously passed through a helper that swapped the T for a space
+ and dropped the Z, which is the shape MySQL wanted. Postgres reads a
+ timestamp with no zone on it using the session TimeZone, and lib/db/dsn.js
+ pins that to America/New_York, so a UTC instant with the Z removed was
+ stored 4 or 5 hours late depending on the month.
+
+ Nothing errored, which is what made it worth a marker. Every affected row
+ looks plausible and is simply wrong, and the offset moves with daylight
+ saving so it cannot be corrected with one constant.
+
+ lib/db/queries/privacyRequests.js has always passed its timestamps straight
+ through. This file now matches it.
+*/
+
 export async function insertLead(lead, leadId) {
   if (!databaseConfigured()) return false
 
@@ -39,7 +58,7 @@ export async function insertLead(lead, leadId) {
        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         leadId,
-        toMysqlDateTime(lead.receivedAt),
+        lead.receivedAt,
         lead.sessionId,
         lead.visitorId,
         lead.origin,
@@ -65,7 +84,7 @@ export async function insertLead(lead, leadId) {
         [
           randomUUID(),
           leadId,
-          toMysqlDateTime(lead.consent.capturedAt),
+          lead.consent.capturedAt,
           lead.consent.text,
           createHash('sha256').update(lead.consent.text).digest('hex'),
           lead.consent.version || null,
@@ -91,14 +110,10 @@ export async function recordPushOutcome(leadId, result) {
         SET pushed_at = ?, push_error = ?
       WHERE lead_id = ?`,
     [
-      delivered ? toMysqlDateTime(new Date().toISOString()) : null,
+      delivered ? new Date().toISOString() : null,
       // Capped to the column width rather than trusting the message length
       delivered ? null : String(result.error || result.outcome).slice(0, 500),
       leadId,
     ]
   )
-}
-
-function toMysqlDateTime(iso) {
-  return String(iso).replace('T', ' ').replace('Z', '')
 }
