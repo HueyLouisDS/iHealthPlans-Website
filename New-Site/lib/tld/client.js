@@ -1,7 +1,6 @@
 // HTTP client for the TLD reporting API. Auth, pagination, and unwrapping the
 // response envelope. Knows nothing about what the data means, that is
 // resources.js.
-
 import 'server-only'
 
 import { crmConfig, authHeaders } from '@/lib/integrations/config'

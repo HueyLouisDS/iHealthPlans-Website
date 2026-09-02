@@ -68,8 +68,7 @@ export const RESOURCES = [
 
      TODO send these as the columns parameter once the selector syntax is
      confirmed. Until then this map is the only thing keeping the rest out,
-     and it filters after the payload has already crossed the wire.
-    */
+     and it filters after the payload has already crossed the wire.*/
     columns: ['user_id', 'vicidial_user', 'full_name', 'email', 'npn', 'status_id'],
 
     map: {
